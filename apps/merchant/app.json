@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "BEVER Merchant",
+    "slug": "bever-merchant",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bever.merchant"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.bever.merchant",
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": ["expo-router"],
+    "extra": {
+      "eas": { "projectId": "your-eas-project-id" }
+    }
+  }
+}

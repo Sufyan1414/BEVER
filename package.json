@@ -1,0 +1,24 @@
+{
+  "name": "bever",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BEVER — Hyperlocal Marketplace & Delivery Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "customer": "yarn workspace @bever/customer start",
+    "merchant": "yarn workspace @bever/merchant start",
+    "rider": "yarn workspace @bever/rider start",
+    "admin": "yarn workspace @bever/admin dev",
+    "build:shared": "yarn workspace @bever/shared build",
+    "typecheck": "yarn workspaces run typecheck",
+    "lint": "yarn workspaces run lint"
+  },
+  "packageManager": "yarn@4.0.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "yarn": ">=4.0.0"
+  }
+}
