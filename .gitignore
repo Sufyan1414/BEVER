@@ -24,7 +24,7 @@ out/
 .env.production.local
 .env.production
 
-# ─── Expo / React Native ──────────────────────────────────────────────────────
+# ─── Expo / React Native / Firebase Secrets ──────────────────────────────────
 .expo/
 *.jks
 *.p8
@@ -35,6 +35,9 @@ out/
 web-build/
 android/
 ios/
+google-services.json
+GoogleService-Info.plist
+
 
 # ─── OS files ─────────────────────────────────────────────────────────────────
 .DS_Store

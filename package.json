@@ -8,17 +8,19 @@
     "packages/*"
   ],
   "scripts": {
-    "customer": "yarn workspace @bever/customer start",
-    "merchant": "yarn workspace @bever/merchant start",
-    "rider": "yarn workspace @bever/rider start",
-    "admin": "yarn workspace @bever/admin dev",
-    "build:shared": "yarn workspace @bever/shared build",
-    "typecheck": "yarn workspaces run typecheck",
-    "lint": "yarn workspaces run lint"
+    "customer": "npm run start --workspace=@bever/customer",
+    "merchant": "npm run start --workspace=@bever/merchant",
+    "rider": "npm run start --workspace=@bever/rider",
+    "admin": "npm run dev --workspace=@bever/admin",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
   },
-  "packageManager": "yarn@4.0.0",
   "engines": {
-    "node": ">=18.0.0",
-    "yarn": ">=4.0.0"
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~6.1.2",
+    "react-dom": "19.1.0",
+    "react-native-web": "^0.21.0"
   }
 }

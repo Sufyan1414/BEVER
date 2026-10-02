@@ -61,8 +61,9 @@ CREATE TYPE store_category AS ENUM (
   'ELECTRONICS',
   'CLOTHING',
   'HARDWARE',
-  'STATIONARY',
+  'STATIONERY',
   'PET_SUPPLIES',
+
   'OTHER'
 );
 

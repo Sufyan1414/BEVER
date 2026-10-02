@@ -6,6 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.bever.rider"
@@ -17,10 +22,6 @@
       },
       "package": "com.bever.rider",
       "googleServicesFile": "./google-services.json"
-    },
-    "plugins": ["expo-router"],
-    "extra": {
-      "eas": { "projectId": "your-eas-project-id" }
     }
   }
 }

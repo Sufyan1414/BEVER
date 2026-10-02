@@ -86,7 +86,11 @@ export const STORAGE_BUCKETS = {
  * NEVER hardcode the actual values here.
  */
 export const ENV_KEYS = {
-  SUPABASE_URL: 'EXPO_PUBLIC_SUPABASE_URL', // Safe to expose in mobile apps
-  SUPABASE_ANON_KEY: 'EXPO_PUBLIC_SUPABASE_ANON_KEY', // Safe to expose in mobile apps
-  // SUPABASE_SERVICE_ROLE_KEY — NEVER in mobile apps. Admin web only, server-side.
+  MOBILE_SUPABASE_URL: 'EXPO_PUBLIC_SUPABASE_URL',
+  MOBILE_SUPABASE_ANON_KEY: 'EXPO_PUBLIC_SUPABASE_ANON_KEY',
+  VITE_SUPABASE_URL: 'VITE_SUPABASE_URL',
+  VITE_SUPABASE_ANON_KEY: 'VITE_SUPABASE_ANON_KEY',
+  SUPABASE_URL: 'EXPO_PUBLIC_SUPABASE_URL', // Default fallback key
+  SUPABASE_ANON_KEY: 'EXPO_PUBLIC_SUPABASE_ANON_KEY',
 } as const;
+

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "BEVER",
+    "name": "BEVER Customer",
     "slug": "bever-customer",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -22,14 +22,6 @@
       },
       "package": "com.bever.customer",
       "googleServicesFile": "./google-services.json"
-    },
-    "plugins": [
-      "expo-router"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "your-eas-project-id"
-      }
     }
   }
 }

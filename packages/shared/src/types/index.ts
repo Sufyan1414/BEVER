@@ -122,9 +122,10 @@ export type StoreCategory =
   | 'ELECTRONICS'
   | 'CLOTHING'
   | 'HARDWARE'
-  | 'STATIONARY'
+  | 'STATIONERY'
   | 'PET_SUPPLIES'
   | 'OTHER';
+
 
 /**
  * ProductCategory — organises products within a store
@@ -226,11 +227,13 @@ export interface OrderItem {
   product_id: string;
   product_name_snapshot: string; // Snapshotted at order time
   product_image_snapshot: string | null;
+  unit_snapshot: string | null; // e.g. "per kg", "500ml", snapshotted at order time
   unit_price: number; // In paise, snapshotted at order time
   quantity: number;
   total_price: number; // unit_price × quantity, in paise
   created_at: string;
 }
+
 
 /**
  * OrderStatusHistory — audit trail for every order state change
