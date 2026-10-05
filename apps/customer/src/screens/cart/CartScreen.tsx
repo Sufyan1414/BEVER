@@ -162,6 +162,7 @@ function EmptyCart({ onGoHome }: { onGoHome: () => void }) {
 
 export function CartScreen() {
   const navigation = useNavigation<any>();
+  const { session } = require('../../stores/useAuthStore').useAuthStore();
   const { storeName, items, incrementItem, decrementItem, removeItem, clearCart } =
     useCartStore();
   const summary = computeCartSummary(items);
@@ -265,8 +266,14 @@ export function CartScreen() {
           <View style={styles.ctaWrap}>
             <TouchableOpacity
               style={styles.ctaBtn}
-              disabled
-              accessibilityLabel="Continue to Checkout (coming soon)"
+              onPress={() => {
+                if (!session) {
+                  navigation.navigate('Auth');
+                  return;
+                }
+                navigation.navigate('Checkout');
+              }}
+              accessibilityLabel="Continue to Checkout"
             >
               <View style={styles.ctaInner}>
                 <View style={styles.ctaBadge}>
@@ -276,7 +283,7 @@ export function CartScreen() {
                 <Text style={styles.ctaPrice}>{formatRupees(summary.subtotalPaise)}</Text>
               </View>
             </TouchableOpacity>
-            <Text style={styles.ctaNote}>Checkout will be available in the next update.</Text>
+            <Text style={styles.ctaNote}>{session ? 'Final price and delivery fee are verified at order placement.' : 'Sign in to continue to checkout.'}</Text>
           </View>
         </>
       )}
@@ -425,10 +432,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ctaBtn: {
-    backgroundColor: '#78716C',  // dimmed — disabled state
+    backgroundColor: '#F59E0B',
     borderRadius: 18,
     overflow: 'hidden',
-    opacity: 0.7,
   },
   ctaInner: {
     flexDirection: 'row',
