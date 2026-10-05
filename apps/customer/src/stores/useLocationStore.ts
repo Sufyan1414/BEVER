@@ -30,8 +30,12 @@ const STORAGE_KEY = '@bever/browsing_location';
 export interface BrowsingLocation {
   lat: number;
   lng: number;
-  /** Human-readable label (area / city name) */
+  /** Human-readable selected place label */
   label: string;
+  /** Normalized locality metadata captured from the selected search result */
+  city?: string;
+  state?: string;
+  pincode?: string;
   /** ISO timestamp of when this was set */
   setAt: string;
   /** House / Flat / Shop Number */
