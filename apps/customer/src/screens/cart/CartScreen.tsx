@@ -7,11 +7,10 @@
  *   - Shows store header, line items with quantity steppers, subtotal.
  *   - Empty-cart state with navigation back to Home.
  *   - Clear-cart action with confirmation dialog.
- *   - "Continue to Checkout" CTA — navigation placeholder only.
- *     Order creation is Task 4; this button is disabled until the
- *     Checkout screen exists.
- *   - Available to guests and authenticated users alike (Task 2 scope).
- *     Authentication gate comes in Task 3.
+ *   - Real "Continue to Checkout" CTA.
+ *   - Guests are asked to authenticate only when they proceed to checkout;
+ *     their checkout intent is preserved and they land directly on Checkout
+ *     after authentication/profile completion.
  *   - Prices displayed in rupees (paise ÷ 100, no decimals for whole values).
  *   - No fake data, no hardcoded products, prices, or fees.
  */
@@ -164,8 +163,15 @@ function EmptyCart({ onGoHome }: { onGoHome: () => void }) {
 export function CartScreen() {
   const navigation = useNavigation<any>();
   const { session } = useAuthStore();
-  const { storeName, items, incrementItem, decrementItem, removeItem, clearCart } =
-    useCartStore();
+  const {
+    storeName,
+    items,
+    incrementItem,
+    decrementItem,
+    removeItem,
+    clearCart,
+    requestCheckout,
+  } = useCartStore();
   const summary = computeCartSummary(items);
 
   const [showClearDialog, setShowClearDialog] = useState(false);
@@ -178,6 +184,15 @@ export function CartScreen() {
     clearCart();
     setShowClearDialog(false);
   };
+
+  const handleCheckout = () => {
+    if (!session) {
+      requestCheckout();
+      navigation.navigate('Auth');
+      return;
+    }
+    navigation.navigate('Checkout');
+  };;
 
   const isEmpty = items.length === 0;
 
@@ -267,13 +282,7 @@ export function CartScreen() {
           <View style={styles.ctaWrap}>
             <TouchableOpacity
               style={styles.ctaBtn}
-              onPress={() => {
-                if (!session) {
-                  navigation.navigate('Auth');
-                  return;
-                }
-                navigation.navigate('Checkout');
-              }}
+              onPress={handleCheckout}
               accessibilityLabel="Continue to Checkout"
             >
               <View style={styles.ctaInner}>
@@ -284,7 +293,11 @@ export function CartScreen() {
                 <Text style={styles.ctaPrice}>{formatRupees(summary.subtotalPaise)}</Text>
               </View>
             </TouchableOpacity>
-            <Text style={styles.ctaNote}>{session ? 'Final price and delivery fee are verified at order placement.' : 'Sign in to continue to checkout.'}</Text>
+            <Text style={styles.ctaNote}>
+              {session
+                ? 'Final price and delivery fee are verified at order placement.'
+                : 'Secure sign-in is required before placing your order.'}
+            </Text>
           </View>
         </>
       )}
