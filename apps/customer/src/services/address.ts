@@ -126,6 +126,55 @@ export async function fetchDefaultAddress(): Promise<CustomerAddress | null> {
 }
 
 /**
+ * Materializes the previously selected guest browsing location into the
+ * authenticated customer's default delivery address. This prevents checkout
+ * from asking for the same delivery details again after sign-in.
+ */
+export async function ensureDefaultAddressFromBrowsingLocation(location: {
+  lat: number;
+  lng: number;
+  label: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  houseNo?: string;
+  floor?: string;
+  building?: string;
+  landmark?: string;
+  instructions?: string;
+}): Promise<CustomerAddress | null> {
+  const existing = await fetchDefaultAddress();
+  if (existing) return existing;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const city = location.city?.trim() || '';
+  const state = location.state?.trim() || '';
+  const pincode = location.pincode?.trim() || '';
+  if (!city || !state || !/^\\d{6}$/.test(pincode)) {
+    return null;
+  }
+
+  const addressLine1 = [location.houseNo, location.building].filter(Boolean).join(', ') || location.label;
+  const addressLine2 = [location.floor, location.landmark, location.instructions]
+    .filter(Boolean)
+    .join(' • ') || null;
+
+  return createAddress({
+    label: 'Home',
+    address_line_1: addressLine1,
+    address_line_2: addressLine2,
+    city,
+    state,
+    pincode,
+    latitude: location.lat,
+    longitude: location.lng,
+    is_default: true,
+  });
+}
+
+/**
  * Creates a new customer address record in public.customer_addresses.
  */
 export async function createAddress(input: CreateAddressInput): Promise<CustomerAddress> {
