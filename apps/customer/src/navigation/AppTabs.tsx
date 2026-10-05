@@ -28,6 +28,7 @@ type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 const TAB_ICONS: Record<keyof AppTabParamList, { active: IoniconName; inactive: IoniconName }> = {
   Home:    { active: 'home',          inactive: 'home-outline' },
   Cart:    { active: 'cart',          inactive: 'cart-outline' },
+  Checkout:{ active: 'card',          inactive: 'card-outline' },
   Orders:  { active: 'receipt',       inactive: 'receipt-outline' },
   Profile: { active: 'person-circle', inactive: 'person-circle-outline' },
 };
