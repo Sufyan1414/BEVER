@@ -15,7 +15,7 @@ export function CheckoutScreen() {
   const { storeId, storeName, items, clearCart } = useCartStore();
   const summary = computeCartSummary(items);
   const [address, setAddress] = useState<CustomerAddress | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('COD');
+  const paymentMethod: CheckoutPaymentMethod = 'COD';
   const [instructions, setInstructions] = useState('');
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
@@ -53,16 +53,16 @@ export function CheckoutScreen() {
       <Text style={styles.section}>Delivery address</Text>
       {address ? <View style={styles.card}><View style={styles.addressTop}><Text style={styles.addressLabel}>{address.label}</Text><Text style={styles.default}>DEFAULT</Text></View><Text style={styles.addressMain}>{address.address_line_1}</Text>{address.address_line_2 ? <Text style={styles.addressSub}>{address.address_line_2}</Text> : null}<Text style={styles.addressSub}>{address.city}, {address.state} — {address.pincode}</Text><TouchableOpacity onPress={() => navigation.navigate('Profile')}><Text style={styles.change}>Change address</Text></TouchableOpacity></View> : <View style={styles.card}><Text style={styles.addressMain}>No delivery address saved</Text><TouchableOpacity onPress={() => navigation.navigate('Profile')}><Text style={styles.change}>Add delivery address</Text></TouchableOpacity></View>}
       <Text style={styles.section}>Payment</Text>
-      <View style={styles.card}>{(['COD', 'UPI'] as CheckoutPaymentMethod[]).map(method => <TouchableOpacity key={method} style={styles.paymentRow} onPress={() => setPaymentMethod(method)}><View style={[styles.radio, paymentMethod === method && styles.radioSelected]}>{paymentMethod === method ? <View style={styles.radioDot} /> : null}</View><View><Text style={styles.paymentTitle}>{method === 'COD' ? 'Cash on Delivery' : 'UPI'}</Text><Text style={styles.paymentSub}>{method === 'COD' ? 'Pay when your order arrives' : 'Pay securely online'}</Text></View></TouchableOpacity>)}</View>
+      <View style={styles.card}><View style={styles.paymentRow}><View style={[styles.radio, styles.radioSelected]}><View style={styles.radioDot} /></View><View><Text style={styles.paymentTitle}>Cash on Delivery</Text><Text style={styles.paymentSub}>Pay when your order arrives</Text></View></View></View>
       <Text style={styles.section}>Order notes <Text style={styles.optional}>OPTIONAL</Text></Text>
       <TextInput value={instructions} onChangeText={setInstructions} placeholder="Anything the store should know?" placeholderTextColor="#A8A29E" style={styles.notes} multiline maxLength={250} />
       <View style={styles.card}>
         <View style={styles.row}><Text style={styles.muted}>Items ({summary.totalItems})</Text><Text style={styles.value}>{formatRupees(summary.subtotalPaise)}</Text></View>
         <View style={styles.row}><Text style={styles.muted}>Delivery</Text><Text style={styles.value}>Calculated securely at order placement</Text></View>
-        <View style={styles.line} /><View style={styles.row}><Text style={styles.total}>Total</Text><Text style={styles.totalValue}>{formatRupees(summary.subtotalPaise)}+</Text></View>
+        <View style={styles.line} /><View style={styles.row}><Text style={styles.total}>Final total</Text><Text style={styles.totalValue}>Verified at placement</Text></View>
       </View>
     </ScrollView>
-    <View style={styles.footer}><TouchableOpacity disabled={placing || !address || !items.length} onPress={placeOrder} style={[styles.place, (placing || !address || !items.length) && styles.disabled]}>{placing ? <ActivityIndicator color="#fff" /> : <Text style={styles.placeText}>Place order · {formatRupees(summary.subtotalPaise)}+</Text>}</TouchableOpacity><Text style={styles.footerNote}>Final price and delivery fee are verified when you place the order.</Text></View>
+    <View style={styles.footer}><TouchableOpacity disabled={placing || !address || !items.length} onPress={placeOrder} style={[styles.place, (placing || !address || !items.length) && styles.disabled]}>{placing ? <ActivityIndicator color="#fff" /> : <Text style={styles.placeText}>Place order+</Text>}</TouchableOpacity><Text style={styles.footerNote}>Final price and delivery fee are verified when you place the order.</Text></View>
   </SafeAreaView>;
 }
 
