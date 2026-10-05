@@ -47,6 +47,17 @@ interface NominatimResult {
   display_name: string;
   lat: string;
   lon: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    municipality?: string;
+    suburb?: string;
+    city_district?: string;
+    state?: string;
+    state_district?: string;
+    postcode?: string;
+  };
 }
 
 interface ParsedLocationResult {
@@ -56,6 +67,9 @@ interface ParsedLocationResult {
   fullDisplayName: string;
   lat: number;
   lng: number;
+  city: string;
+  state: string;
+  pincode: string;
 }
 
 // ─── Screen Props ─────────────────────────────────────────────────────────────
@@ -76,6 +90,11 @@ function parseNominatimResult(item: NominatimResult): ParsedLocationResult {
   const areaTitle = parts.slice(0, 2).join(', ');
   const citySubtitle = parts.slice(2).join(', ');
 
+  const address = item.address ?? {};
+  const city = address.city || address.town || address.village || address.municipality || '';
+  const state = address.state || address.state_district || '';
+  const pincode = address.postcode || '';
+
   return {
     placeId: item.place_id,
     areaTitle: areaTitle || item.display_name,
@@ -83,6 +102,9 @@ function parseNominatimResult(item: NominatimResult): ParsedLocationResult {
     fullDisplayName: item.display_name,
     lat: parseFloat(item.lat),
     lng: parseFloat(item.lon),
+    city,
+    state,
+    pincode,
   };
 }
 
@@ -202,6 +224,9 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
       lat: selectedResult.lat,
       lng: selectedResult.lng,
       label: selectedResult.areaTitle,
+      city: selectedResult.city || undefined,
+      state: selectedResult.state || undefined,
+      pincode: selectedResult.pincode || undefined,
       setAt: new Date().toISOString(),
       houseNo: houseNo.trim(),
       floor: floor.trim(),
