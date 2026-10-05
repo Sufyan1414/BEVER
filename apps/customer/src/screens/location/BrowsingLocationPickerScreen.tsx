@@ -131,6 +131,7 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
   const [building, setBuilding] = useState(browsingLocation?.building || '');
   const [landmark, setLandmark] = useState(browsingLocation?.landmark || '');
   const [instructions, setInstructions] = useState(browsingLocation?.instructions || '');
+  const [pincode, setPincode] = useState(browsingLocation?.pincode || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ── Animations ──────────────────────────────────────────────────────────────
@@ -213,7 +214,12 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
 
   // ── Save Logic ──────────────────────────────────────────────────────────────
 
-  const isFormValid = Boolean(houseNo.trim() && floor.trim());
+  const needsPincode = Boolean(selectedResult && !selectedResult.pincode);
+  const isFormValid = Boolean(
+    houseNo.trim() &&
+    floor.trim() &&
+    (!needsPincode || /^\\d{6}$/.test(pincode.trim()))
+  );
 
   const handleSaveAndContinue = useCallback(async () => {
     if (!selectedResult || !isFormValid || isSubmitting) return;
@@ -226,7 +232,7 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
       label: selectedResult.areaTitle,
       city: selectedResult.city || undefined,
       state: selectedResult.state || undefined,
-      pincode: selectedResult.pincode || undefined,
+      pincode: (selectedResult.pincode || pincode.trim()) || undefined,
       setAt: new Date().toISOString(),
       houseNo: houseNo.trim(),
       floor: floor.trim(),
@@ -476,6 +482,24 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
                 accessibilityLabel="Landmark"
               />
             </View>
+
+            {/* Pincode — only when the selected place did not provide one */}
+            {needsPincode ? (
+              <View style={styles.inputGroup}>
+                <Text style={styles.fieldLabel}>6-Digit Pincode *</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="e.g. 431001"
+                  placeholderTextColor="#A8A29E"
+                  value={pincode}
+                  onChangeText={(text) => setPincode(text.replace(/\\D/g, '').slice(0, 6))}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  accessibilityLabel="Delivery pincode"
+                />
+                <Text style={styles.fieldHint}>We only ask this when the selected area does not include a postal code.</Text>
+              </View>
+            ) : null}
 
             {/* Delivery Instructions (Optional) */}
             <View style={styles.inputGroup}>
@@ -829,6 +853,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     elevation: 0,
   },
+  fieldHint: {
+    fontSize: 11,
+    color: '#A8A29E',
+    marginTop: 6,
+    lineHeight: 16,
+  },
+
   submitCtaText: {
     fontSize: 16,
     fontWeight: '800',
