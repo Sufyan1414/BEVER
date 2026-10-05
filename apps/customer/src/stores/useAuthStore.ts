@@ -15,6 +15,7 @@ import { create } from 'zustand';
 import type { Session, User, Subscription, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
 import { fetchMyProfile, updateMyProfile, type CustomerProfile } from '../services/profile';
+import { validateAndFormatIndianPhone, phoneToInternalAuthEmail } from '../services/phone';
 
 interface AuthActionResult {
   success: boolean;
@@ -32,13 +33,19 @@ interface AuthState {
   isLoading: boolean;
   /** True while profile is specifically being fetched/updated */
   isProfileLoading: boolean;
+  /**
+   * True only when the customer is authenticated AND has a non-empty full_name.
+   * AppNavigator reads this as the single source of truth to decide whether
+   * to show ProfileSetup or AppTabs. Never derive this in screens.
+   */
+  isProfileComplete: boolean;
 
   /** Initialize store: reads session and profile from Supabase */
   initialize: () => () => void;
-  /** Requests SMS OTP code */
-  sendPhoneOtp: (phone: string) => Promise<AuthActionResult>;
-  /** Verifies SMS OTP code */
-  verifyPhoneOtp: (phone: string, token: string) => Promise<AuthActionResult>;
+  /** Signs up new user with phone number and PIN */
+  signUpWithPhonePin: (phone: string, pin: string) => Promise<AuthActionResult>;
+  /** Signs in existing user with phone number and PIN */
+  signInWithPhonePin: (phone: string, pin: string) => Promise<AuthActionResult>;
   /** Loads current user's profile from database */
   loadProfile: () => Promise<CustomerProfile | null>;
   /** Updates current user's full_name in database */
@@ -54,21 +61,17 @@ function parseSupabaseError(error: AuthError | null | undefined): string {
   const status = error.status;
 
   if (
-    message.toLowerCase().includes('provider is disabled') ||
-    message.toLowerCase().includes('unsupported phone provider') ||
-    message.toLowerCase().includes('sms provider') ||
-    message.toLowerCase().includes('not configured')
+    message.toLowerCase().includes('invalid login credentials') ||
+    message.toLowerCase().includes('invalid credentials')
   ) {
-    return 'Phone authentication is currently unavailable because the SMS provider is not configured on the server. Please check Supabase project settings.';
+    return 'Invalid mobile number or 6-digit PIN. Please check your credentials and try again.';
   }
 
   if (
-    message.toLowerCase().includes('invalid token') ||
-    message.toLowerCase().includes('token has expired') ||
-    message.toLowerCase().includes('otp expired') ||
-    message.toLowerCase().includes('invalid otp')
+    message.toLowerCase().includes('already registered') ||
+    message.toLowerCase().includes('user already exists')
   ) {
-    return 'The verification code is invalid or has expired. Please check the code and try again or request a new one.';
+    return 'An account with this mobile number already exists. Please sign in instead.';
   }
 
   if (
@@ -76,14 +79,19 @@ function parseSupabaseError(error: AuthError | null | undefined): string {
     message.toLowerCase().includes('for security purposes') ||
     status === 429
   ) {
-    return 'Too many OTP requests. Please wait a few minutes before trying again.';
+    return 'Too many attempts. Please wait a few minutes before trying again.';
   }
 
   if (message.toLowerCase().includes('invalid phone') || status === 400) {
-    return message || 'Invalid phone number format. Please ensure your number is entered correctly.';
+    return message || 'Invalid phone number format. Please enter a valid 10-digit mobile number.';
   }
 
   return message || 'Authentication failed. Please check your network connection and try again.';
+}
+
+/** Pure helper — profile is complete when full_name is a non-empty string. */
+function profileIsComplete(profile: CustomerProfile | null): boolean {
+  return Boolean(profile?.full_name && profile.full_name.trim().length > 0);
 }
 
 export const useAuthStore = create<AuthState>((set, get) => {
@@ -91,17 +99,22 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
   const loadUserProfile = async (user: User | null): Promise<CustomerProfile | null> => {
     if (!user) {
-      set({ profile: null, isProfileLoading: false });
+      set({ profile: null, isProfileComplete: false, isProfileLoading: false });
       return null;
     }
 
     set({ isProfileLoading: true });
     try {
       const profileData = await fetchMyProfile();
-      set({ profile: profileData, isProfileLoading: false });
+      const complete = profileIsComplete(profileData);
+      set({
+        profile: profileData,
+        isProfileComplete: complete,
+        isProfileLoading: false,
+      });
       return profileData;
-    } catch {
-      set({ profile: null, isProfileLoading: false });
+    } catch (err) {
+      set({ profile: null, isProfileComplete: false, isProfileLoading: false });
       return null;
     }
   };
@@ -112,6 +125,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     profile: null,
     isLoading: true,
     isProfileLoading: false,
+    isProfileComplete: false,
 
     initialize: () => {
       // Step 1: Read session & load profile
@@ -129,7 +143,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
           set({ isLoading: false });
         })
         .catch(() => {
-          set({ session: null, user: null, profile: null, isLoading: false });
+          set({ session: null, user: null, profile: null, isProfileComplete: false, isLoading: false });
         });
 
       // Step 2: Subscribe to auth state changes
@@ -140,7 +154,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
         if (currentUser) {
           await loadUserProfile(currentUser);
         } else {
-          set({ profile: null, isProfileLoading: false });
+          set({ profile: null, isProfileComplete: false, isProfileLoading: false });
         }
 
         set({ isLoading: false });
@@ -154,27 +168,24 @@ export const useAuthStore = create<AuthState>((set, get) => {
       };
     },
 
-    sendPhoneOtp: async (phone: string): Promise<AuthActionResult> => {
+    signUpWithPhonePin: async (phone: string, pin: string): Promise<AuthActionResult> => {
       try {
-        const { error } = await supabase.auth.signInWithOtp({ phone });
-        if (error) {
-          return { success: false, error: parseSupabaseError(error) };
+        const phoneVal = validateAndFormatIndianPhone(phone);
+        if (!phoneVal.isValid) {
+          return { success: false, error: phoneVal.error || 'Invalid phone number format.' };
         }
-        return { success: true };
-      } catch (err: any) {
-        return {
-          success: false,
-          error: err?.message || 'Network error while requesting OTP.',
-        };
-      }
-    },
 
-    verifyPhoneOtp: async (phone: string, token: string): Promise<AuthActionResult> => {
-      try {
-        const { data, error } = await supabase.auth.verifyOtp({
-          phone,
-          token,
-          type: 'sms',
+        const normalizedPhone = phoneVal.formattedPhone;
+        const internalEmail = phoneToInternalAuthEmail(normalizedPhone);
+
+        const { data, error } = await supabase.auth.signUp({
+          email: internalEmail,
+          password: pin,
+          options: {
+            data: {
+              phone: normalizedPhone,
+            },
+          },
         });
 
         if (error) {
@@ -190,7 +201,40 @@ export const useAuthStore = create<AuthState>((set, get) => {
       } catch (err: any) {
         return {
           success: false,
-          error: err?.message || 'Network error while verifying OTP code.',
+          error: err?.message || 'Network error while creating account.',
+        };
+      }
+    },
+
+    signInWithPhonePin: async (phone: string, pin: string): Promise<AuthActionResult> => {
+      try {
+        const phoneVal = validateAndFormatIndianPhone(phone);
+        if (!phoneVal.isValid) {
+          return { success: false, error: phoneVal.error || 'Invalid phone number format.' };
+        }
+
+        const normalizedPhone = phoneVal.formattedPhone;
+        const internalEmail = phoneToInternalAuthEmail(normalizedPhone);
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: internalEmail,
+          password: pin,
+        });
+
+        if (error) {
+          return { success: false, error: parseSupabaseError(error) };
+        }
+
+        if (data.session) {
+          set({ session: data.session, user: data.session.user });
+          await loadUserProfile(data.session.user);
+        }
+
+        return { success: true };
+      } catch (err: any) {
+        return {
+          success: false,
+          error: err?.message || 'Network error while signing in.',
         };
       }
     },
@@ -205,7 +249,12 @@ export const useAuthStore = create<AuthState>((set, get) => {
       const result = await updateMyProfile(fullName);
 
       if (result.success && result.profile) {
-        set({ profile: result.profile, isProfileLoading: false });
+        const complete = profileIsComplete(result.profile);
+        set({
+          profile: result.profile,
+          isProfileComplete: complete,
+          isProfileLoading: false,
+        });
         return { success: true };
       }
 
@@ -215,7 +264,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
     signOut: async () => {
       await supabase.auth.signOut();
-      set({ session: null, user: null, profile: null, isLoading: false, isProfileLoading: false });
+      set({
+        session: null,
+        user: null,
+        profile: null,
+        isProfileComplete: false,
+        isLoading: false,
+        isProfileLoading: false,
+      });
     },
   };
 });

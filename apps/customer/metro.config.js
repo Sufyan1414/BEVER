@@ -1,9 +1,17 @@
 const path = require("path");
 const Module = require("module");
+
+const projectRoot = __dirname;
+const monorepoRoot = path.resolve(projectRoot, "../..");
+
 const originalResolveFilename = Module._resolveFilename;
 Module._resolveFilename = function(request, parent, isMain, options) {
   if (request === "react-native/package.json") {
-    return path.resolve(__dirname, "node_modules/react-native/package.json");
+    try {
+      return require.resolve("react-native/package.json", { paths: [projectRoot, monorepoRoot] });
+    } catch (e) {
+      // fallback if not found
+    }
   }
   return originalResolveFilename.apply(this, arguments);
 };
@@ -11,9 +19,15 @@ Module._resolveFilename = function(request, parent, isMain, options) {
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
 
-const config = getDefaultConfig(__dirname);
+const config = getDefaultConfig(projectRoot);
+
+config.watchFolders = [monorepoRoot];
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, "node_modules"),
+  path.resolve(monorepoRoot, "node_modules"),
+];
 
 module.exports = withNativeWind(config, { 
   input: "./global.css",
-  configPath: path.resolve(__dirname, "tailwind.config.js")
+  configPath: path.resolve(projectRoot, "tailwind.config.js")
 });

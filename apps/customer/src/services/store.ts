@@ -18,7 +18,7 @@
  */
 
 import { supabase } from './supabase';
-import type { NearbyStore } from '../types/store';
+import type { NearbyStore, ProductCategory, Product } from '../types/store';
 
 /**
  * Fetches stores that service the given delivery coordinate.
@@ -47,3 +47,42 @@ export async function fetchNearbyStores(
 
   return (data ?? []) as NearbyStore[];
 }
+
+/**
+ * Fetches active product categories for a specific store.
+ */
+export async function fetchStoreCategories(storeId: string): Promise<ProductCategory[]> {
+  const { data, error } = await supabase
+    .from('product_categories')
+    .select('*')
+    .eq('store_id', storeId)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .order('name', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as ProductCategory[];
+}
+
+/**
+ * Fetches active products for a specific store.
+ */
+export async function fetchStoreProducts(storeId: string): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('store_id', storeId)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .order('name', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as Product[];
+}
+

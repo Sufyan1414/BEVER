@@ -25,16 +25,21 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const supabaseUrl = process.env['EXPO_PUBLIC_SUPABASE_URL'] ?? '';
-const supabaseAnonKey = process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'] ?? '';
+const rawUrl = process.env['EXPO_PUBLIC_SUPABASE_URL'];
+const rawKey = process.env['EXPO_PUBLIC_SUPABASE_ANON_KEY'];
 
-if (__DEV__ && (supabaseUrl === '' || supabaseAnonKey === '')) {
+const isConfigured = Boolean(rawUrl && rawUrl.trim() !== '') && Boolean(rawKey && rawKey.trim() !== '');
+
+const supabaseUrl = isConfigured ? rawUrl! : 'https://placeholder.supabase.co';
+const supabaseAnonKey = isConfigured ? rawKey! : 'placeholder-anon-key';
+
+if (__DEV__ && !isConfigured) {
   console.warn(
     '[BEVER] Supabase environment variables are not set.\n' +
       'Create apps/customer/.env with:\n' +
       '  EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co\n' +
       '  EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key\n' +
-      'The app will load but all network calls will fail until these are set.'
+      'The app will load but network calls will fail until valid credentials are provided.'
   );
 }
 

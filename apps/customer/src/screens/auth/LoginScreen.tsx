@@ -1,17 +1,10 @@
 /**
  * BEVER Customer App — Login Screen
  *
- * Phone number entry screen for real Supabase SMS OTP authentication.
- *
- * Flow:
- *   1. User enters 10-digit Indian mobile number (+91).
- *   2. Validates number before sending request.
- *   3. Calls `useAuthStore.sendPhoneOtp(phone)`.
- *   4. Navigates to `OtpVerifyScreen` on success.
- *   5. Shows clear error messages for invalid inputs or server errors.
+ * Phone number + 6-digit PIN sign in screen using Supabase Auth.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -32,19 +25,18 @@ import { validateAndFormatIndianPhone } from '../../services/phone';
 
 export function LoginScreen({ navigation }: LoginScreenProps) {
   const [localNumber, setLocalNumber] = useState('');
+  const [pin, setPin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { sendPhoneOtp, session } = useAuthStore();
+  const { signInWithPhonePin } = useAuthStore();
 
-  // If already authenticated, dismiss the modal
-  useEffect(() => {
-    if (session) {
-      navigation.getParent()?.goBack();
-    }
-  }, [session, navigation]);
+  // No useEffect navigation.
+  // After signInWithPhonePin() succeeds, the store sets session + isProfileComplete.
+  // AppNavigator detects the state change and re-renders to the correct branch
+  // (ProfileSetupGate if profile incomplete, AppTabs if complete).
 
-  const handleSendOtp = async () => {
+  const handleSignIn = async () => {
     Keyboard.dismiss();
 
     const validation = validateAndFormatIndianPhone(localNumber);
@@ -53,19 +45,21 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
       return;
     }
 
+    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+      setErrorMessage('Please enter your 6-digit PIN.');
+      return;
+    }
+
     setErrorMessage(null);
     setIsSubmitting(true);
 
     try {
-      const result = await sendPhoneOtp(validation.formattedPhone);
+      const result = await signInWithPhonePin(validation.formattedPhone, pin);
 
       if (!result.success) {
         setErrorMessage(
-          result.error || 'Failed to send verification code. Please try again.'
+          result.error || 'Invalid mobile number or PIN. Please check your credentials.'
         );
-      } else {
-        // Successfully requested OTP; navigate to verification screen
-        navigation.navigate('OtpVerify', { phone: validation.formattedPhone });
       }
     } catch {
       setErrorMessage('An unexpected network error occurred. Please check your connection.');
@@ -74,7 +68,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
     }
   };
 
-  const isFormValid = localNumber.replace(/\D/g, '').length === 10;
+  const isFormValid = localNumber.replace(/\D/g, '').length === 10 && pin.length === 6;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -95,7 +89,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
             </TouchableOpacity>
           </View>
 
-          {/* Main Content */}
+          {/* Content */}
           <View style={styles.content}>
             <Text style={styles.wordmark}>BEVER</Text>
             <Text style={styles.tagline}>Hyperlocal Beverage Marketplace</Text>
@@ -104,13 +98,13 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
 
             <Text style={styles.heading}>Sign in to BEVER</Text>
             <Text style={styles.subheading}>
-              Enter your mobile number to receive a 6-digit verification passcode via SMS.
+              Enter your registered mobile number and 6-digit PIN to sign in.
             </Text>
 
-            {/* Phone Number Input Group */}
+            {/* Phone Input */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>Mobile Number</Text>
-              <View style={[styles.inputRow, errorMessage ? styles.inputRowError : null]}>
+              <View style={styles.inputRow}>
                 <View style={styles.countryCodeBadge}>
                   <Text style={styles.flag}>🇮🇳</Text>
                   <Text style={styles.countryCodeText}>+91</Text>
@@ -133,36 +127,65 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
               </View>
             </View>
 
-            {/* Error banner */}
+            {/* PIN Input */}
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>6-Digit PIN</Text>
+              <View style={styles.inputRow}>
+                <TextInput
+                  value={pin}
+                  onChangeText={(text) => {
+                    const digits = text.replace(/\D/g, '').slice(0, 6);
+                    setPin(digits);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  placeholder="Enter 6-digit PIN"
+                  placeholderTextColor="#A8A29E"
+                  keyboardType="number-pad"
+                  secureTextEntry
+                  maxLength={6}
+                  style={styles.fullInput}
+                  accessibilityLabel="6-digit PIN input"
+                />
+              </View>
+            </View>
+
+            {/* Error Banner */}
             {errorMessage ? (
               <View style={styles.errorBox}>
                 <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
             ) : null}
 
-            {/* Action Button */}
+            {/* Sign In Button */}
             <TouchableOpacity
               style={[
                 styles.submitButton,
                 (!isFormValid || isSubmitting) && styles.submitButtonDisabled,
               ]}
-              onPress={handleSendOtp}
+              onPress={handleSignIn}
               disabled={!isFormValid || isSubmitting}
-              accessibilityLabel="Send OTP verification code"
+              accessibilityLabel="Sign in button"
             >
               {isSubmitting ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.submitButtonText}>Send Passcode</Text>
+                <Text style={styles.submitButtonText}>Sign In</Text>
               )}
             </TouchableOpacity>
 
-            <Text style={styles.disclaimerText}>
-              By continuing, you agree to receive SMS verification codes from BEVER. Standard carrier rates may apply.
-            </Text>
+            {/* Switch to Create Account */}
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={() => navigation.navigate('Signup')}
+              accessibilityLabel="New to BEVER? Create account"
+            >
+              <Text style={styles.switchButtonText}>
+                New to BEVER? <Text style={styles.switchHighlight}>Create Account</Text>
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Bottom browse button */}
+          {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity
               style={styles.browseButton}
@@ -223,7 +246,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   headerSpacing: {
-    height: 24,
+    height: 20,
   },
   heading: {
     fontSize: 26,
@@ -235,10 +258,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#57534E',
     lineHeight: 20,
-    marginBottom: 28,
+    marginBottom: 24,
   },
   inputSection: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   inputLabel: {
     fontSize: 13,
@@ -257,9 +280,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     height: 56,
     paddingHorizontal: 14,
-  },
-  inputRowError: {
-    borderColor: '#EF4444',
   },
   countryCodeBadge: {
     flexDirection: 'row',
@@ -285,13 +305,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1C1917',
   },
+  fullInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1C1917',
+    letterSpacing: 2,
+  },
   errorBox: {
     backgroundColor: '#FEE2E2',
     borderColor: '#FCA5A5',
     borderWidth: 1,
     borderRadius: 12,
     padding: 14,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   errorText: {
     color: '#991B1B',
@@ -314,17 +342,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  disclaimerText: {
-    fontSize: 12,
-    color: '#A8A29E',
-    textAlign: 'center',
-    lineHeight: 18,
-    marginTop: 16,
+  switchButton: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  switchButtonText: {
+    fontSize: 15,
+    color: '#78716C',
+  },
+  switchHighlight: {
+    color: '#F59E0B',
+    fontWeight: '700',
   },
   footer: {
     paddingHorizontal: 24,
     paddingBottom: 24,
-    paddingTop: 12,
+    paddingTop: 8,
   },
   browseButton: {
     backgroundColor: '#1C1917',

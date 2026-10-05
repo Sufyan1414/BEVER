@@ -8,17 +8,28 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CustomerAddress } from '../types/address';
+import type { NearbyStore } from '../types/store';
+
+// ─── Home Stack ───────────────────────────────────────────────────────────────
+
+export type HomeStackParamList = {
+  HomeMain: undefined;
+  StoreDetail: { store: NearbyStore };
+};
+
+export type HomeMainProps = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;
+export type StoreDetailProps = NativeStackScreenProps<HomeStackParamList, 'StoreDetail'>;
 
 // ─── Auth Stack ───────────────────────────────────────────────────────────────
 
 export type AuthStackParamList = {
   Login: undefined;
-  OtpVerify: { phone: string };
+  Signup: undefined;
   ProfileSetup: undefined;
 };
 
 export type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'>;
-export type OtpVerifyScreenProps = NativeStackScreenProps<AuthStackParamList, 'OtpVerify'>;
+export type SignupScreenProps = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 export type ProfileSetupScreenProps = NativeStackScreenProps<AuthStackParamList, 'ProfileSetup'>;
 
 // ─── Profile Stack ────────────────────────────────────────────────────────────
@@ -57,3 +68,4 @@ export type HomeTabProps = BottomTabScreenProps<AppTabParamList, 'Home'>;
 export type CartTabProps = BottomTabScreenProps<AppTabParamList, 'Cart'>;
 export type OrdersTabProps = BottomTabScreenProps<AppTabParamList, 'Orders'>;
 export type ProfileTabProps = BottomTabScreenProps<AppTabParamList, 'Profile'>;
+

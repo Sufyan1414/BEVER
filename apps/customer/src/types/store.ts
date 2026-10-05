@@ -69,3 +69,36 @@ export interface NearbyStore {
    */
   service_radius_meters: number;
 }
+
+// ─── Product Category ─────────────────────────────────────────────────────────
+
+export interface ProductCategory {
+  id: string;
+  store_id: string;
+  name: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+// ─── Product Item ─────────────────────────────────────────────────────────────
+
+export interface Product {
+  id: string;
+  store_id: string;
+  category_id: string | null;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  /** Selling price in paise (₹1 = 100 paise) */
+  price: number;
+  /** Compare-at / original price in paise, or null */
+  compare_at_price: number | null;
+  unit: string;
+  is_available: boolean;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+

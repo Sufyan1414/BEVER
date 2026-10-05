@@ -20,8 +20,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.bever.customer",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.bever.customer"
     }
   }
 }

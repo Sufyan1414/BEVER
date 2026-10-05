@@ -81,3 +81,16 @@ export function maskPhoneNumber(phone: string): string {
   const lastFour = local.slice(-4);
   return `+91 ••••• •${lastFour}`;
 }
+
+/**
+ * Converts a normalized phone number into a deterministic internal Supabase Auth email.
+ * Format: "919876543210@auth.bever.app"
+ * This email is strictly internal and NEVER shown to the customer.
+ */
+export function phoneToInternalAuthEmail(phone: string): string {
+  const result = validateAndFormatIndianPhone(phone);
+  const digits = result.isValid
+    ? result.formattedPhone.replace(/\D/g, '')
+    : phone.replace(/\D/g, '');
+  return `customer_${digits}@bever.app`;
+}

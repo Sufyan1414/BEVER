@@ -1,17 +1,19 @@
 /**
  * BEVER Customer App — Profile Setup Screen
  *
- * Presented to newly authenticated customers whose database profile does not
- * yet contain a full_name.
+ * Presented to newly authenticated customers whose profile is incomplete
+ * (full_name is empty or missing).
  *
  * Flow:
  *   1. Prompts for customer's full name.
  *   2. Validates non-emptiness (2–100 characters).
- *   3. Calls `useAuthStore.updateProfileName(name)` -> updates public.profiles in DB.
- *   4. Dismisses auth modal to transition into the authenticated experience.
+ *   3. Calls updateProfileName() → saves to public.profiles.
+ *   4. Store sets isProfileComplete = true → AppNavigator re-renders to AppTabs.
+ *
+ * This screen does NOT navigate imperatively. AppNavigator is the state machine.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -26,21 +28,19 @@ import {
   Keyboard,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import type { ProfileSetupScreenProps } from '../../navigation/types';
 import { useAuthStore } from '../../stores/useAuthStore';
 
-export function ProfileSetupScreen({ navigation }: ProfileSetupScreenProps) {
+export function ProfileSetupScreen() {
   const { profile, updateProfileName, isProfileLoading } = useAuthStore();
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // If profile is already complete, auto-dismiss modal
-  useEffect(() => {
-    if (profile?.full_name && profile.full_name.trim().length > 0) {
-      navigation.getParent()?.goBack();
-    }
-  }, [profile, navigation]);
+  // NOTE: No useEffect navigation here.
+  // AppNavigator observes isProfileComplete and re-renders to AppTabs
+  // automatically when the profile save succeeds. This screen must never
+  // call navigate() or goBack() — it has no parent navigator in the
+  // profile-gate branch.
 
   const handleSubmit = async () => {
     Keyboard.dismiss();
@@ -66,12 +66,8 @@ export function ProfileSetupScreen({ navigation }: ProfileSetupScreenProps) {
 
     try {
       const result = await updateProfileName(trimmed);
-
       if (!result.success) {
         setErrorMessage(result.error || 'Failed to save profile. Please try again.');
-      } else {
-        // Profile updated in database; dismiss auth modal
-        navigation.getParent()?.goBack();
       }
     } catch {
       setErrorMessage('An unexpected error occurred. Please check connection and try again.');

@@ -19,8 +19,8 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~6.1.2",
-    "react-dom": "19.1.0",
+    "@expo/metro-runtime": "~57.0.16",
+    "react-dom": "19.2.3",
     "react-native-web": "^0.21.0"
   }
 }

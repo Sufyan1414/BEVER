@@ -69,3 +69,6 @@ coverage/
 
 # ─── Misc ─────────────────────────────────────────────────────────────────────
 *.local
+
+# Supabase local temporary files
+packages/supabase/.temp/

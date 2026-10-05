@@ -9,10 +9,11 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import type { AppTabParamList } from './types';
-import { HomeScreen } from '../screens/home/HomeScreen';
+import { HomeNavigator } from './HomeNavigator';
 import { CartScreen } from '../screens/cart/CartScreen';
 import { OrdersScreen } from '../screens/orders/OrdersScreen';
 import { ProfileNavigator } from './ProfileNavigator';
+import { useCartStore, computeCartSummary } from '../stores/useCartStore';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
@@ -31,6 +32,10 @@ const TAB_ICONS: Record<keyof AppTabParamList, { active: IoniconName; inactive: 
 };
 
 export function AppTabs() {
+  const { items } = useCartStore();
+  const summary = computeCartSummary(items);
+  const cartCount = summary.totalItems;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -56,8 +61,23 @@ export function AppTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home"    component={HomeScreen}       options={{ title: 'Home' }} />
-      <Tab.Screen name="Cart"    component={CartScreen}       options={{ title: 'Cart' }} />
+      <Tab.Screen name="Home"    component={HomeNavigator}    options={{ title: 'Home' }} />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{
+          title: 'Cart',
+          ...(cartCount > 0 ? {
+            tabBarBadge: cartCount,
+            tabBarBadgeStyle: {
+              backgroundColor: '#F59E0B',
+              color: '#FFFFFF',
+              fontSize: 10,
+              fontWeight: '700' as const,
+            },
+          } : {}),
+        }}
+      />
       <Tab.Screen name="Orders"  component={OrdersScreen}     options={{ title: 'Orders' }} />
       <Tab.Screen name="Profile" component={ProfileNavigator} options={{ title: 'Profile' }} />
     </Tab.Navigator>

@@ -1,19 +1,19 @@
 /**
  * BEVER Customer App — Auth Stack
  *
- * Stack navigator for authentication and onboarding flow.
- * Screens:
- *   - Login: Phone number entry & OTP request
- *   - OtpVerify: 6-digit SMS OTP verification
- *   - ProfileSetup: Initial customer name setup (when profile.full_name is missing)
+ * Stack navigator for the authentication flow (unauthenticated users).
+ * Only contains Login and Signup screens.
+ *
+ * ProfileSetup is NOT here — it is rendered by AppNavigator as a
+ * fullscreen gate when the customer is authenticated but profile is incomplete.
+ * This prevents ProfileSetup from being dismissible by the user.
  */
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from './types';
 import { LoginScreen } from '../screens/auth/LoginScreen';
-import { OtpVerifyScreen } from '../screens/auth/OtpVerifyScreen';
-import { ProfileSetupScreen } from '../screens/auth/ProfileSetupScreen';
+import { SignupScreen } from '../screens/auth/SignupScreen';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -27,8 +27,7 @@ export function AuthStack() {
       }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="OtpVerify" component={OtpVerifyScreen} />
-      <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
     </Stack.Navigator>
   );
 }

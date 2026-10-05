@@ -32,37 +32,41 @@ export interface ProfileOperationResult {
   error?: string;
 }
 
+const PROFILE_SELECT =
+  'id, role, full_name, phone, avatar_url, fcm_token, is_active, created_at, updated_at';
+
 /**
  * Fetches the authenticated user's profile from public.profiles.
- * Scoped strictly to auth.uid(). Returns null if no user is signed in.
+ * If no row exists (user pre-dates the trigger), calls ensure_my_profile()
+ * to create one server-side before returning.
+ * Returns null if no user is signed in.
  */
 export async function fetchMyProfile(): Promise<CustomerProfile | null> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return null;
 
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
-    .select('id, role, full_name, phone, avatar_url, fcm_token, is_active, created_at, updated_at')
+    .select(PROFILE_SELECT)
     .eq('id', user.id)
     .maybeSingle();
 
-  // If profile row doesn't exist yet (DB trigger slight race condition), retry once after a brief delay
-  if (!data && !error) {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const retry = await supabase
-      .from('profiles')
-      .select('id, role, full_name, phone, avatar_url, fcm_token, is_active, created_at, updated_at')
-      .eq('id', user.id)
-      .maybeSingle();
-    data = retry.data;
-    error = retry.error;
-  }
+  if (error) throw new Error(error.message);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  // Row exists — return it directly.
+  if (data) return data as CustomerProfile;
 
-  return data as CustomerProfile | null;
+  // No row: user signed up before the trigger was installed.
+  // Call the server-side RPC which creates the row safely and returns it.
+  const { data: ensured, error: ensureError } = await supabase
+    .rpc('ensure_my_profile')
+    .maybeSingle();
+
+  if (ensureError) throw new Error(ensureError.message);
+
+  return (ensured as CustomerProfile) ?? null;
 }
 
 /**
@@ -75,32 +79,40 @@ export async function updateMyProfile(fullName: string): Promise<ProfileOperatio
   if (!trimmedName) {
     return { success: false, error: 'Please enter your full name.' };
   }
-
   if (trimmedName.length < 2) {
     return { success: false, error: 'Name must be at least 2 characters long.' };
   }
-
   if (trimmedName.length > 100) {
     return { success: false, error: 'Name must be 100 characters or less.' };
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
     return { success: false, error: 'User session has expired. Please sign in again.' };
   }
 
   try {
+    // Ensure the profile row exists before attempting an UPDATE.
+    // This is a no-op for users created after the trigger was installed.
+    await supabase.rpc('ensure_my_profile');
+
     const { data, error } = await supabase
       .from('profiles')
-      .update({
-        full_name: trimmedName,
-      })
+      .update({ full_name: trimmedName })
       .eq('id', user.id)
-      .select('id, role, full_name, phone, avatar_url, fcm_token, is_active, created_at, updated_at')
-      .single();
+      .select(PROFILE_SELECT)
+      .maybeSingle();
 
     if (error) {
       return { success: false, error: error.message };
+    }
+
+    if (!data) {
+      return { success: false, error: 'Profile could not be saved. Please try again.' };
     }
 
     return { success: true, profile: data as CustomerProfile };
