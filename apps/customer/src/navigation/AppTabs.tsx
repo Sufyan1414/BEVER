@@ -13,6 +13,7 @@ import { HomeNavigator } from './HomeNavigator';
 import { CartScreen } from '../screens/cart/CartScreen';
 import { OrdersScreen } from '../screens/orders/OrdersScreen';
 import { ProfileNavigator } from './ProfileNavigator';
+import { CheckoutNavigator } from './CheckoutNavigator';
 import { useCartStore, computeCartSummary } from '../stores/useCartStore';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
@@ -78,6 +79,10 @@ export function AppTabs() {
           } : {}),
         }}
       />
+      <Tab.Screen name="Checkout" component={CheckoutNavigator} options={{
+        tabBarButton: () => null,
+        tabBarItemStyle: { display: 'none' },
+      }} />
       <Tab.Screen name="Orders"  component={OrdersScreen}     options={{ title: 'Orders' }} />
       <Tab.Screen name="Profile" component={ProfileNavigator} options={{ title: 'Profile' }} />
     </Tab.Navigator>
