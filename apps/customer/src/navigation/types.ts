@@ -60,6 +60,7 @@ export type AddressLocationPickerProps = NativeStackScreenProps<
 export type AppTabParamList = {
   Home: undefined;
   Cart: undefined;
+  Checkout: undefined;
   Orders: undefined;
   Profile: undefined;
 };
