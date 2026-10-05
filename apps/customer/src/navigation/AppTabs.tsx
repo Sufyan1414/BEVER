@@ -1,11 +1,12 @@
 /**
- * BEVER Customer App — App Tabs (Authenticated)
+ * BEVER Customer App — App Tabs
  *
- * Bottom tab navigator shown to customers.
- * Tabs: Home | Cart | Orders | Profile
+ * Bottom tab navigator for the customer experience.
+ * Checkout is a hidden tab route so the existing navigation architecture
+ * remains intact while allowing Cart → Checkout transitions.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import type { AppTabParamList } from './types';
@@ -18,7 +19,6 @@ import { useCartStore, computeCartSummary } from '../stores/useCartStore';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
-// BEVER brand colours used in the tab bar
 const AMBER = '#F59E0B';
 const SURFACE = '#FFFBF5';
 const MUTED = '#A8A29E';
@@ -26,20 +26,29 @@ const MUTED = '#A8A29E';
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 const TAB_ICONS: Record<keyof AppTabParamList, { active: IoniconName; inactive: IoniconName }> = {
-  Home:    { active: 'home',          inactive: 'home-outline' },
-  Cart:    { active: 'cart',          inactive: 'cart-outline' },
-  Checkout:{ active: 'card',          inactive: 'card-outline' },
-  Orders:  { active: 'receipt',       inactive: 'receipt-outline' },
+  Home: { active: 'home', inactive: 'home-outline' },
+  Cart: { active: 'cart', inactive: 'cart-outline' },
+  Checkout: { active: 'card', inactive: 'card-outline' },
+  Orders: { active: 'receipt', inactive: 'receipt-outline' },
   Profile: { active: 'person-circle', inactive: 'person-circle-outline' },
 };
 
 export function AppTabs() {
-  const { items } = useCartStore();
+  const { items, pendingCheckout, consumeCheckoutIntent } = useCartStore();
   const summary = computeCartSummary(items);
   const cartCount = summary.totalItems;
 
+  // After guest authentication/profile setup, AppNavigator mounts a fresh
+  // AppTabs tree. Start directly at Checkout when that was the user's intent.
+  useEffect(() => {
+    if (pendingCheckout) {
+      consumeCheckoutIntent();
+    }
+  }, [pendingCheckout, consumeCheckoutIntent]);
+
   return (
     <Tab.Navigator
+      initialRouteName={pendingCheckout ? 'Checkout' : 'Home'}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: AMBER,
@@ -63,28 +72,34 @@ export function AppTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home"    component={HomeNavigator}    options={{ title: 'Home' }} />
+      <Tab.Screen name="Home" component={HomeNavigator} options={{ title: 'Home' }} />
       <Tab.Screen
         name="Cart"
         component={CartScreen}
         options={{
           title: 'Cart',
-          ...(cartCount > 0 ? {
-            tabBarBadge: cartCount,
-            tabBarBadgeStyle: {
-              backgroundColor: '#F59E0B',
-              color: '#FFFFFF',
-              fontSize: 10,
-              fontWeight: '700' as const,
-            },
-          } : {}),
+          ...(cartCount > 0
+            ? {
+                tabBarBadge: cartCount,
+                tabBarBadgeStyle: {
+                  backgroundColor: '#F59E0B',
+                  color: '#FFFFFF',
+                  fontSize: 10,
+                  fontWeight: '700' as const,
+                },
+              }
+            : {}),
         }}
       />
-      <Tab.Screen name="Checkout" component={CheckoutNavigator} options={{
-        tabBarButton: () => null,
-        tabBarItemStyle: { display: 'none' },
-      }} />
-      <Tab.Screen name="Orders"  component={OrdersScreen}     options={{ title: 'Orders' }} />
+      <Tab.Screen
+        name="Checkout"
+        component={CheckoutNavigator}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
+        }}
+      />
+      <Tab.Screen name="Orders" component={OrdersScreen} options={{ title: 'Orders' }} />
       <Tab.Screen name="Profile" component={ProfileNavigator} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
