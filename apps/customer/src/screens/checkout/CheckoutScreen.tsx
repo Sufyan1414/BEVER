@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCartStore, computeCartSummary } from '../../stores/useCartStore';
-import { fetchDefaultAddress } from '../../services/address';
+import { ensureDefaultAddressFromBrowsingLocation } from '../../services/address';
+import { useLocationStore } from '../../stores/useLocationStore';
 import { createCustomerOrder, type CheckoutPaymentMethod } from '../../services/order';
 import type { CustomerAddress } from '../../types/address';
 
@@ -13,6 +14,7 @@ const formatRupees = (paise: number) => `₹${Math.round(paise / 100)}`;
 export function CheckoutScreen() {
   const navigation = useNavigation<any>();
   const { storeId, storeName, items, clearCart } = useCartStore();
+  const { browsingLocation } = useLocationStore();
   const summary = computeCartSummary(items);
   const [address, setAddress] = useState<CustomerAddress | null>(null);
   const paymentMethod: CheckoutPaymentMethod = 'COD';
@@ -23,10 +25,17 @@ export function CheckoutScreen() {
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
-    try { setAddress(await fetchDefaultAddress()); }
-    catch (e: any) { setError(e?.message ?? 'Could not load your delivery address.'); }
+    try {
+      const materialized = browsingLocation
+        ? await ensureDefaultAddressFromBrowsingLocation(browsingLocation)
+        : null;
+      setAddress(materialized);
+      if (!materialized) {
+        setError('Your saved delivery area is missing a complete postal address. Please add the pincode once in Address settings.');
+      }
+    } catch (e: any) { setError(e?.message ?? 'Could not load your delivery address.'); }
     finally { setLoading(false); }
-  }, []);
+  }, [browsingLocation]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
