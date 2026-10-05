@@ -38,7 +38,6 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useLocationStore } from '../../stores/useLocationStore';
-import { fetchDefaultAddress, parseLocationPoint } from '../../services/address';
 import { fetchNearbyStores } from '../../services/store';
 import { BrowsingLocationPickerScreen } from '../location/BrowsingLocationPickerScreen';
 import type { NearbyStore, StoreCategory } from '../../types/store';
@@ -316,28 +315,15 @@ export function HomeScreen() {
   const resolveCoordinate = useCallback(async (): Promise<{
     lat: number; lng: number; label: string;
   } | null> => {
-    // 1. Authenticated: try default delivery address first
-    if (isAuthenticated) {
-      try {
-        const address = await fetchDefaultAddress();
-        if (address) {
-          const coords = parseLocationPoint(address.location);
-          if (coords) {
-            return { lat: coords.lat, lng: coords.lng, label: `${address.label} · ${address.city}` };
-          }
-        }
-      } catch {
-        // Fall through
-      }
-    }
-
-    // 2. Browsing location (works for guests too)
+    // Store discovery is driven ONLY by the customer's browsing location.
+    // A saved delivery address belongs to checkout and must never silently
+    // override the area the customer selected for discovery.
     if (browsingLocation) {
       return { lat: browsingLocation.lat, lng: browsingLocation.lng, label: browsingLocation.label };
     }
 
     return null;
-  }, [isAuthenticated, browsingLocation]);
+  }, [browsingLocation]);
 
   // ── Data loading ─────────────────────────────────────────────────────────────
 
