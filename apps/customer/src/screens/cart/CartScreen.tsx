@@ -29,6 +29,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
+import { useAuthStore } from '../../stores/useAuthStore';
 import { useCartStore, computeCartSummary } from '../../stores/useCartStore';
 import type { CartItem } from '../../stores/useCartStore';
 
@@ -162,7 +163,7 @@ function EmptyCart({ onGoHome }: { onGoHome: () => void }) {
 
 export function CartScreen() {
   const navigation = useNavigation<any>();
-  const { session } = require('../../stores/useAuthStore').useAuthStore();
+  const { session } = useAuthStore();
   const { storeName, items, incrementItem, decrementItem, removeItem, clearCart } =
     useCartStore();
   const summary = computeCartSummary(items);
