@@ -1236,3 +1236,90 @@ GRANT EXECUTE
 -- END OF BEVER DATABASE INSTALLATION SCRIPT
 -- All 13 migrations applied. Schema is now complete.
 -- ============================================================
+
+
+-- ============================================================
+-- CUSTOMER CHECKOUT RPC
+-- Revalidates store, address, live product prices/availability,
+-- serviceability and delivery fee before creating the order.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.create_customer_order(
+  p_store_id uuid,
+  p_delivery_address_id uuid,
+  p_items jsonb,
+  p_payment_method public.payment_method DEFAULT 'COD'::public.payment_method,
+  p_special_instructions text DEFAULT NULL
+)
+RETURNS TABLE (order_id uuid, order_number text, items_total integer, delivery_fee integer, total_amount integer)
+LANGUAGE plpgsql SECURITY INVOKER SET search_path = public
+AS $$
+DECLARE
+  v_customer_id uuid := auth.uid();
+  v_store record;
+  v_address record;
+  v_items_total integer := 0;
+  v_delivery_fee integer := 0;
+  v_total integer := 0;
+  v_order_id uuid;
+  v_order_number text;
+  v_item jsonb;
+  v_product record;
+  v_qty integer;
+  v_distance_meters double precision;
+BEGIN
+  IF v_customer_id IS NULL THEN RAISE EXCEPTION 'AUTH_REQUIRED'; END IF;
+  IF p_items IS NULL OR jsonb_typeof(p_items) <> 'array' OR jsonb_array_length(p_items) = 0 THEN RAISE EXCEPTION 'CART_EMPTY'; END IF;
+
+  SELECT id, name, is_active, is_verified, is_open, minimum_order_amount, service_radius_meters, location
+    INTO v_store FROM public.stores WHERE id = p_store_id;
+  IF NOT FOUND OR NOT v_store.is_active OR NOT v_store.is_verified OR NOT v_store.is_open THEN RAISE EXCEPTION 'STORE_UNAVAILABLE'; END IF;
+
+  SELECT id, customer_id, label, address_line_1, address_line_2, city, state, pincode, location
+    INTO v_address FROM public.customer_addresses WHERE id = p_delivery_address_id AND customer_id = v_customer_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'ADDRESS_NOT_FOUND'; END IF;
+  IF v_address.location IS NULL THEN RAISE EXCEPTION 'ADDRESS_LOCATION_REQUIRED'; END IF;
+  IF v_store.location IS NULL OR v_store.service_radius_meters IS NULL THEN RAISE EXCEPTION 'STORE_LOCATION_UNAVAILABLE'; END IF;
+
+  v_distance_meters := public.ST_Distance(v_store.location::public.geography, v_address.location::public.geography);
+  IF v_distance_meters > v_store.service_radius_meters THEN RAISE EXCEPTION 'ADDRESS_OUTSIDE_SERVICE_AREA'; END IF;
+
+  FOR v_item IN SELECT value FROM jsonb_array_elements(p_items)
+  LOOP
+    IF NOT (v_item ? 'product_id') OR NOT (v_item ? 'quantity') THEN RAISE EXCEPTION 'INVALID_CART_ITEM'; END IF;
+    v_qty := (v_item->>'quantity')::integer;
+    IF v_qty < 1 OR v_qty > 99 THEN RAISE EXCEPTION 'INVALID_QUANTITY'; END IF;
+    SELECT id, store_id, name, image_url, unit, price, is_available, is_active INTO v_product
+      FROM public.products WHERE id = (v_item->>'product_id')::uuid AND store_id = p_store_id;
+    IF NOT FOUND OR NOT v_product.is_active OR NOT v_product.is_available THEN RAISE EXCEPTION 'PRODUCT_UNAVAILABLE:%', (v_item->>'product_id'); END IF;
+    v_items_total := v_items_total + (v_product.price * v_qty);
+  END LOOP;
+
+  IF v_items_total < v_store.minimum_order_amount THEN RAISE EXCEPTION 'MINIMUM_ORDER_NOT_MET'; END IF;
+
+  -- Pilot rule: ₹199+ item total => free delivery; below ₹199 => ₹20 + ₹7 per started km.
+  IF v_items_total < 19900 THEN
+    v_delivery_fee := 2000 + (ceil(v_distance_meters / 1000.0)::integer * 700);
+  END IF;
+  v_total := v_items_total + v_delivery_fee;
+
+  INSERT INTO public.orders (customer_id, store_id, status, payment_method, payment_status, delivery_address_id, delivery_address_snapshot, items_total, delivery_fee, discount_amount, total_amount, special_instructions)
+  VALUES (v_customer_id, p_store_id, 'PENDING', p_payment_method, 'PENDING', p_delivery_address_id,
+    jsonb_build_object('label',v_address.label,'address_line_1',v_address.address_line_1,'address_line_2',v_address.address_line_2,'city',v_address.city,'state',v_address.state,'pincode',v_address.pincode,'location',v_address.location::text),
+    v_items_total, v_delivery_fee, 0, v_total, nullif(trim(p_special_instructions), ''))
+  RETURNING id, order_number INTO v_order_id, v_order_number;
+
+  FOR v_item IN SELECT value FROM jsonb_array_elements(p_items)
+  LOOP
+    v_qty := (v_item->>'quantity')::integer;
+    SELECT id, name, image_url, unit, price INTO v_product FROM public.products WHERE id=(v_item->>'product_id')::uuid AND store_id=p_store_id AND is_active=true AND is_available=true;
+    INSERT INTO public.order_items (order_id, product_id, product_name_snapshot, product_image_snapshot, unit_price, quantity, total_price, unit_snapshot)
+    VALUES (v_order_id,v_product.id,v_product.name,v_product.image_url,v_product.price,v_qty,v_product.price*v_qty,v_product.unit);
+  END LOOP;
+
+  RETURN QUERY SELECT v_order_id,v_order_number,v_items_total,v_delivery_fee,v_total;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.create_customer_order(uuid, uuid, jsonb, public.payment_method, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.create_customer_order(uuid, uuid, jsonb, public.payment_method, text) TO authenticated;
