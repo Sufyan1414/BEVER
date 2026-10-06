@@ -28,7 +28,7 @@ export function OrdersScreen() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   if (!session) {
-    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><Text style={styles.icon}>📋</Text><Text style={styles.heading}>Sign in to view orders</Text><Text style={styles.body}>Your order history is tied to your account.</Text><TouchableOpacity style={styles.primary} onPress={() => navigation.getParent()?.navigate('Auth')}><Text style={styles.primaryText}>Sign in</Text></TouchableOpacity></View></SafeAreaView>;
+    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><Text style={styles.icon}>📋</Text><Text style={styles.heading}>Sign in to view orders</Text><Text style={styles.body}>Your order history is tied to your account.</Text><TouchableOpacity style={styles.primary} onPress={() => navigation.getParent()?.getParent()?.navigate('Auth')}><Text style={styles.primaryText}>Sign in</Text></TouchableOpacity></View></SafeAreaView>;
   }
 
   if (loading) {
