@@ -78,9 +78,9 @@ begin
     select id,name,image_url,unit,price into v_product
     from public.products where id=(v_item->>'product_id')::uuid and store_id=p_store_id and is_active=true and is_available=true;
     insert into public.order_items
-      (order_id,product_id,product_name_snapshot,unit_price,quantity,total_price,unit_snapshot)
+      (order_id,product_id,product_name_snapshot,product_image_snapshot,unit_price,quantity,total_price,unit_snapshot)
     values
-      (v_order_id,v_product.id,v_product.name,v_product.price,v_qty,v_product.price*v_qty,v_product.unit);
+      (v_order_id,v_product.id,v_product.name,v_product.image_url,v_product.price,v_qty,v_product.price*v_qty,v_product.unit);
   end loop;
 
   return query select v_order_id,v_order_number,v_items_total,v_delivery_fee,v_total;
