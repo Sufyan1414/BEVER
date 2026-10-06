@@ -55,7 +55,7 @@ export type AddressLocationPickerProps = NativeStackScreenProps<
   'AddressLocationPicker'
 >;
 
-// ─── App Bottom Tabs ─────────────────────────────────────────────────────────
+export type CheckoutStackParamList = {\n  CheckoutMain: undefined;\n};\n\n// ─── App Bottom Tabs ─────────────────────────────────────────────────────────
 
 export type OrdersStackParamList = {\n  OrdersMain: undefined;\n  OrderDetail: { orderId: string };\n};\n\nexport type AppTabParamList = {
   Home: undefined;
