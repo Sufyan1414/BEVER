@@ -227,3 +227,25 @@ export function getOrderProgress(status: CustomerOrderStatus): OrderProgressStep
     detail: terminalFailure && i === 0 ? formatOrderStatus(status) : stage.detail,
   }));
 }
+
+export async function transitionCustomerOrder(
+  orderId: string,
+  toStatus: Extract<CustomerOrderStatus, 'CANCELLED'>,
+  note?: string | null,
+): Promise<void> {
+  const { error } = await supabase.rpc('transition_order_status', {
+    p_order_id: orderId,
+    p_to_status: toStatus,
+    p_note: note?.trim() || null,
+  });
+  if (error) {
+    const code = error.message.split(':')[0];
+    const messages: Record<string, string> = {
+      AUTH_REQUIRED: 'Please sign in again.',
+      ORDER_NOT_FOUND: 'This order no longer exists.',
+      ROLE_NOT_ALLOWED: 'You cannot change this order.',
+      INVALID_ORDER_TRANSITION: 'This order can no longer be cancelled.',
+    };
+    throw new Error(messages[code] ?? error.message);
+  }
+}
