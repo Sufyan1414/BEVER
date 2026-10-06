@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import type { CartItem } from '../stores/useCartStore';
 
-export type CheckoutPaymentMethod = 'COD' | 'UPI';
+export type CheckoutPaymentMethod = 'COD';
 export type CustomerOrderStatus =
   | 'PENDING' | 'MERCHANT_ACCEPTED' | 'PREPARING' | 'READY_FOR_PICKUP'
   | 'RIDER_ASSIGNED' | 'RIDER_AT_STORE' | 'PICKED_UP' | 'OUT_FOR_DELIVERY'
@@ -77,6 +77,7 @@ function normalizeRpcError(message: string): Error {
     INVALID_CART_ITEM: 'One of the cart items is invalid. Please review your cart.',
     INVALID_QUANTITY: 'One of the item quantities is invalid.',
     MINIMUM_ORDER_NOT_MET: 'The minimum order amount for this store has not been met.',
+    PAYMENT_METHOD_NOT_SUPPORTED: 'Only Cash on Delivery is available right now.',
   };
   return new Error(messages[code] ?? (code.startsWith('PRODUCT_UNAVAILABLE') ? 'One or more items are no longer available. Please review your cart.' : message));
 }
