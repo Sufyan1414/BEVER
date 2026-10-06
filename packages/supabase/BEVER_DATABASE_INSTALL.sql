@@ -1892,3 +1892,14 @@ revoke execute on function public.transition_order_status(uuid, public.order_sta
 grant execute on function public.transition_order_status(uuid, public.order_status, text) to authenticated;
 revoke execute on function public.complete_order_delivery(uuid, text, boolean, text) from public, anon;
 grant execute on function public.complete_order_delivery(uuid, text, boolean, text) to authenticated;
+
+
+-- ============================================================================
+-- 2026-10-06 REALTIME OPERATIONAL EVENTS
+-- Enables live order, delivery, product, and store updates for app consoles.
+-- ============================================================================
+
+alter publication supabase_realtime add table public.orders;
+alter publication supabase_realtime add table public.delivery_assignments;
+alter publication supabase_realtime add table public.products;
+alter publication supabase_realtime add table public.stores;
