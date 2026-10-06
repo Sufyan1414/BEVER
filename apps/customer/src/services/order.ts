@@ -46,6 +46,7 @@ export interface CustomerOrderDetail extends CustomerOrderSummary {
   deliveryOtp: string | null;
   rejectionReason: string | null;
   cancellationReason: string | null;
+  deliveryFailureReason: string | null;
   deliveryAddress: {
     label?: string;
     address_line_1: string;
@@ -137,7 +138,7 @@ export async function fetchMyOrders(limit = 50): Promise<CustomerOrderSummary[]>
 export async function fetchOrderDetail(orderId: string): Promise<CustomerOrderDetail> {
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id,order_number,status,payment_method,total_amount,items_total,delivery_fee,discount_amount,special_instructions,delivered_at,delivery_otp,rejection_reason,cancellation_reason,created_at,estimated_delivery_at,delivery_address_snapshot,stores(name)')
+    .select('id,order_number,status,payment_method,total_amount,items_total,delivery_fee,discount_amount,special_instructions,delivered_at,delivery_otp,rejection_reason,cancellation_reason,created_at,estimated_delivery_at,delivery_address_snapshot,delivery_failure_reason,stores(name)')
     .eq('id', orderId)
     .maybeSingle();
 
@@ -174,6 +175,7 @@ export async function fetchOrderDetail(orderId: string): Promise<CustomerOrderDe
     deliveryOtp: order.delivery_otp ?? null,
     rejectionReason: order.rejection_reason ?? null,
     cancellationReason: order.cancellation_reason ?? null,
+    deliveryFailureReason: order.delivery_failure_reason ?? null,
     deliveryAddress: snapshot,
     items: (items ?? []).map((item: any) => ({
       id: item.id,
