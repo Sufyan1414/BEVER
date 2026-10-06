@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { AppTabParamList } from './types';
 import { HomeNavigator } from './HomeNavigator';
 import { CartScreen } from '../screens/cart/CartScreen';
-import { OrdersScreen } from '../screens/orders/OrdersScreen';
+import { OrdersNavigator } from './OrdersNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
 import { CheckoutNavigator } from './CheckoutNavigator';
 import { useCartStore, computeCartSummary } from '../stores/useCartStore';
@@ -99,7 +99,7 @@ export function AppTabs() {
           tabBarItemStyle: { display: 'none' },
         }}
       />
-      <Tab.Screen name="Orders" component={OrdersScreen} options={{ title: 'Orders' }} />
+      <Tab.Screen name="Orders" component={OrdersNavigator} options={{ title: 'Orders' }} />
       <Tab.Screen name="Profile" component={ProfileNavigator} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
