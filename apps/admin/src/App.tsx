@@ -16,6 +16,18 @@ export default function App(){
  useEffect(()=>{supabase.auth.getSession().then(({data})=>{setSession(data.session);setLoading(false)});const{data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));return()=>data.subscription.unsubscribe()},[]);
  const load=useCallback(async()=>{if(!session)return;setNotice('');try{const[o,r,s]=await Promise.all([supabase.from('orders').select('id,order_number,status,total_amount,created_at,store_id,stores(name)').order('created_at',{ascending:false}).limit(100),supabase.from('profiles').select('id,full_name,phone,is_active').eq('role','rider').order('full_name'),supabase.from('stores').select('id,name,category,is_open,is_verified,merchant_id').order('created_at',{ascending:false})]);if(o.error)throw o.error;if(r.error)throw r.error;if(s.error)throw s.error;setOrders((o.data??[]) as Order[]);setRiders((r.data??[]) as Rider[]);setStores((s.data??[]) as Store[])}catch(e:any){setNotice(e?.message??'Could not load admin data.')}},[session]);
  useEffect(()=>{load()},[load]);
+
+ useEffect(()=>{
+  if(!session) return;
+  const channel=supabase
+   .channel('admin-operations')
+   .on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>load())
+   .on('postgres_changes',{event:'*',schema:'public',table:'delivery_assignments'},()=>load())
+   .on('postgres_changes',{event:'*',schema:'public',table:'stores'},()=>load())
+   .subscribe();
+  const timer=setInterval(()=>load(),30000);
+  return()=>{clearInterval(timer);supabase.removeChannel(channel)};
+ },[session?.user?.id,load]);
  const assign=async(order:Order,riderId:string)=>{setBusy(true);setNotice('');try{const{error}=await supabase.rpc('assign_order_to_rider',{p_order_id:order.id,p_rider_id:riderId});if(error)throw error;await load()}catch(e:any){setNotice(e?.message??'Could not assign rider.')}finally{setBusy(false)}};
  const transition=async(order:Order,to:string)=>{setBusy(true);setNotice('');try{const{error}=await supabase.rpc('transition_order_status',{p_order_id:order.id,p_to_status:to,p_note:null});if(error)throw error;await load()}catch(e:any){setNotice(e?.message??'Could not update order.')}finally{setBusy(false)}};
 
