@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { supabase } from '../../services/supabase';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../navigation/types';
@@ -49,9 +50,21 @@ export function OrderDetailScreen() {
 
   useFocusEffect(useCallback(() => {
     load();
-    const timer = setInterval(() => load(true), 8000);
-    return () => clearInterval(timer);
-  }, [load]));
+    const channel = supabase
+      .channel(`customer-order-${orderId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders',
+        filter: `id=eq.${orderId}`,
+      }, () => load(true))
+      .subscribe();
+    const timer = setInterval(() => load(true), 30000);
+    return () => {
+      clearInterval(timer);
+      supabase.removeChannel(channel);
+    };
+  }, [load, orderId]));
 
   if (loading && !order) {
     return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#F59E0B" /></View></SafeAreaView>;
@@ -65,7 +78,14 @@ export function OrderDetailScreen() {
 
   const progress = getOrderProgress(order.status);
   const canCancel = order.status === 'PENDING';
-  const cancelOrder = async () => {\n    try { await transitionCustomerOrder(order.id, 'CANCELLED', 'Customer cancelled before store confirmation.'); await load(true); }\n    catch (e: any) { setError(e?.message ?? 'Could not cancel this order.'); }\n  };\n  const terminal = ['DELIVERED', 'REJECTED', 'CANCELLED', 'DELIVERY_FAILED', 'REFUNDED'].includes(order.status);
+  const cancelOrder = async () => {
+    try {
+      await transitionCustomerOrder(order.id, 'CANCELLED', 'Customer cancelled before store confirmation.');
+      await load(true);
+    } catch (e: any) {
+      setError(e?.message ?? 'Could not cancel this order.');
+    }
+  };\n  const terminal = ['DELIVERED', 'REJECTED', 'CANCELLED', 'DELIVERY_FAILED', 'REFUNDED'].includes(order.status);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
