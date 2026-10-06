@@ -16,6 +16,17 @@ export default function App(){
  useEffect(()=>{supabase.auth.getSession().then(({data})=>{setSession(data.session);setAuthLoading(false)});const{data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));return()=>data.subscription.unsubscribe()},[]);
  const load=useCallback(async(refresh=false)=>{if(!session)return;if(refresh)setRefreshing(true);try{const{data,error}=await supabase.from('delivery_assignments').select('id,order_id,accepted_at,arrived_at_store_at,picked_up_at,delivered_at,cod_collected,cod_amount,orders(order_number,status,total_amount,items_total,delivery_fee,payment_method,special_instructions,delivery_address_snapshot,stores(name,address_text))').order('created_at',{ascending:false}).limit(30);if(error)throw error;setAssignments((data??[]) as Assignment[])}catch(e:any){setNotice(e?.message??'Could not load deliveries.')}finally{setRefreshing(false)}},[session]);
  useEffect(()=>{load()},[load]);
+
+ useEffect(()=>{
+  if(!session) return;
+  const channel=supabase
+   .channel(`rider-${session.user.id}`)
+   .on('postgres_changes',{event:'*',schema:'public',table:'delivery_assignments',filter:`rider_id=eq.${session.user.id}`},()=>load(true))
+   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders'},()=>load(true))
+   .subscribe();
+  const timer=setInterval(()=>load(true),30000);
+  return()=>{clearInterval(timer);supabase.removeChannel(channel)};
+ },[session?.user?.id,load]);
  const transition=async(to:Status)=>{if(!selected)return;setBusy(true);setNotice(null);try{const{error}=await supabase.rpc('transition_order_status',{p_order_id:selected.order_id,p_to_status:to,p_note:null});if(error)throw error;await load(true);const fresh=assignments.find(a=>a.id===selected.id);if(fresh)setSelected({...selected,orders:{...selected.orders,status:to}})}catch(e:any){setNotice(e?.message??'Could not update delivery status.')}finally{setBusy(false)}};
  const acceptDelivery=async()=>{if(!selected)return;setBusy(true);setNotice(null);try{const{data,error}=await supabase.rpc('accept_delivery_assignment',{p_order_id:selected.order_id});if(error)throw error;setSelected({...selected,...data});await load(true)}catch(e:any){setNotice(e?.message??'Could not accept delivery.')}finally{setBusy(false)}};
  const deliver=async()=>{if(!selected)return;if(!/^\d{4}$/.test(otp)){setNotice('Enter the 4-digit delivery code from the customer.');return}setBusy(true);setNotice(null);try{const{error}=await supabase.rpc('complete_order_delivery',{p_order_id:selected.order_id,p_delivery_otp:otp,p_cod_collected:codCollected,p_failure_note:null});if(error)throw error;setOtp('');setCodCollected(false);setSelected(null);await load(true)}catch(e:any){setNotice(e?.message==='INVALID_DELIVERY_OTP'?'Incorrect delivery code. Ask the customer to show the code again.':e?.message==='COD_NOT_COLLECTED'?'Confirm that the cash was collected before completing the delivery.':e?.message??'Could not complete delivery.')}finally{setBusy(false)}};
