@@ -1,145 +1,62 @@
-/**
- * BEVER Customer App — Orders Screen (Placeholder)
- *
- * CURRENT STATE — Step 1 (Navigation/Session Foundation):
- *   Order fetching and display is not yet implemented.
- *   This screen shows auth-aware state only.
- *
- * Order history (fetching from Supabase, real-time status updates) will be
- * implemented in Step 5 (Orders & Tracking).
- */
-
-import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-} from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { fetchMyOrders, formatOrderStatus, type CustomerOrderSummary } from '../../services/order';
 
-type RootNav = NativeStackNavigationProp<{ Auth: undefined }>;
+const rupees = (paise: number) => `₹${Math.round(paise / 100)}`;
 
 export function OrdersScreen() {
   const { session } = useAuthStore();
-  const navigation = useNavigation<RootNav>();
-  const isAuthenticated = session !== null;
+  const navigation = useNavigation<any>();
+  const [orders, setOrders] = useState<CustomerOrderSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (refresh = false) => {
+    if (!session) { setLoading(false); return; }
+    if (refresh) setRefreshing(true); else setLoading(true);
+    setError(null);
+    try { setOrders(await fetchMyOrders()); }
+    catch (e: any) { setError(e?.message ?? 'Could not load your orders.'); }
+    finally { setLoading(false); setRefreshing(false); }
+  }, [session]);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  if (!session) {
+    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><Text style={styles.icon}>📋</Text><Text style={styles.heading}>Sign in to view orders</Text><Text style={styles.body}>Your order history is tied to your account.</Text><TouchableOpacity style={styles.primary} onPress={() => navigation.getParent()?.navigate('Auth')}><Text style={styles.primaryText}>Sign in</Text></TouchableOpacity></View></SafeAreaView>;
+  }
+
+  if (loading) {
+    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#F59E0B" /><Text style={styles.loadingText}>Loading orders…</Text></View></SafeAreaView>;
+  }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar style="dark" />
-      <View style={styles.container}>
-        <Text style={styles.title}>My Orders</Text>
-
-        {isAuthenticated ? (
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderIcon}>📦</Text>
-            <Text style={styles.placeholderHeading}>No orders yet</Text>
-            <Text style={styles.placeholderBody}>
-              Your order history will appear here once you place your first
-              order. Real-time tracking is coming in the next step.
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.authRequired}>
-            <Text style={styles.authIcon}>📋</Text>
-            <Text style={styles.authHeading}>Sign in to view orders</Text>
-            <Text style={styles.authBody}>
-              Your order history is tied to your account. Sign in to see
-              past and active orders.
-            </Text>
-            <TouchableOpacity
-              style={styles.signInButton}
-              onPress={() => navigation.navigate('Auth')}
-              accessibilityLabel="Sign in to view order history"
-            >
-              <Text style={styles.signInText}>Sign In</Text>
+      <View style={styles.header}><View><Text style={styles.title}>My Orders</Text><Text style={styles.subtitle}>{orders.length ? `${orders.length} order${orders.length === 1 ? '' : 's'}` : 'Your order history'}</Text></View></View>
+      {error ? <View style={styles.error}><Text style={styles.errorText}>{error}</Text><TouchableOpacity onPress={() => load()}><Text style={styles.retry}>Retry</Text></TouchableOpacity></View> : null}
+      {orders.length === 0 && !error ? (
+        <View style={styles.center}><Text style={styles.icon}>🛍️</Text><Text style={styles.heading}>No orders yet</Text><Text style={styles.body}>Your first BEVER order will appear here with live status and delivery details.</Text></View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}>
+          {orders.map((order) => (
+            <TouchableOpacity key={order.id} activeOpacity={0.86} style={styles.card} onPress={() => navigation.navigate('OrderDetail', { orderId: order.id })}>
+              <View style={styles.cardTop}><View style={{flex:1}}><Text style={styles.store}>{order.storeName}</Text><Text style={styles.meta}>#{order.orderNumber} • {new Date(order.createdAt).toLocaleDateString('en-IN')}</Text></View><Text style={styles.amount}>{rupees(order.totalAmount)}</Text></View>
+              <View style={styles.divider} />
+              <View style={styles.cardBottom}><View><Text style={styles.status}>{formatOrderStatus(order.status)}</Text><Text style={styles.items}>{order.itemCount} item{order.itemCount === 1 ? '' : 's'} • {order.paymentMethod === 'COD' ? 'COD' : 'UPI'}</Text></View><View style={styles.arrow}><Text style={styles.arrowText}>›</Text></View></View>
             </TouchableOpacity>
-          </View>
-        )}
-      </View>
+          ))}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#FFFBF5',
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1C1917',
-    marginBottom: 24,
-  },
-  placeholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 60,
-  },
-  placeholderIcon: {
-    fontSize: 56,
-    marginBottom: 16,
-  },
-  placeholderHeading: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1C1917',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  placeholderBody: {
-    fontSize: 14,
-    color: '#78716C',
-    textAlign: 'center',
-    lineHeight: 22,
-    maxWidth: 280,
-  },
-  authRequired: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 60,
-  },
-  authIcon: {
-    fontSize: 56,
-    marginBottom: 16,
-  },
-  authHeading: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1C1917',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  authBody: {
-    fontSize: 14,
-    color: '#78716C',
-    textAlign: 'center',
-    lineHeight: 22,
-    maxWidth: 280,
-    marginBottom: 24,
-  },
-  signInButton: {
-    backgroundColor: '#F59E0B',
-    borderRadius: 12,
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-  },
-  signInText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
+const styles=StyleSheet.create({
+  safe:{flex:1,backgroundColor:'#FFFBF5'},header:{paddingHorizontal:20,paddingTop:16,paddingBottom:14},title:{fontSize:25,fontWeight:'900',color:'#1C1917'},subtitle:{fontSize:12,color:'#78716C',marginTop:3},content:{padding:20,paddingTop:4,paddingBottom:40},card:{backgroundColor:'#fff',borderWidth:1,borderColor:'#EEECE9',borderRadius:18,padding:16,marginBottom:12},cardTop:{flexDirection:'row',alignItems:'flex-start'},store:{fontSize:15,fontWeight:'800',color:'#1C1917'},meta:{fontSize:11,color:'#A8A29E',marginTop:4},amount:{fontSize:15,fontWeight:'900',color:'#1C1917'},divider:{height:1,backgroundColor:'#F0EFED',marginVertical:13},cardBottom:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},status:{fontSize:12,fontWeight:'800',color:'#D97706'},items:{fontSize:11,color:'#78716C',marginTop:3},arrow:{width:32,height:32,borderRadius:16,backgroundColor:'#F7F7F4',alignItems:'center',justifyContent:'center'},arrowText:{fontSize:23,color:'#57534E',marginTop:-3},center:{flex:1,alignItems:'center',justifyContent:'center',padding:30},icon:{fontSize:48,marginBottom:15},heading:{fontSize:19,fontWeight:'800',color:'#1C1917',textAlign:'center'},body:{fontSize:13,color:'#78716C',lineHeight:20,textAlign:'center',maxWidth:280,marginTop:7,marginBottom:20},primary:{backgroundColor:'#F59E0B',borderRadius:12,paddingHorizontal:28,paddingVertical:14},primaryText:{color:'#fff',fontSize:14,fontWeight:'800'},loadingText:{fontSize:12,color:'#78716C',marginTop:10},error:{marginHorizontal:20,marginBottom:10,backgroundColor:'#FEE2E2',borderWidth:1,borderColor:'#FCA5A5',borderRadius:12,padding:12,flexDirection:'row',justifyContent:'space-between'},errorText:{flex:1,fontSize:12,color:'#991B1B'},retry:{fontSize:12,fontWeight:'800',color:'#991B1B',marginLeft:10}
 });
