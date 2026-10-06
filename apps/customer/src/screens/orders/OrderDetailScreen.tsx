@@ -104,7 +104,7 @@ export function OrderDetailScreen() {
         <View style={[styles.statusCard, terminal && styles.statusCardTerminal]}>
           <Text style={styles.statusEyebrow}>{terminal ? 'ORDER STATUS' : 'LIVE ORDER STATUS'}</Text>
           <Text style={styles.statusTitle}>{formatOrderStatus(order.status)}</Text>
-          <Text style={styles.statusSub}>{order.status === 'DELIVERED' ? 'Delivered successfully.' : order.status === 'REJECTED' || order.status === 'CANCELLED' ? 'This order will not be delivered.' : 'We keep this screen updated while your order moves through the store and delivery.'}</Text>
+          <Text style={styles.statusSub}>{order.status === 'DELIVERED' ? 'Delivered successfully.' : order.status === 'REJECTED' || order.status === 'CANCELLED' ? 'This order will not be delivered.' : order.status === 'DELIVERY_FAILED' ? (order.deliveryFailureReason ?? 'Delivery could not be completed. BEVER operations has been notified.') : 'We keep this screen updated while your order moves through the store and delivery.'}</Text>
         </View>
 
         <Text style={styles.section}>Order progress</Text>
@@ -152,6 +152,8 @@ export function OrderDetailScreen() {
           <View style={styles.row}><Text style={styles.totalLabel}>Total</Text><Text style={styles.totalValue}>{rupees(order.totalAmount)}</Text></View>
           <Text style={styles.payment}>Payment: {order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI'}</Text>
         </View>
+
+        {order.deliveryFailureReason ? <><Text style={styles.section}>Delivery issue</Text><View style={styles.card}><Text style={styles.note}>{order.deliveryFailureReason}</Text></View></> : null}
 
         {order.specialInstructions ? <><Text style={styles.section}>Order note</Text><View style={styles.card}><Text style={styles.note}>{order.specialInstructions}</Text></View></> : null}\n\n        {canCancel ? <TouchableOpacity style={styles.cancelButton} onPress={cancelOrder}><Text style={styles.cancelText}>Cancel order</Text></TouchableOpacity> : null}
       </ScrollView>
