@@ -17,6 +17,7 @@ import {
   fetchOrderDetail,
   formatOrderStatus,
   getOrderProgress,
+  transitionCustomerOrder,
   type CustomerOrderDetail,
 } from '../../services/order';
 
@@ -63,7 +64,8 @@ export function OrderDetailScreen() {
   if (!order) return null;
 
   const progress = getOrderProgress(order.status);
-  const terminal = ['DELIVERED', 'REJECTED', 'CANCELLED', 'DELIVERY_FAILED', 'REFUNDED'].includes(order.status);
+  const canCancel = order.status === 'PENDING';
+  const cancelOrder = async () => {\n    try { await transitionCustomerOrder(order.id, 'CANCELLED', 'Customer cancelled before store confirmation.'); await load(true); }\n    catch (e: any) { setError(e?.message ?? 'Could not cancel this order.'); }\n  };\n  const terminal = ['DELIVERED', 'REJECTED', 'CANCELLED', 'DELIVERY_FAILED', 'REFUNDED'].includes(order.status);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -131,7 +133,7 @@ export function OrderDetailScreen() {
           <Text style={styles.payment}>Payment: {order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI'}</Text>
         </View>
 
-        {order.specialInstructions ? <><Text style={styles.section}>Order note</Text><View style={styles.card}><Text style={styles.note}>{order.specialInstructions}</Text></View></> : null}
+        {order.specialInstructions ? <><Text style={styles.section}>Order note</Text><View style={styles.card}><Text style={styles.note}>{order.specialInstructions}</Text></View></> : null}\n\n        {canCancel ? <TouchableOpacity style={styles.cancelButton} onPress={cancelOrder}><Text style={styles.cancelText}>Cancel order</Text></TouchableOpacity> : null}
       </ScrollView>
     </SafeAreaView>
   );
