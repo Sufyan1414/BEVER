@@ -1,7 +1,7 @@
 -- ============================================================
 -- BEVER — CONSOLIDATED DATABASE INSTALLATION SCRIPT
 -- ============================================================
--- This script combines migrations 001 through 013 in their
+-- This script combines migrations 001 through 016 in their
 -- exact dependency order. It is safe to run on a completely
 -- empty Supabase project.
 --
@@ -10,7 +10,7 @@
 -- to this consolidated script as a clearly separated section.
 --
 -- Source migration files: packages/supabase/migrations/
--- Generated from: 001_initial_schema.sql through 013_nearby_stores_rpc.sql
+-- Generated from: 001_initial_schema.sql through 016_enable_realtime_operational_tables.sql
 -- ============================================================
 
 
