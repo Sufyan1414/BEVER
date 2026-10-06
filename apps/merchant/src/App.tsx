@@ -53,6 +53,17 @@ export default function App(){
 
   useEffect(()=>{load();},[load]);
 
+  useEffect(()=>{
+    if(!store) return;
+    const channel=supabase
+      .channel(`merchant-store-${store.id}`)
+      .on('postgres_changes',{event:'*',schema:'public',table:'orders',filter:`store_id=eq.${store.id}`},()=>load(true))
+      .on('postgres_changes',{event:'*',schema:'public',table:'products',filter:`store_id=eq.${store.id}`},()=>load(true))
+      .subscribe();
+    const timer=setInterval(()=>load(true),30000);
+    return()=>{clearInterval(timer);supabase.removeChannel(channel);};
+  },[store?.id,load]);
+
   const transition=async(order:Order,to:OrderStatus)=>{
     setBusy(true);setNotice(null);
     try{
