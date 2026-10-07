@@ -76,7 +76,7 @@ type CategoryItem = {
 };
 
 const CATEGORIES: CategoryItem[] = [
-  { key: ALL_KEY,      label: 'All',         emoji: '✨', color: '#F59E0B' },
+  { key: ALL_KEY,      label: 'All',         emoji: '✨', color: '#FF5A36' },
   { key: 'RESTAURANT', label: 'Food',        emoji: '🍽️',  color: '#EF4444' },
   { key: 'GROCERY',    label: 'Grocery',     emoji: '🛒', color: '#10B981' },
   { key: 'PHARMACY',   label: 'Pharmacy',    emoji: '💊', color: '#3B82F6' },
@@ -482,7 +482,7 @@ export function HomeScreen() {
       {homeState.kind === 'LOADING' && !isRefreshing && (
         <ScrollView contentContainerStyle={styles.skeletonContainer} showsVerticalScrollIndicator={false}>
           <View style={styles.searchWrap}>
-            <View style={[searchStyles.bar, { backgroundColor: '#F5F5F4' }]} />
+            <View style={[searchStyles.bar, { backgroundColor: '#EFEFEB' }]} />
           </View>
           {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
         </ScrollView>
@@ -516,7 +516,7 @@ export function HomeScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#F59E0B" />
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#FF5A36" />
           }
           ListHeaderComponent={renderHeader()}
           ListEmptyComponent={
@@ -581,7 +581,7 @@ function EmptyCategory({ label, onClear }: { label: string; onClear: () => void 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFBF5' },
+  safe: { flex: 1, backgroundColor: '#F7F7F3' },
 
   // ── Header ──
   header: {
@@ -591,15 +591,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 14,
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F7F7F3',
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F4',
+    borderBottomColor: '#EFEFEB',
   },
   headerLeft: { flex: 1, gap: 5 },
   wordmark: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#F59E0B',
+    color: '#FF5A36',
     letterSpacing: 3,
     lineHeight: 30,
   },
@@ -608,21 +608,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FFF0EA',
     borderRadius: 8,
     paddingHorizontal: 9,
     paddingVertical: 5,
     alignSelf: 'flex-start',
     maxWidth: SCREEN_WIDTH * 0.55,
   },
-  locationChipEmpty: { backgroundColor: '#F5F5F4' },
+  locationChipEmpty: { backgroundColor: '#EFEFEB' },
   locationChipPin: { fontSize: 11 },
-  locationChipText: { fontSize: 12, fontWeight: '600', color: '#92400E', flexShrink: 1 },
-  locationChipTextEmpty: { color: '#78716C' },
-  locationChipCaret: { fontSize: 14, color: '#D97706', fontWeight: '700' },
+  locationChipText: { fontSize: 12, fontWeight: '600', color: '#9A321F', flexShrink: 1 },
+  locationChipTextEmpty: { color: '#6B6B67' },
+  locationChipCaret: { fontSize: 14, color: '#E64A2E', fontWeight: '700' },
 
   signInBtn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#FF5A36',
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -645,8 +645,8 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 10,
   },
-  sectionTitle: { fontSize: 17, fontWeight: '800', color: '#1C1917' },
-  sectionCount: { fontSize: 13, color: '#A8A29E', fontWeight: '500' },
+  sectionTitle: { fontSize: 17, fontWeight: '800', color: '#171717' },
+  sectionCount: { fontSize: 13, color: '#9A9A94', fontWeight: '500' },
 
   // ── List ──
   listContent: { paddingBottom: 36 },
@@ -657,10 +657,10 @@ const styles = StyleSheet.create({
   // ── Error state ──
   errorState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
   errorStateIcon: { fontSize: 52, marginBottom: 16 },
-  errorStateTitle: { fontSize: 18, fontWeight: '800', color: '#1C1917', marginBottom: 8 },
-  errorStateBody: { fontSize: 14, color: '#78716C', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  errorStateTitle: { fontSize: 18, fontWeight: '800', color: '#171717', marginBottom: 8 },
+  errorStateBody: { fontSize: 14, color: '#6B6B67', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   retryBtn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#FF5A36',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -675,7 +675,7 @@ const searchStyles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#E7E5E4',
+    borderColor: '#E6E6E1',
     paddingHorizontal: 16,
     paddingVertical: 13,
     gap: 10,
@@ -686,7 +686,7 @@ const searchStyles = StyleSheet.create({
     shadowRadius: 4,
   },
   icon: { fontSize: 16 },
-  placeholder: { fontSize: 14, color: '#A8A29E', fontWeight: '500' },
+  placeholder: { fontSize: 14, color: '#9A9A94', fontWeight: '500' },
 });
 
 const catStyles = StyleSheet.create({
@@ -699,11 +699,11 @@ const catStyles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#E7E5E4',
+    borderColor: '#E6E6E1',
     backgroundColor: '#FFFFFF',
   },
   chipEmoji: { fontSize: 15 },
-  chipLabel: { fontSize: 13, fontWeight: '600', color: '#78716C' },
+  chipLabel: { fontSize: 13, fontWeight: '600', color: '#6B6B67' },
 });
 
 const cardStyles = StyleSheet.create({
@@ -714,9 +714,9 @@ const cardStyles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#F0EFEE',
+    borderColor: '#E4E4DE',
     elevation: 2,
-    shadowColor: '#1C1917',
+    shadowColor: '#171717',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -728,7 +728,7 @@ const cardStyles = StyleSheet.create({
   bannerFallback: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FFF0EA',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -751,7 +751,7 @@ const cardStyles = StyleSheet.create({
   openDotColor: { backgroundColor: '#10B981' },
   closedDotColor: { backgroundColor: '#EF4444' },
   openText: { fontSize: 11, fontWeight: '700' },
-  openTextColor: { color: '#065F46' },
+  openTextColor: { color: '#0F5E58' },
   closedTextColor: { color: '#991B1B' },
 
   // Info section
@@ -760,44 +760,44 @@ const cardStyles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FFF0EA',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: '#FFD3C8',
     flexShrink: 0,
   },
   logoImg: { width: 48, height: 48, borderRadius: 12 },
   logoEmoji: { fontSize: 24 },
 
   infoContent: { flex: 1, gap: 4 },
-  name: { fontSize: 15, fontWeight: '800', color: '#1C1917' },
+  name: { fontSize: 15, fontWeight: '800', color: '#171717' },
 
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap' },
   catChip: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FFF0EA',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  catChipText: { fontSize: 11, color: '#92400E', fontWeight: '600' },
+  catChipText: { fontSize: 11, color: '#9A321F', fontWeight: '600' },
   dot: { fontSize: 12, color: '#D6D3D1' },
-  distance: { fontSize: 12, color: '#78716C', fontWeight: '500' },
-  deliveryTime: { fontSize: 12, color: '#78716C' },
-  description: { fontSize: 12, color: '#A8A29E', lineHeight: 16 },
+  distance: { fontSize: 12, color: '#6B6B67', fontWeight: '500' },
+  deliveryTime: { fontSize: 12, color: '#6B6B67' },
+  description: { fontSize: 12, color: '#9A9A94', lineHeight: 16 },
 
   footerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   ratingChip: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   ratingStar: { fontSize: 12 },
-  ratingValue: { fontSize: 12, fontWeight: '700', color: '#1C1917' },
-  ratingCount: { fontSize: 11, color: '#A8A29E' },
-  minOrder: { fontSize: 11, color: '#78716C', fontWeight: '500' },
+  ratingValue: { fontSize: 12, fontWeight: '700', color: '#171717' },
+  ratingCount: { fontSize: 11, color: '#9A9A94' },
+  minOrder: { fontSize: 11, color: '#6B6B67', fontWeight: '500' },
 });
 
 const skeletonStyles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: '#F5F5F4',
+    backgroundColor: '#EFEFEB',
     marginHorizontal: 20,
     marginBottom: 14,
     borderRadius: 18,
@@ -805,20 +805,20 @@ const skeletonStyles = StyleSheet.create({
     gap: 14,
     height: 88,
   },
-  logoBox: { width: 56, height: 56, borderRadius: 14, backgroundColor: '#E7E5E4' },
+  logoBox: { width: 56, height: 56, borderRadius: 14, backgroundColor: '#E6E6E1' },
   content: { flex: 1, gap: 8, justifyContent: 'center' },
-  titleBar: { height: 14, backgroundColor: '#E7E5E4', borderRadius: 7, width: '60%' },
-  metaBar: { height: 10, backgroundColor: '#E7E5E4', borderRadius: 5, width: '80%' },
-  tagBar: { height: 10, backgroundColor: '#E7E5E4', borderRadius: 5, width: '40%' },
+  titleBar: { height: 14, backgroundColor: '#E6E6E1', borderRadius: 7, width: '60%' },
+  metaBar: { height: 10, backgroundColor: '#E6E6E1', borderRadius: 5, width: '80%' },
+  tagBar: { height: 10, backgroundColor: '#E6E6E1', borderRadius: 5, width: '40%' },
 });
 
 const emptyStyles = StyleSheet.create({
   wrap: { alignItems: 'center', paddingHorizontal: 36, paddingVertical: 48 },
   icon: { fontSize: 56, marginBottom: 16 },
-  title: { fontSize: 18, fontWeight: '800', color: '#1C1917', textAlign: 'center', marginBottom: 10 },
-  body: { fontSize: 14, color: '#78716C', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  title: { fontSize: 18, fontWeight: '800', color: '#171717', textAlign: 'center', marginBottom: 10 },
+  body: { fontSize: 14, color: '#6B6B67', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   btn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#FF5A36',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 28,
@@ -829,7 +829,7 @@ const emptyStyles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderWidth: 1.5,
-    borderColor: '#E7E5E4',
+    borderColor: '#E6E6E1',
   },
-  btnSecondaryText: { fontSize: 14, fontWeight: '600', color: '#78716C' },
+  btnSecondaryText: { fontSize: 14, fontWeight: '600', color: '#6B6B67' },
 });
