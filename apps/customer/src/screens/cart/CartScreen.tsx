@@ -310,7 +310,7 @@ export function CartScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F7F7F3',
   },
   header: {
     flexDirection: 'row',
@@ -319,13 +319,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#E7E5E4',
-    backgroundColor: '#FFFBF5',
+    borderBottomColor: '#E6E6E1',
+    backgroundColor: '#F7F7F3',
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#1C1917',
+    color: '#171717',
     letterSpacing: 0.5,
   },
   clearBtn: {
@@ -333,12 +333,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: '#E7E5E4',
+    borderColor: '#E6E6E1',
   },
   clearBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#78716C',
+    color: '#6B6B67',
   },
 
   scrollContent: {
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   storeLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#A8A29E',
+    color: '#9A9A94',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 2,
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
   storeName: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#1C1917',
+    color: '#171717',
   },
 
   // Items card
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#F0EFEE',
+    borderColor: '#E4E4DE',
     overflow: 'hidden',
     marginBottom: 16,
     elevation: 1,
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: '#F5F5F4',
+    backgroundColor: '#EFEFEB',
     marginHorizontal: 16,
   },
 
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#F0EFEE',
+    borderColor: '#E4E4DE',
     padding: 18,
     gap: 12,
     marginBottom: 8,
@@ -410,43 +410,43 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 14,
-    color: '#78716C',
+    color: '#6B6B67',
     fontWeight: '500',
   },
   summaryValue: {
     fontSize: 14,
-    color: '#1C1917',
+    color: '#171717',
     fontWeight: '600',
   },
   totalLabel: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#1C1917',
+    color: '#171717',
   },
   totalValue: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#1C1917',
+    color: '#171717',
   },
   feesNote: {
     fontSize: 11,
-    color: '#A8A29E',
+    color: '#9A9A94',
     textAlign: 'center',
     fontStyle: 'italic',
   },
 
   // Sticky CTA
   ctaWrap: {
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F7F7F3',
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 20,
     borderTopWidth: 1,
-    borderTopColor: '#E7E5E4',
+    borderTopColor: '#E6E6E1',
     gap: 8,
   },
   ctaBtn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#FF5A36',
     borderRadius: 18,
     overflow: 'hidden',
   },
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   },
   ctaNote: {
     fontSize: 11,
-    color: '#A8A29E',
+    color: '#9A9A94',
     textAlign: 'center',
   },
 });
@@ -506,7 +506,7 @@ const itemStyles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 10,
-    backgroundColor: '#F5F5F4',
+    backgroundColor: '#EFEFEB',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -519,17 +519,17 @@ const itemStyles = StyleSheet.create({
   name: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1C1917',
+    color: '#171717',
     lineHeight: 20,
   },
   unit: {
     fontSize: 11,
-    color: '#A8A29E',
+    color: '#9A9A94',
     fontWeight: '500',
   },
   unitPrice: {
     fontSize: 12,
-    color: '#78716C',
+    color: '#6B6B67',
     fontWeight: '500',
   },
   right: {
@@ -540,15 +540,15 @@ const itemStyles = StyleSheet.create({
   lineTotal: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#1C1917',
+    color: '#171717',
   },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FFF0EA',
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: '#F59E0B',
+    borderColor: '#FF5A36',
     overflow: 'hidden',
   },
   stepperBtn: {
@@ -560,13 +560,13 @@ const itemStyles = StyleSheet.create({
   stepperBtnText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#D97706',
+    color: '#E64A2E',
     lineHeight: 19,
   },
   stepperQty: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#1C1917',
+    color: '#171717',
     minWidth: 22,
     textAlign: 'center',
   },
@@ -585,17 +585,17 @@ const emptyStyles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#1C1917',
+    color: '#171717',
     textAlign: 'center',
   },
   body: {
     fontSize: 14,
-    color: '#78716C',
+    color: '#6B6B67',
     textAlign: 'center',
     lineHeight: 22,
   },
   btn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#FF5A36',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -633,12 +633,12 @@ const dialogStyles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#1C1917',
+    color: '#171717',
     textAlign: 'center',
   },
   body: {
     fontSize: 14,
-    color: '#78716C',
+    color: '#6B6B67',
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -663,11 +663,11 @@ const dialogStyles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#E7E5E4',
+    borderColor: '#E6E6E1',
   },
   cancelBtnText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#78716C',
+    color: '#6B6B67',
   },
 });
