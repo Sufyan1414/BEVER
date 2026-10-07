@@ -8,6 +8,8 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "npm run dev --workspace=@bever/admin",
+    "build": "npm run build --workspace=@bever/admin",
     "customer": "npm run start --workspace=@bever/customer",
     "merchant": "npm run start --workspace=@bever/merchant",
     "rider": "npm run start --workspace=@bever/rider",
