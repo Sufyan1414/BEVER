@@ -19,9 +19,9 @@ import { useCartStore, computeCartSummary } from '../stores/useCartStore';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
-const AMBER = '#F59E0B';
-const SURFACE = '#FFFBF5';
-const MUTED = '#A8A29E';
+const AMBER = '#FF5A36';
+const SURFACE = '#F7F7F3';
+const MUTED = '#9A9A94';
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -55,15 +55,15 @@ export function AppTabs() {
         tabBarInactiveTintColor: MUTED,
         tabBarStyle: {
           backgroundColor: SURFACE,
-          borderTopColor: '#E7E5E4',
+          borderTopColor: '#E6E6E1',
           borderTopWidth: 1,
-          paddingBottom: 6,
-          paddingTop: 6,
-          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 68,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '500',
+          fontWeight: '700',
         },
         tabBarIcon: ({ focused, color, size }) => {
           const icons = TAB_ICONS[route.name];
@@ -82,7 +82,7 @@ export function AppTabs() {
             ? {
                 tabBarBadge: cartCount,
                 tabBarBadgeStyle: {
-                  backgroundColor: '#F59E0B',
+                  backgroundColor: '#FF5A36',
                   color: '#FFFFFF',
                   fontSize: 10,
                   fontWeight: '700' as const,
