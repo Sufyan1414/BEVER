@@ -28,6 +28,7 @@ import {
   Modal,
   Animated,
   Image,
+  TextInput,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -300,6 +301,7 @@ export function HomeScreen() {
 
   const [homeState, setHomeState] = useState<HomeState>({ kind: 'LOADING' });
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>(ALL_KEY);
+  const [storeSearchQuery, setStoreSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showChangeLocation, setShowChangeLocation] = useState(false);
 
@@ -378,10 +380,17 @@ export function HomeScreen() {
   const allStores: NearbyStore[] =
     homeState.kind === 'STORE_LIST' ? homeState.stores : [];
 
-  const visibleStores: NearbyStore[] =
+  const normalizedSearchQuery = storeSearchQuery.trim().toLocaleLowerCase();
+  const categoryStores: NearbyStore[] =
     selectedCategory === ALL_KEY
       ? allStores
       : allStores.filter((s) => s.category === selectedCategory);
+  const visibleStores: NearbyStore[] = categoryStores.filter((store) => {
+    if (!normalizedSearchQuery) return true;
+    const category = STORE_CATEGORY_LABELS[store.category] ?? store.category;
+    return [store.name, store.description ?? '', store.address_text ?? '', category]
+      .some((value) => value.toLocaleLowerCase().includes(normalizedSearchQuery));
+  });
 
   // Header location label
   const locationLabel: string =
@@ -393,9 +402,26 @@ export function HomeScreen() {
 
   const renderHeader = () => (
     <View>
-      {/* Search bar */}
+      {/* Search real nearby store data; never invent product or store matches. */}
       <View style={styles.searchWrap}>
-        <SearchBar onFocus={() => { /* TODO Stage D: navigate to search screen */ }} />
+        <View style={searchStyles.bar}>
+          <Text style={searchStyles.icon}>⌕</Text>
+          <TextInput
+            value={storeSearchQuery}
+            onChangeText={setStoreSearchQuery}
+            placeholder="Search nearby stores"
+            placeholderTextColor="#9A9A94"
+            returnKeyType="search"
+            autoCapitalize="none"
+            style={{ flex: 1, color: '#20201C', fontSize: 14, paddingVertical: 0 }}
+            accessibilityLabel="Search nearby stores"
+          />
+          {storeSearchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setStoreSearchQuery('')} accessibilityLabel="Clear store search">
+              <Text style={{ color: '#77776F', fontSize: 20, paddingHorizontal: 4 }}>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Category row */}
