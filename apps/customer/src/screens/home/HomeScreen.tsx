@@ -239,22 +239,6 @@ function StoreCard({ store, onPress }: { store: NearbyStore; onPress: () => void
   );
 }
 
-// ─── Search Bar ───────────────────────────────────────────────────────────────
-
-function SearchBar({ onFocus }: { onFocus: () => void }) {
-  return (
-    <TouchableOpacity
-      style={searchStyles.bar}
-      onPress={onFocus}
-      activeOpacity={0.85}
-      accessibilityLabel="Search stores and products"
-    >
-      <Text style={searchStyles.icon}>🔍</Text>
-      <Text style={searchStyles.placeholder}>Search stores or products…</Text>
-    </TouchableOpacity>
-  );
-}
-
 // ─── Category Grid ────────────────────────────────────────────────────────────
 
 function CategoryRow({
@@ -546,7 +530,16 @@ export function HomeScreen() {
           }
           ListHeaderComponent={renderHeader()}
           ListEmptyComponent={
-            selectedCategory !== ALL_KEY && homeState.kind === 'STORE_LIST' ? (
+            storeSearchQuery.trim().length > 0 && homeState.kind === 'STORE_LIST' ? (
+              <View style={{ alignItems: 'center', paddingHorizontal: 30, paddingTop: 44, paddingBottom: 60 }}>
+                <Text style={{ fontSize: 32, marginBottom: 12 }}>⌕</Text>
+                <Text style={{ fontSize: 17, fontWeight: '800', color: '#20201C', marginBottom: 7 }}>No matching stores</Text>
+                <Text style={{ fontSize: 13, color: '#77776F', lineHeight: 20, textAlign: 'center' }}>Try another name, category, or part of the store address.</Text>
+                <TouchableOpacity onPress={() => setStoreSearchQuery('')} style={{ marginTop: 16, backgroundColor: '#FFF0EA', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
+                  <Text style={{ color: '#C8442B', fontWeight: '700' }}>Clear search</Text>
+                </TouchableOpacity>
+              </View>
+            ) : selectedCategory !== ALL_KEY && homeState.kind === 'STORE_LIST' ? (
               <EmptyCategory
                 label={STORE_CATEGORY_LABELS[selectedCategory as StoreCategory] ?? selectedCategory}
                 onClear={() => setSelectedCategory(ALL_KEY)}
