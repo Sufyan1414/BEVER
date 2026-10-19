@@ -206,7 +206,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
   const visibleProducts = products.filter((product) => {
     const matchesCategory = selectedCategory === ALL_CATEGORY_KEY || product.category_id === selectedCategory;
     const matchesQuery = !normalizedProductQuery ||
-      [product.name, product.description ?? '', product.unit]
+      [product.name, product.description ?? '', product.unit ?? '']
         .some((value) => value.toLocaleLowerCase().includes(normalizedProductQuery));
     return matchesCategory && matchesQuery;
   });
