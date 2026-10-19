@@ -22,6 +22,7 @@ import {
   Image,
   Animated,
   Modal,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -125,6 +126,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CATEGORY_KEY);
+  const [productSearchQuery, setProductSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -200,10 +202,14 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
 
   // ── Filter Products ─────────────────────────────────────────────────────────
 
-  const visibleProducts =
-    selectedCategory === ALL_CATEGORY_KEY
-      ? products
-      : products.filter((p) => p.category_id === selectedCategory);
+  const normalizedProductQuery = productSearchQuery.trim().toLocaleLowerCase();
+  const visibleProducts = products.filter((product) => {
+    const matchesCategory = selectedCategory === ALL_CATEGORY_KEY || product.category_id === selectedCategory;
+    const matchesQuery = !normalizedProductQuery ||
+      [product.name, product.description ?? '', product.unit]
+        .some((value) => value.toLocaleLowerCase().includes(normalizedProductQuery));
+    return matchesCategory && matchesQuery;
+  });
 
   const cartItemCount = summary.totalItems;
 
@@ -308,6 +314,26 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
           ) : null}
         </View>
 
+        {/* Search within this store's real catalogue */}
+        <View style={{ marginHorizontal: 18, marginTop: 8, marginBottom: 12, minHeight: 46, flexDirection: 'row', alignItems: 'center', borderRadius: 14, borderWidth: 1, borderColor: '#E7E7E0', backgroundColor: '#FFFFFF', paddingHorizontal: 13 }}>
+          <Text style={{ fontSize: 19, color: '#77776F', marginRight: 9 }}>⌕</Text>
+          <TextInput
+            value={productSearchQuery}
+            onChangeText={setProductSearchQuery}
+            placeholder={'Search ' + store.name + ' catalogue'}
+            placeholderTextColor="#96968E"
+            autoCapitalize="none"
+            returnKeyType="search"
+            style={{ flex: 1, color: '#20201C', fontSize: 14, paddingVertical: 10 }}
+            accessibilityLabel="Search products in this store"
+          />
+          {productSearchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setProductSearchQuery('')} accessibilityLabel="Clear product search">
+              <Text style={{ color: '#77776F', fontSize: 20, paddingHorizontal: 4 }}>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Category Pills Bar */}
         {categories.length > 0 && (
           <ScrollView
@@ -381,11 +407,18 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
         {/* Empty State */}
         {!isLoading && !error && visibleProducts.length === 0 && (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyIcon}>📦</Text>
-            <Text style={styles.emptyTitle}>No products available</Text>
+            <Text style={styles.emptyIcon}>{normalizedProductQuery ? '⌕' : '📦'}</Text>
+            <Text style={styles.emptyTitle}>{normalizedProductQuery ? 'No matching products' : 'No products available'}</Text>
             <Text style={styles.emptySub}>
-              This store has not added any products to this category yet.
+              {normalizedProductQuery
+                ? 'Try another product name, description, or pack size.'
+                : 'This store has not added any products to this category yet.'}
             </Text>
+            {normalizedProductQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setProductSearchQuery('')} style={{ marginTop: 14, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#FFF0EA' }}>
+                <Text style={{ color: '#C8442B', fontWeight: '700' }}>Clear search</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
