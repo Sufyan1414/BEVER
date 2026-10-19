@@ -192,7 +192,7 @@ export function CartScreen() {
       return;
     }
     navigation.navigate('Checkout');
-  };;
+  };
 
   const isEmpty = items.length === 0;
 

@@ -86,3 +86,32 @@ Decision:
 
 ## Working rule
 Make large coherent changes, verify them, commit them, and keep this document updated so a fresh chat can resume without reconstructing the project from conversation history.
+
+## Continuation update — 2026-10-19
+
+### Active customer journey work
+- Active branch: `feature/customer-store-search`, based on `upgrade/sdk-57`.
+- Open PR: https://github.com/Sufyan1414/BEVER/pull/1 (not merged).
+- Home search now filters real nearby stores by name, category, description, and address.
+- Store catalogue search filters the selected store's real products by name, description, and unit/pack label, while retaining category filters.
+- Checkout now shows a line-by-line item review and prevents duplicate rapid submissions.
+- Persisted cart restore validates item identity, price/quantity shape, and single-store consistency.
+- Fixed a malformed statement separator in `OrderDetailScreen.tsx` found during source review.
+- These changes have not been run through TypeScript, Metro, SQL integration, or device tests. GitHub reported no workflow runs for the latest feature commit.
+
+### Live Supabase checks — read-only
+- Confirmed project `atuaafowdoijojdmtgcr` is the active BEVER project in ap-south-1.
+- Production migration history currently ends at `20261006113359`.
+- Production exposes `public.create_customer_order(p_store_id uuid, p_delivery_address_id uuid, p_items jsonb, p_payment_method payment_method, p_special_instructions text)`; its returned columns match the customer service's current legacy RPC call.
+- The live function verifies auth, store active/verified/open state, address ownership and location, delivery radius, product availability, COD, minimum order, and server-side prices before creating order rows.
+- **Unit ambiguity to resolve before changing minimum-order data:** the client/store type comments describe `minimum_order_amount` as paise, but the live RPC compares subtotal against `minimum_order_amount * 100`, treating the stored value as rupees. Do not alter existing data or RPC until current store values and intended units are confirmed.
+- Supabase's advisor flags `public.spatial_ref_sys` as having RLS disabled. This is a PostGIS reference-system table; do not blindly enable RLS without checking extension ownership and intended exposure, because doing so without appropriate policies can break spatial operations. Review and remediate deliberately.
+- The security advisor also reports one mutable-search-path function (`public.validate_order_status_transition`), PostGIS installed in `public`, several `SECURITY DEFINER` RPCs executable by `anon` and/or `authenticated`, and leaked-password protection disabled. These need a grant-by-grant/function-by-function review; the presence of `SECURITY DEFINER` alone is not proof of exploitability, because some RPCs intentionally serve signed-in users. Do not blanket-revoke functions that the apps depend on.
+
+### Next release gates
+1. Install the exact workspace dependencies and run TypeScript checks for customer, merchant, rider, admin, and shared packages.
+2. Fix compile/runtime issues found; export Android bundles and test on a real Android device. iOS should also receive a smoke test if available.
+3. Confirm minimum-order unit conventions from real store rows and migration history.
+4. Verify order create, cancellation, order detail, delivery OTP, and merchant/rider state transitions end-to-end against a disposable database or safely isolated environment.
+5. Re-check RLS, function grants/search paths, and Supabase security advisors; never apply speculative production migrations.
+6. Only then mark MVP launch-ready.

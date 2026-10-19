@@ -28,6 +28,7 @@ import {
   Modal,
   Animated,
   Image,
+  TextInput,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -238,22 +239,6 @@ function StoreCard({ store, onPress }: { store: NearbyStore; onPress: () => void
   );
 }
 
-// ─── Search Bar ───────────────────────────────────────────────────────────────
-
-function SearchBar({ onFocus }: { onFocus: () => void }) {
-  return (
-    <TouchableOpacity
-      style={searchStyles.bar}
-      onPress={onFocus}
-      activeOpacity={0.85}
-      accessibilityLabel="Search stores and products"
-    >
-      <Text style={searchStyles.icon}>🔍</Text>
-      <Text style={searchStyles.placeholder}>Search stores or products…</Text>
-    </TouchableOpacity>
-  );
-}
-
 // ─── Category Grid ────────────────────────────────────────────────────────────
 
 function CategoryRow({
@@ -300,6 +285,7 @@ export function HomeScreen() {
 
   const [homeState, setHomeState] = useState<HomeState>({ kind: 'LOADING' });
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>(ALL_KEY);
+  const [storeSearchQuery, setStoreSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showChangeLocation, setShowChangeLocation] = useState(false);
 
@@ -378,10 +364,17 @@ export function HomeScreen() {
   const allStores: NearbyStore[] =
     homeState.kind === 'STORE_LIST' ? homeState.stores : [];
 
-  const visibleStores: NearbyStore[] =
+  const normalizedSearchQuery = storeSearchQuery.trim().toLocaleLowerCase();
+  const categoryStores: NearbyStore[] =
     selectedCategory === ALL_KEY
       ? allStores
       : allStores.filter((s) => s.category === selectedCategory);
+  const visibleStores: NearbyStore[] = categoryStores.filter((store) => {
+    if (!normalizedSearchQuery) return true;
+    const category = STORE_CATEGORY_LABELS[store.category] ?? store.category;
+    return [store.name, store.description ?? '', store.address_text ?? '', category]
+      .some((value) => value.toLocaleLowerCase().includes(normalizedSearchQuery));
+  });
 
   // Header location label
   const locationLabel: string =
@@ -393,9 +386,26 @@ export function HomeScreen() {
 
   const renderHeader = () => (
     <View>
-      {/* Search bar */}
+      {/* Search real nearby store data; never invent product or store matches. */}
       <View style={styles.searchWrap}>
-        <SearchBar onFocus={() => { /* TODO Stage D: navigate to search screen */ }} />
+        <View style={searchStyles.bar}>
+          <Text style={searchStyles.icon}>⌕</Text>
+          <TextInput
+            value={storeSearchQuery}
+            onChangeText={setStoreSearchQuery}
+            placeholder="Search nearby stores"
+            placeholderTextColor="#9A9A94"
+            returnKeyType="search"
+            autoCapitalize="none"
+            style={{ flex: 1, color: '#20201C', fontSize: 14, paddingVertical: 0 }}
+            accessibilityLabel="Search nearby stores"
+          />
+          {storeSearchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setStoreSearchQuery('')} accessibilityLabel="Clear store search">
+              <Text style={{ color: '#77776F', fontSize: 20, paddingHorizontal: 4 }}>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Category row */}
@@ -520,7 +530,16 @@ export function HomeScreen() {
           }
           ListHeaderComponent={renderHeader()}
           ListEmptyComponent={
-            selectedCategory !== ALL_KEY && homeState.kind === 'STORE_LIST' ? (
+            storeSearchQuery.trim().length > 0 && homeState.kind === 'STORE_LIST' ? (
+              <View style={{ alignItems: 'center', paddingHorizontal: 30, paddingTop: 44, paddingBottom: 60 }}>
+                <Text style={{ fontSize: 32, marginBottom: 12 }}>⌕</Text>
+                <Text style={{ fontSize: 17, fontWeight: '800', color: '#20201C', marginBottom: 7 }}>No matching stores</Text>
+                <Text style={{ fontSize: 13, color: '#77776F', lineHeight: 20, textAlign: 'center' }}>Try another name, category, or part of the store address.</Text>
+                <TouchableOpacity onPress={() => setStoreSearchQuery('')} style={{ marginTop: 16, backgroundColor: '#FFF0EA', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
+                  <Text style={{ color: '#C8442B', fontWeight: '700' }}>Clear search</Text>
+                </TouchableOpacity>
+              </View>
+            ) : selectedCategory !== ALL_KEY && homeState.kind === 'STORE_LIST' ? (
               <EmptyCategory
                 label={STORE_CATEGORY_LABELS[selectedCategory as StoreCategory] ?? selectedCategory}
                 onClear={() => setSelectedCategory(ALL_KEY)}

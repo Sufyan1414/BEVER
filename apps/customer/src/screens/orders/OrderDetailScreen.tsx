@@ -85,7 +85,8 @@ export function OrderDetailScreen() {
     } catch (e: any) {
       setError(e?.message ?? 'Could not cancel this order.');
     }
-  };\n  const terminal = ['DELIVERED', 'REJECTED', 'CANCELLED', 'DELIVERY_FAILED', 'REFUND_PENDING', 'REFUNDED'].includes(order.status);
+  };
+  const terminal = ['DELIVERED', 'REJECTED', 'CANCELLED', 'DELIVERY_FAILED', 'REFUND_PENDING', 'REFUNDED'].includes(order.status);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>

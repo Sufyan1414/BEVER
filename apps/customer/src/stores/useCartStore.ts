@@ -102,16 +102,39 @@ export const useCartStore = create<CartState>((set, get) => ({
       const raw = await AsyncStorage.getItem(CART_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as PersistedCart;
-        if (
-          Array.isArray(parsed.items) &&
-          (parsed.storeId === null || typeof parsed.storeId === 'string')
-        ) {
+        const validStoreId = parsed.storeId === null || typeof parsed.storeId === 'string';
+        const validStoreName = parsed.storeName === null || typeof parsed.storeName === 'string';
+        const validItems = Array.isArray(parsed.items)
+          ? parsed.items.filter((item): item is CartItem =>
+              !!item &&
+              typeof item.productId === 'string' &&
+              item.productId.length > 0 &&
+              typeof item.storeId === 'string' &&
+              typeof item.productName === 'string' &&
+              (typeof item.productImageUrl === 'string' || item.productImageUrl === null) &&
+              typeof item.unit === 'string' &&
+              Number.isSafeInteger(item.unitPricePaise) &&
+              item.unitPricePaise >= 0 &&
+              Number.isSafeInteger(item.quantity) &&
+              item.quantity > 0
+            )
+          : null;
+        const oneStoreOnly = validItems !== null &&
+          validItems.every((item) => item.storeId === validItems[0]?.storeId) &&
+          (validItems.length === 0 || parsed.storeId === validItems[0].storeId);
+
+        if (validStoreId && validStoreName && validItems && oneStoreOnly) {
+          const storeId = validItems.length ? parsed.storeId : null;
+          const storeName = validItems.length ? parsed.storeName : null;
           set({
-            storeId: parsed.storeId,
-            storeName: parsed.storeName ?? null,
-            items: parsed.items,
+            storeId,
+            storeName,
+            items: validItems,
             isCartLoading: false,
           });
+          if (validItems.length !== parsed.items.length || storeId !== parsed.storeId) {
+            await persistCart(storeId, storeName, validItems);
+          }
           return;
         }
       }
