@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [ "feature/**", "upgrade/**" ]
+  pull_request:
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Typecheck (all workspaces)
+        run: npm run typecheck
+      - name: Export Android bundles (customer, merchant)
+        run: |
+          cd apps/customer && npx expo export --platform android --output-dir /tmp/out-customer
+          cd ../merchant && npx expo export --platform android --output-dir /tmp/out-merchant
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
