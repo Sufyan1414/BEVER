@@ -1,0 +1,74 @@
+name: Android test APKs
+
+# Manual build of installable test APKs (customer + merchant) for field testing.
+# Needs one repository secret: EXPO_PUBLIC_SUPABASE_ANON_KEY (Settings > Secrets and variables > Actions).
+# Optional repository variable: EXPO_PUBLIC_SUPABASE_URL (defaults to the BEVER project).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://atuaafowdoijojdmtgcr.supabase.co' }}
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Require Supabase anon key
+        run: |
+          if [ -z "$EXPO_PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "Missing secret EXPO_PUBLIC_SUPABASE_ANON_KEY. Add it under Settings > Secrets and variables > Actions." ; exit 1
+          fi
+      - run: npm ci --no-audit --no-fund
+      - name: Build APKs
+        run: |
+          mkdir -p build-logs out
+          status=0
+          for app in customer merchant; do
+            (
+              set -e
+              cd apps/$app
+              # Push notifications (FCM) are not configured yet; this file is not in the repo.
+              node -e "const f='app.json';const j=require('./'+f);if(j.expo.android){delete j.expo.android.googleServicesFile;}require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
+              npx expo prebuild --platform android --no-install --clean
+              cd android
+              chmod +x gradlew
+              ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=armeabi-v7a,arm64-v8a
+            ) > build-logs/$app.log 2>&1 || { echo "BUILD FAILED: $app"; status=1; continue; }
+            apk=$(ls apps/$app/android/app/build/outputs/apk/release/*.apk | head -1)
+            cp "$apk" out/bever-$app-test.apk
+          done
+          echo "$status" > build-logs/status.txt
+          ls -la out >> build-logs/status.txt
+          exit 0
+      - name: Publish build logs
+        if: always()
+        run: |
+          for f in build-logs/*.log; do tail -n 300 "$f" > "$f.tail"; rm "$f"; done
+          git config user.name "ci-bot"; git config user.email "ci-bot@users.noreply.github.com"
+          rm -rf /tmp/bl && mkdir /tmp/bl && cp -r build-logs/. /tmp/bl/
+          git checkout --orphan build-logs-tmp && git rm -rf . -q && cp -r /tmp/bl/. .
+          git add -A && git commit -q -m "APK build logs for $GITHUB_SHA"
+          git push -f origin HEAD:refs/heads/build-logs
+          git checkout -q "$GITHUB_SHA"
+      - name: Publish APKs as a release
+        run: |
+          test "$(head -1 build-logs/status.txt 2>/dev/null || cat /tmp/bl/status.txt | head -1)" = "0" || { echo "Some builds failed"; exit 1; }
+          tag="test-build-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" out/*.apk --title "BEVER test build #${GITHUB_RUN_NUMBER}" --notes "Field-test APKs (customer + merchant). Static build from commit ${GITHUB_SHA}. Not a Play Store build; debug-key signed." --prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
