@@ -36,6 +36,25 @@ jobs:
         env:
           EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+      - name: Visual preview of merchant screens (sample data, dev-only)
+        if: always()
+        run: |
+          set +e
+          mkdir -p ci-logs/shots
+          cd apps/merchant
+          cp index.ts /tmp/index.ts.bak
+          cp preview/entry.ts index.ts && sed -i "s#'./PreviewApp'#'./preview/PreviewApp'#" index.ts
+          npx expo export --platform web --output-dir /tmp/preview-dist > ../../ci-logs/preview-export.log 2>&1
+          cp /tmp/index.ts.bak index.ts
+          cd ../..
+          npm i --no-save --no-audit --no-fund playwright > ci-logs/playwright-install.log 2>&1
+          npx playwright install --with-deps chromium >> ci-logs/playwright-install.log 2>&1
+          cp apps/merchant/preview/shoot.mjs /tmp/shoot.mjs
+          NODE_PATH=$PWD/node_modules node /tmp/shoot.mjs /tmp/preview-dist ci-logs/shots > ci-logs/shoot.log 2>&1
+          exit 0
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
       - name: Publish logs to ci-logs branch
         if: always()
         run: |
