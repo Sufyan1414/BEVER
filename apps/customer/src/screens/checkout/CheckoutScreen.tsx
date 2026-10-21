@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import { ensureDefaultAddressFromBrowsingLocation } from '../../services/address
 import { useLocationStore } from '../../stores/useLocationStore';
 import { createCustomerOrder, type CheckoutPaymentMethod } from '../../services/order';
 import type { CustomerAddress } from '../../types/address';
+import { FreeDeliveryProgress, FREE_DELIVERY_THRESHOLD_PAISE } from '../../components/FreeDeliveryProgress';
 
 const formatRupees = (paise: number) => `₹${Math.round(paise / 100)}`;
 
@@ -49,7 +50,7 @@ export function CheckoutScreen() {
     try {
       const result = await createCustomerOrder({ storeId, addressId: address.id, items, paymentMethod, specialInstructions: instructions });
       clearCart();
-      Alert.alert('Order placed', `Order ${result.orderNumber} has been sent to the store.`, [{ text: 'View Orders', onPress: () => navigation.navigate('Orders') }]);
+      navigation.navigate('Orders', { screen: 'OrderDetail', params: { orderId: result.orderId } });
     } catch (e: any) { setError(e?.message ?? 'Could not place your order.'); }
     finally { placementInFlight.current = false; setPlacing(false); }
   };
@@ -64,6 +65,7 @@ export function CheckoutScreen() {
       <Text style={styles.eyebrow}>DELIVERING FROM</Text><Text style={styles.store}>{storeName ?? 'Store'}</Text>
       <Text style={styles.section}>Delivery address</Text>
       {address ? <View style={styles.card}><View style={styles.addressTop}><Text style={styles.addressLabel}>{address.label}</Text><Text style={styles.default}>DEFAULT</Text></View><Text style={styles.addressMain}>{address.address_line_1}</Text>{address.address_line_2 ? <Text style={styles.addressSub}>{address.address_line_2}</Text> : null}<Text style={styles.addressSub}>{address.city}, {address.state} — {address.pincode}</Text><TouchableOpacity onPress={() => navigation.navigate('Profile')}><Text style={styles.change}>Change address</Text></TouchableOpacity></View> : <View style={styles.card}><Text style={styles.addressMain}>No delivery address saved</Text><TouchableOpacity onPress={() => navigation.navigate('Profile')}><Text style={styles.change}>Add delivery address</Text></TouchableOpacity></View>}
+      <FreeDeliveryProgress subtotalPaise={summary.subtotalPaise} />
       <Text style={styles.section}>Review your items</Text>
       <View style={styles.card}>
         {items.map((item, index) => (
@@ -86,11 +88,11 @@ export function CheckoutScreen() {
       <TextInput value={instructions} onChangeText={setInstructions} placeholder="Anything the store should know?" placeholderTextColor="#A8A29E" style={styles.notes} multiline maxLength={250} />
       <View style={styles.card}>
         <View style={styles.row}><Text style={styles.muted}>Items ({summary.totalItems})</Text><Text style={styles.value}>{formatRupees(summary.subtotalPaise)}</Text></View>
-        <View style={styles.row}><Text style={styles.muted}>Delivery</Text><Text style={styles.value}>Calculated securely at order placement</Text></View>
-        <View style={styles.line} /><View style={styles.row}><Text style={styles.total}>Final total</Text><Text style={styles.totalValue}>Verified at placement</Text></View>
+        <View style={styles.row}><Text style={styles.muted}>Delivery</Text><Text style={styles.value}>{summary.subtotalPaise >= FREE_DELIVERY_THRESHOLD_PAISE ? 'Free' : '₹20 + ₹7 per km'}</Text></View>
+        <View style={styles.line} /><View style={styles.row}><Text style={styles.total}>Final total</Text><Text style={styles.totalValue}>{summary.subtotalPaise >= FREE_DELIVERY_THRESHOLD_PAISE ? formatRupees(summary.subtotalPaise) : 'Items + delivery'}</Text></View>
       </View>
     </ScrollView>
-    <View style={styles.footer}><TouchableOpacity disabled={placing || !address || !items.length} onPress={placeOrder} style={[styles.place, (placing || !address || !items.length) && styles.disabled]}>{placing ? <ActivityIndicator color="#fff" /> : <Text style={styles.placeText}>Place order+</Text>}</TouchableOpacity><Text style={styles.footerNote}>Final price and delivery fee are verified when you place the order.</Text></View>
+    <View style={styles.footer}><TouchableOpacity disabled={placing || !address || !items.length} onPress={placeOrder} style={[styles.place, (placing || !address || !items.length) && styles.disabled]}>{placing ? <ActivityIndicator color="#fff" /> : <Text style={styles.placeText}>Place order</Text>}</TouchableOpacity><Text style={styles.footerNote}>Final price and delivery fee are verified when you place the order.</Text></View>
   </SafeAreaView>;
 }
 

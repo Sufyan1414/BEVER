@@ -31,6 +31,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useCartStore, computeCartSummary } from '../../stores/useCartStore';
 import type { CartItem } from '../../stores/useCartStore';
+import { FreeDeliveryProgress } from '../../components/FreeDeliveryProgress';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -252,6 +253,8 @@ export function CartScreen() {
               ))}
             </View>
 
+            <FreeDeliveryProgress subtotalPaise={summary.subtotalPaise} />
+
             {/* Subtotal */}
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
@@ -273,7 +276,7 @@ export function CartScreen() {
               </View>
 
               <Text style={styles.feesNote}>
-                Delivery fee and taxes calculated at checkout.
+                Delivery is free from ₹199. Below that, the fee is ₹20 plus ₹7 per started km, shown on your order.
               </Text>
             </View>
           </ScrollView>
