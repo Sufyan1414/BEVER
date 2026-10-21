@@ -67,6 +67,61 @@ await step('orders tab', async () => { await page.goto('http://localhost:4174/')
 await step('profile tab', async () => { await page.getByText('Profile', { exact: true }).last().click({ timeout: 8000 }); await shot('c-profile-guest'); });
 await step('checkout->login', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('Cart', { exact: true }).last().click({ timeout: 8000 }); await page.waitForTimeout(800); await page.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot('c-login'); });
 
+
+// ---- Signed-in flow: checkout -> order tracking (all backend responses are SAMPLE data) ----
+const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+const uid = '22222222-2222-4222-8222-222222222222';
+const fakeJwt = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: uid, role: 'authenticated', aud: 'authenticated', exp: 4102444800 })}.sig`;
+const user = { id: uid, aud: 'authenticated', role: 'authenticated', email: 'customer_919876543210@bever.app', app_metadata: {}, user_metadata: { phone: '+919876543210' }, created_at: '2026-10-01T00:00:00Z' };
+const profile = { id: uid, role: 'customer', full_name: 'Test Customer', phone: '+919876543210', avatar_url: null, fcm_token: null, is_active: true, created_at: '2026-10-01T00:00:00Z', updated_at: '2026-10-01T00:00:00Z' };
+const address = { id: '33333333-3333-4333-8333-333333333333', customer_id: uid, label: 'Home', address_line_1: 'Flat 12, Gulmandi Apartments', address_line_2: '2nd floor - near Ganesh temple', city: 'Chhatrapati Sambhajinagar', state: 'Maharashtra', pincode: '431001', location: null, is_default: true, created_at: '2026-10-01T00:00:00Z', updated_at: '2026-10-01T00:00:00Z' };
+const orderId = '44444444-4444-4444-8444-444444444444';
+const orderRow = { id: orderId, order_number: 'BVR-20261022-0007', status: 'PENDING', payment_method: 'COD', total_amount: 32300, items_total: 32300, delivery_fee: 0, discount_amount: 0, special_instructions: 'Please call at the gate.', delivered_at: null, delivery_otp: '4826', rejection_reason: null, cancellation_reason: null, created_at: new Date().toISOString(), estimated_delivery_at: null, delivery_address_snapshot: { label: 'Home', address_line_1: address.address_line_1, address_line_2: address.address_line_2, city: address.city, state: address.state, pincode: address.pincode }, delivery_failure_reason: null, stores: { name: 'Sharma Kirana & General Store' }, order_items: [{ quantity: 1 }, { quantity: 2 }] };
+const orderItems = [
+  { id: 'oi1', product_name_snapshot: 'Toor Dal', unit_price: 15500, quantity: 1, total_price: 15500, unit_snapshot: '1 kg' },
+  { id: 'oi2', product_name_snapshot: 'Farm Eggs', unit_price: 8400, quantity: 2, total_price: 16800, unit_snapshot: '12 pcs' },
+];
+
+const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+await ctx2.addInitScript(({ storeId, fakeJwt, user }) => {
+  localStorage.setItem('@bever/browsing_location', JSON.stringify({ lat: 19.8762, lng: 75.3433, label: 'Gulmandi', city: 'Chhatrapati Sambhajinagar', state: 'Maharashtra', pincode: '431001', setAt: new Date().toISOString(), houseNo: '12', floor: '2' }));
+  localStorage.setItem('@bever/cart', JSON.stringify({ storeId, storeName: 'Sharma Kirana & General Store', items: [
+    { productId: 'p1', storeId, productName: 'Toor Dal', productImageUrl: null, unit: '1 kg', unitPricePaise: 15500, quantity: 1 },
+    { productId: 'p2', storeId, productName: 'Farm Eggs', productImageUrl: null, unit: '12 pcs', unitPricePaise: 8400, quantity: 2 },
+  ] }));
+  localStorage.setItem('sb-example-auth-token', JSON.stringify({ access_token: fakeJwt, refresh_token: 'refresh', token_type: 'bearer', expires_in: 3600000, expires_at: 4102444800, user }));
+}, { storeId, fakeJwt, user });
+await ctx2.route('**/example.supabase.co/**', async (route) => {
+  const req = route.request();
+  const url = new URL(req.url());
+  if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+  const single = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
+  const pick = (rows) => (single ? json(route, rows[0] ?? null, rows[0] ? 200 : 406) : json(route, rows));
+  const p = url.pathname;
+  if (p.includes('/auth/v1/user')) return json(route, user);
+  if (p.includes('/auth/v1/')) return json(route, { error: 'unsupported in preview' }, 400);
+  if (p.includes('/rpc/get_nearby_stores')) return json(route, stores);
+  if (p.includes('/rpc/create_customer_order')) return json(route, [{ order_id: orderId, order_number: orderRow.order_number, items_total: 32300, delivery_fee: 0, total_amount: 32300 }]);
+  if (p.endsWith('/profiles')) return pick([profile]);
+  if (p.endsWith('/customer_addresses')) return req.method() === 'GET' ? pick([address]) : json(route, [address], 201);
+  if (p.endsWith('/order_items')) return json(route, orderItems);
+  if (p.endsWith('/orders')) return single ? json(route, orderRow) : json(route, [orderRow]);
+  if (p.endsWith('/product_categories')) return json(route, cats);
+  if (p.endsWith('/products')) return json(route, products);
+  return json(route, []);
+});
+const page2 = await ctx2.newPage();
+page2.on('pageerror', (e) => errors.push(`[signed-in] pageerror: ${String(e)}`));
+page2.on('console', (m) => { if (m.type() === 'error' && !/WebSocket|realtime|ERR_/i.test(m.text())) errors.push(`[signed-in] console: ${m.text().slice(0, 300)}`); });
+const shot2 = async (name) => { await page2.waitForTimeout(1800); await page2.screenshot({ path: path.join(out, `${name}.png`) }); };
+const step2 = async (name, fn) => { try { await fn(); } catch (e) { errors.push(`[signed-in] step ${name}: ${String(e).slice(0, 300)}`); } };
+await page2.goto('http://localhost:4174/');
+await shot2('s-home');
+await step2('checkout', async () => { await page2.getByText('Cart', { exact: true }).last().click({ timeout: 8000 }); await page2.waitForTimeout(800); await page2.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot2('s-checkout'); });
+await step2('place order', async () => { await page2.getByText('Place order', { exact: true }).first().click({ timeout: 5000 }); await shot2('s-order-detail'); });
+await step2('orders tab', async () => { await page2.goto('http://localhost:4174/'); await page2.waitForTimeout(1200); await page2.getByText('Orders', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-orders'); });
+await step2('profile tab', async () => { await page2.getByText('Profile', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-profile'); });
+
 fs.writeFileSync(path.join(out, 'customer-errors.txt'), errors.join('\n'));
 await browser.close();
 server.close();
