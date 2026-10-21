@@ -55,12 +55,16 @@ jobs:
           EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
       - name: Publish logs to ci-logs branch
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run: |
-          git config user.name "ci-bot"; git config user.email "ci-bot@users.noreply.github.com"
           rm -rf /tmp/cilogs && mkdir /tmp/cilogs && cp -r ci-logs/. /tmp/cilogs/
-          git checkout --orphan ci-logs-tmp && git rm -rf . -q && cp -r /tmp/cilogs/. . 
+          cd /tmp/cilogs
+          git init -q -b ci-logs
+          git config user.name "ci-bot"; git config user.email "ci-bot@users.noreply.github.com"
           git add -A && git commit -q -m "CI logs for $GITHUB_SHA"
-          git push -f origin HEAD:refs/heads/ci-logs
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c http.extraheader="AUTHORIZATION: basic $auth" push -f "https://github.com/$GITHUB_REPOSITORY.git" ci-logs:refs/heads/ci-logs
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Fail if anything failed
         run: test "$(head -1 ci-logs/status.txt)" = "0"

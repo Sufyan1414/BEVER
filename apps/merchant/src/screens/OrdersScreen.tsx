@@ -37,7 +37,7 @@ export function OrdersScreen({ orders, loading, refreshing, now, busyId, onRefre
       <View style={styles.stats}>
         <Card style={styles.stat}><Text style={styles.statNum}>{groups.new.length}</Text><Text style={styles.statLabel}>New</Text></Card>
         <Card style={styles.stat}><Text style={styles.statNum}>{groups.active.length}</Text><Text style={styles.statLabel}>In progress</Text></Card>
-        <Card style={styles.stat}><Text style={styles.statNum}>{rupees(salesToday)}</Text><Text style={styles.statLabel}>Delivered today</Text></Card>
+        <Card style={styles.stat}><Text style={styles.statNum}>{rupees(salesToday)}</Text><Text style={styles.statLabel}>Sold today</Text></Card>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips}>
@@ -66,8 +66,8 @@ export function OrdersScreen({ orders, loading, refreshing, now, busyId, onRefre
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 32 },
   stats: { flexDirection: 'row', marginBottom: 6 },
-  stat: { flex: 1, marginRight: 8, paddingVertical: 14, alignItems: 'center', marginBottom: 6 },
-  statNum: { fontSize: 18, fontWeight: '900', color: colors.ink },
+  stat: { flex: 1, marginRight: 8, height: 74, justifyContent: 'center', alignItems: 'center', marginBottom: 6, padding: 8 },
+  statNum: { fontSize: 19, fontWeight: '900', color: colors.ink },
   statLabel: { fontSize: 11, color: colors.muted, marginTop: 3, fontWeight: '700' },
   chips: { marginBottom: 14, marginTop: 4, flexGrow: 0 },
 });
