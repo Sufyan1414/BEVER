@@ -62,17 +62,20 @@ jobs:
       - name: Publish build logs
         if: always()
         run: |
-          for f in build-logs/*.log; do tail -n 300 "$f" > "$f.tail"; rm "$f"; done
-          git config user.name "ci-bot"; git config user.email "ci-bot@users.noreply.github.com"
+          for f in build-logs/*.log; do [ -f "$f" ] && tail -n 300 "$f" > "$f.tail" && rm "$f"; done
           rm -rf /tmp/bl && mkdir /tmp/bl && cp -r build-logs/. /tmp/bl/
-          git checkout --orphan build-logs-tmp && git rm -rf . -q && cp -r /tmp/bl/. .
+          cd /tmp/bl
+          git init -q -b build-logs
+          git config user.name "ci-bot"; git config user.email "ci-bot@users.noreply.github.com"
           git add -A && git commit -q -m "APK build logs for $GITHUB_SHA"
-          git push -f origin HEAD:refs/heads/build-logs
-          git checkout -q "$GITHUB_SHA"
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c http.extraheader="AUTHORIZATION: basic $auth" push -f "https://github.com/$GITHUB_REPOSITORY.git" build-logs:refs/heads/build-logs
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Publish APKs as a release
         if: env.NO_KEY != '1'
         run: |
-          test "$(head -1 build-logs/status.txt 2>/dev/null || cat /tmp/bl/status.txt | head -1)" = "0" || { echo "Some builds failed"; exit 1; }
+          test "$(head -1 /tmp/bl/status.txt)" = "0" || { echo "Some builds failed"; exit 1; }
           tag="test-build-${GITHUB_RUN_NUMBER}"
           gh release create "$tag" out/*.apk --title "BEVER test build #${GITHUB_RUN_NUMBER}" --notes "Field-test APKs (customer + merchant + rider). Static build from commit ${GITHUB_SHA}. Not a Play Store build; debug-key signed." --prerelease
         env:
