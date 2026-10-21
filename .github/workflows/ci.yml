@@ -49,8 +49,7 @@ jobs:
           cd ../..
           npm i --no-save --no-audit --no-fund playwright > ci-logs/playwright-install.log 2>&1
           npx playwright install --with-deps chromium >> ci-logs/playwright-install.log 2>&1
-          cp apps/merchant/preview/shoot.mjs /tmp/shoot.mjs
-          NODE_PATH=$PWD/node_modules node /tmp/shoot.mjs /tmp/preview-dist ci-logs/shots > ci-logs/shoot.log 2>&1
+          node apps/merchant/preview/shoot.mjs /tmp/preview-dist ci-logs/shots > ci-logs/shoot.log 2>&1
           exit 0
         env:
           EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
