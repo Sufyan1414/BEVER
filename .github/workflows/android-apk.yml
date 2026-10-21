@@ -1,6 +1,6 @@
 name: Android test APKs
 
-# Manual build of installable test APKs (customer + merchant) for field testing.
+# Manual build of installable test APKs (customer + merchant + rider) for field testing.
 # Needs one repository secret: EXPO_PUBLIC_SUPABASE_ANON_KEY (Settings > Secrets and variables > Actions).
 # Optional repository variable: EXPO_PUBLIC_SUPABASE_URL (defaults to the BEVER project).
 
@@ -42,7 +42,7 @@ jobs:
         run: |
           mkdir -p build-logs out
           status=0
-          for app in customer merchant; do
+          for app in customer merchant rider; do
             (
               set -e
               cd apps/$app
@@ -74,6 +74,6 @@ jobs:
         run: |
           test "$(head -1 build-logs/status.txt 2>/dev/null || cat /tmp/bl/status.txt | head -1)" = "0" || { echo "Some builds failed"; exit 1; }
           tag="test-build-${GITHUB_RUN_NUMBER}"
-          gh release create "$tag" out/*.apk --title "BEVER test build #${GITHUB_RUN_NUMBER}" --notes "Field-test APKs (customer + merchant). Static build from commit ${GITHUB_SHA}. Not a Play Store build; debug-key signed." --prerelease
+          gh release create "$tag" out/*.apk --title "BEVER test build #${GITHUB_RUN_NUMBER}" --notes "Field-test APKs (customer + merchant + rider). Static build from commit ${GITHUB_SHA}. Not a Play Store build; debug-key signed." --prerelease
         env:
           GH_TOKEN: ${{ github.token }}

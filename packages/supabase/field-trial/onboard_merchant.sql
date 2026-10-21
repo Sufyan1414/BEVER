@@ -65,3 +65,8 @@ $$;
 --   ('Sunflower Oil',   '1 L',    15500),
 --   ('Basmati Rice',    '5 kg',   64000)
 -- ) as p(name, unit, price);
+
+-- Make YOURSELF (or a delivery runner) a rider/operator so you can complete deliveries in the Rider app.
+-- They sign up once in the Customer app with their number and PIN first. Then run:
+-- update public.profiles set role = 'rider', full_name = 'Rider Name', is_active = true
+-- where phone = '+919876543210';

@@ -26,7 +26,7 @@ jobs:
             dir="apps/$ws"; [ "$ws" = shared ] && dir="packages/shared"
             (cd "$dir" && npx tsc --noEmit --pretty false) > "ci-logs/tsc-$ws.log" 2>&1 || { echo "typecheck FAILED: $ws"; status=1; }
           done
-          for app in customer merchant; do
+          for app in customer merchant rider; do
             (cd apps/$app && npx expo export --platform android --output-dir /tmp/out-$app) > "ci-logs/export-$app.log" 2>&1 || { echo "export FAILED: $app"; status=1; }
           done
           npm test --workspace=@bever/merchant > ci-logs/test-merchant.log 2>&1 || { echo "tests FAILED: merchant"; status=1; }
