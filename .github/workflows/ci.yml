@@ -54,6 +54,25 @@ jobs:
         env:
           EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+      - name: Render smoke test of the real customer app (mocked backend, dev-only)
+        if: always()
+        run: |
+          set +e
+          mkdir -p ci-logs/shots
+          cd apps/customer
+          cp metro.config.js /tmp/metro.config.js.bak
+          node -e "
+            const fs=require('fs');let s=fs.readFileSync('metro.config.js','utf8');
+            s=s.replace('config.watchFolders = [monorepoRoot];', 'config.watchFolders = [monorepoRoot];\nconst prevResolve = config.resolver.resolveRequest;\nconfig.resolver.resolveRequest = (ctx, name, platform) => { if (name === \'react-native-maps\' && platform === \'web\') { return { type: \'sourceFile\', filePath: path.resolve(projectRoot, \'preview/maps-stub.js\') }; } return (prevResolve || ctx.resolveRequest)(ctx, name, platform); };');
+            fs.writeFileSync('metro.config.js', s);"
+          npx expo export --platform web --output-dir /tmp/customer-dist > ../../ci-logs/customer-web-export.log 2>&1
+          cp /tmp/metro.config.js.bak metro.config.js
+          cd ../..
+          node apps/customer/preview/smoke.mjs /tmp/customer-dist ci-logs/shots > ci-logs/customer-smoke.log 2>&1
+          exit 0
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
       - name: Publish logs to ci-logs branch
         if: always() && github.event_name != 'pull_request'
         run: |
