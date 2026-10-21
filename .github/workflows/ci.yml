@@ -5,8 +5,11 @@ on:
     branches: [ "feature/**", "upgrade/**" ]
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
-  typecheck:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,12 +18,33 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - name: Typecheck (all workspaces)
-        run: npm run typecheck
-      - name: Export Android bundles (customer, merchant)
+      - name: Typecheck, export, test (logs kept in ./ci-logs)
         run: |
-          cd apps/customer && npx expo export --platform android --output-dir /tmp/out-customer
-          cd ../merchant && npx expo export --platform android --output-dir /tmp/out-merchant
+          mkdir -p ci-logs
+          status=0
+          for ws in shared customer merchant rider admin; do
+            dir="apps/$ws"; [ "$ws" = shared ] && dir="packages/shared"
+            (cd "$dir" && npx tsc --noEmit --pretty false) > "ci-logs/tsc-$ws.log" 2>&1 || { echo "typecheck FAILED: $ws"; status=1; }
+          done
+          for app in customer merchant; do
+            (cd apps/$app && npx expo export --platform android --output-dir /tmp/out-$app) > "ci-logs/export-$app.log" 2>&1 || { echo "export FAILED: $app"; status=1; }
+          done
+          if [ -f packages/shared/package.json ] && grep -q '"test"' packages/shared/package.json; then
+            npm test --workspace=@bever/shared > ci-logs/test-shared.log 2>&1 || { echo "tests FAILED: shared"; status=1; }
+          fi
+          echo "$status" > ci-logs/status.txt
+          echo "commit: $GITHUB_SHA" >> ci-logs/status.txt
+          exit 0
         env:
           EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+      - name: Publish logs to ci-logs branch
+        if: always()
+        run: |
+          git config user.name "ci-bot"; git config user.email "ci-bot@users.noreply.github.com"
+          rm -rf /tmp/cilogs && mkdir /tmp/cilogs && cp -r ci-logs/. /tmp/cilogs/
+          git checkout --orphan ci-logs-tmp && git rm -rf . -q && cp -r /tmp/cilogs/. . 
+          git add -A && git commit -q -m "CI logs for $GITHUB_SHA"
+          git push -f origin HEAD:refs/heads/ci-logs
+      - name: Fail if anything failed
+        run: test "$(head -1 ci-logs/status.txt)" = "0"
