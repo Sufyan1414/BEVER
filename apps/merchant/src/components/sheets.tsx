@@ -5,6 +5,7 @@ import {
 import { colors, radius } from '../theme';
 import { Button } from './ui';
 import { REJECT_REASONS } from '../lib/format';
+import { parseRupeesToPaise } from '../lib/money';
 
 function Sheet({ visible, title, onClose, children }: { visible: boolean; title: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -49,14 +50,6 @@ export function RejectSheet({ visible, orderNumber, busy, onClose, onConfirm }: 
       </View>
     </Sheet>
   );
-}
-
-/** Whole-rupee amounts only for the MVP; stored as integer paise. */
-export function parseRupeesToPaise(text: string): number | null {
-  const cleaned = text.trim();
-  if (!/^\d{1,6}(\.\d{1,2})?$/.test(cleaned)) return null;
-  const paise = Math.round(parseFloat(cleaned) * 100);
-  return paise > 0 && paise <= 100000 * 100 ? paise : null;
 }
 
 export function PriceSheet({ visible, productName, currentPaise, busy, onClose, onSave }: {
