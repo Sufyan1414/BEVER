@@ -152,7 +152,7 @@ export async function ensureDefaultAddressFromBrowsingLocation(location: {
   const city = location.city?.trim() || '';
   const state = location.state?.trim() || '';
   const pincode = location.pincode?.trim() || '';
-  if (!city || !state || !/^\\d{6}$/.test(pincode)) {
+  if (!city || !state || !/^\d{6}$/.test(pincode)) {
     return null;
   }
 
