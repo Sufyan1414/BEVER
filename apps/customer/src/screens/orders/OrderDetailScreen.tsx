@@ -156,7 +156,9 @@ export function OrderDetailScreen() {
 
         {order.deliveryFailureReason ? <><Text style={styles.section}>Delivery issue</Text><View style={styles.card}><Text style={styles.note}>{order.deliveryFailureReason}</Text></View></> : null}
 
-        {order.specialInstructions ? <><Text style={styles.section}>Order note</Text><View style={styles.card}><Text style={styles.note}>{order.specialInstructions}</Text></View></> : null}\n\n        {canCancel ? <TouchableOpacity style={styles.cancelButton} onPress={cancelOrder}><Text style={styles.cancelText}>Cancel order</Text></TouchableOpacity> : null}
+        {order.specialInstructions ? <><Text style={styles.section}>Order note</Text><View style={styles.card}><Text style={styles.note}>{order.specialInstructions}</Text></View></> : null}
+
+        {canCancel ? <TouchableOpacity style={styles.cancelButton} onPress={cancelOrder}><Text style={styles.cancelText}>Cancel order</Text></TouchableOpacity> : null}
       </ScrollView>
     </SafeAreaView>
   );
