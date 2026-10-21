@@ -61,9 +61,11 @@ const step = async (name, fn) => { try { await fn(); } catch (e) { errors.push(`
 await page.goto('http://localhost:4174/');
 await shot('c-home');
 await step('open store', async () => { await page.getByText('Sharma Kirana & General Store').first().click({ timeout: 8000 }); await shot('c-store'); });
-await step('add item', async () => { await page.getByText('Add', { exact: true }).first().click({ timeout: 5000 }); await shot('c-store-added'); });
+await step('add item', async () => { await page.getByLabel('Add Sunflower Oil to cart').click({ timeout: 5000 }); await shot('c-store-added'); });
 await step('cart', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('Cart', { exact: true }).last().click({ timeout: 8000 }); await shot('c-cart'); });
-await step('checkout->login', async () => { await page.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot('c-login'); });
+await step('orders tab', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('Orders', { exact: true }).last().click({ timeout: 8000 }); await shot('c-orders-guest'); });
+await step('profile tab', async () => { await page.getByText('Profile', { exact: true }).last().click({ timeout: 8000 }); await shot('c-profile-guest'); });
+await step('checkout->login', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('Cart', { exact: true }).last().click({ timeout: 8000 }); await page.waitForTimeout(800); await page.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot('c-login'); });
 
 fs.writeFileSync(path.join(out, 'customer-errors.txt'), errors.join('\n'));
 await browser.close();
