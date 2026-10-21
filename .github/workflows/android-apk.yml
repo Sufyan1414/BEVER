@@ -6,6 +6,8 @@ name: Android test APKs
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ "apk/**" ]
 
 permissions:
   contents: write
@@ -28,10 +30,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - name: Require Supabase anon key
+      - name: Check Supabase anon key
         run: |
           if [ -z "$EXPO_PUBLIC_SUPABASE_ANON_KEY" ]; then
-            echo "Missing secret EXPO_PUBLIC_SUPABASE_ANON_KEY. Add it under Settings > Secrets and variables > Actions." ; exit 1
+            echo "NO_KEY=1" >> "$GITHUB_ENV"
+            echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=missing-key-build-check-only" >> "$GITHUB_ENV"
+            echo "::warning::Secret EXPO_PUBLIC_SUPABASE_ANON_KEY is missing. Building for a compile check only; no release will be published."
           fi
       - run: npm ci --no-audit --no-fund
       - name: Build APKs
@@ -66,6 +70,7 @@ jobs:
           git push -f origin HEAD:refs/heads/build-logs
           git checkout -q "$GITHUB_SHA"
       - name: Publish APKs as a release
+        if: env.NO_KEY != '1'
         run: |
           test "$(head -1 build-logs/status.txt 2>/dev/null || cat /tmp/bl/status.txt | head -1)" = "0" || { echo "Some builds failed"; exit 1; }
           tag="test-build-${GITHUB_RUN_NUMBER}"
