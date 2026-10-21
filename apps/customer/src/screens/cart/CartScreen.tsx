@@ -253,7 +253,7 @@ export function CartScreen() {
               ))}
             </View>
 
-            <FreeDeliveryProgress subtotalPaise={summary.subtotalPaise} />
+            <FreeDeliveryProgress subtotalPaise={summary.subtotalPaise} style={{ marginHorizontal: 20 }} />
 
             {/* Subtotal */}
             <View style={styles.summaryCard}>
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ctaBtn: {
-    backgroundColor: '#FF5A36',
+    backgroundColor: '#F59E0B',
     borderRadius: 18,
     overflow: 'hidden',
   },
@@ -548,10 +548,10 @@ const itemStyles = StyleSheet.create({
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF0EA',
+    backgroundColor: '#FFF7E6',
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: '#FF5A36',
+    borderColor: '#F59E0B',
     overflow: 'hidden',
   },
   stepperBtn: {
@@ -598,7 +598,7 @@ const emptyStyles = StyleSheet.create({
     lineHeight: 22,
   },
   btn: {
-    backgroundColor: '#FF5A36',
+    backgroundColor: '#F59E0B',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 32,

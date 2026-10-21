@@ -1,18 +1,18 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 /** Matches the server rule in create_customer_order: merchandise subtotal >= ₹199 ships free. */
 export const FREE_DELIVERY_THRESHOLD_PAISE = 19900;
 
 const rupees = (paise: number) => `₹${Math.ceil(paise / 100)}`;
 
-export function FreeDeliveryProgress({ subtotalPaise }: { subtotalPaise: number }) {
+export function FreeDeliveryProgress({ subtotalPaise, style }: { subtotalPaise: number; style?: StyleProp<ViewStyle> | undefined }) {
   const unlocked = subtotalPaise >= FREE_DELIVERY_THRESHOLD_PAISE;
   const pct = Math.min(100, Math.round((subtotalPaise / FREE_DELIVERY_THRESHOLD_PAISE) * 100));
   const remaining = FREE_DELIVERY_THRESHOLD_PAISE - subtotalPaise;
   return (
     <View
-      style={[styles.box, unlocked && styles.boxDone]}
+      style={[styles.box, unlocked && styles.boxDone, style]}
       accessible
       accessibilityLabel={unlocked ? 'Free delivery unlocked' : `Add ${rupees(remaining)} more for free delivery`}
     >
