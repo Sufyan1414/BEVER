@@ -10,6 +10,7 @@ import {
 } from './services/merchant';
 import { useMerchantData } from './hooks/useMerchantData';
 import { LoginScreen } from './screens/LoginScreen';
+import { PendingApprovalScreen } from './screens/PendingApprovalScreen';
 import { OrdersScreen } from './screens/OrdersScreen';
 import { OrderDetailScreen } from './screens/OrderDetailScreen';
 import { CatalogueScreen } from './screens/CatalogueScreen';
@@ -55,7 +56,6 @@ function Root() {
         if (error) { setRoleOk(null); return; }
         const ok = !!data && data.role === 'merchant' && data.is_active === true;
         setRoleOk(ok);
-        if (!ok) void supabase.auth.signOut();
       });
     return () => { alive = false; };
   }, [userId]);
@@ -67,6 +67,7 @@ function Root() {
   if (roleOk === null) {
     return <View style={styles.center}><StatusBar style="dark" /><ActivityIndicator size="large" color={colors.brand} /></View>;
   }
+  if (!roleOk) return <PendingApprovalScreen phone={String(session.user.email ?? '').replace(/\D/g, '').slice(-10)} onCheck={() => { setRoleOk(null); void supabase.from('profiles').select('role,is_active').eq('id', session.user.id).maybeSingle().then(({ data }) => setRoleOk(!!data && data.role === 'merchant' && data.is_active === true)); }} />;
   return <Console userId={session.user.id} />;
 }
 

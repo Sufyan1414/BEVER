@@ -3,12 +3,13 @@ import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text,
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Button } from '../components/ui';
-import { signInMerchant } from '../services/auth';
+import { signInMerchant, signUpMerchant } from '../services/auth';
 import { colors, radius } from '../theme';
 
 export function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
+  const [mode, setMode] = useState<'in' | 'up'>('in');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +18,7 @@ export function LoginScreen() {
     setBusy(true);
     setError(null);
     try {
-      const r = await signInMerchant(phone, pin);
+      const r = await (mode === 'in' ? signInMerchant(phone, pin) : signUpMerchant(phone, pin));
       if (!r.ok) setError(r.error ?? 'Could not sign in.');
     } catch {
       setError('No internet connection. Check your network and try again.');
@@ -35,7 +36,7 @@ export function LoginScreen() {
         <View style={styles.logoBox}><Ionicons name="storefront" size={28} color="#FFFFFF" /></View>
         <Text style={styles.brand}>BEVER Merchant</Text>
         <Text style={styles.heading}>Run your store,{'\n'}one order at a time.</Text>
-        <Text style={styles.sub}>Sign in with the mobile number and PIN BEVER set up for your store.</Text>
+        <Text style={styles.sub}>{mode === 'in' ? 'Sign in with your mobile number and 6-digit PIN.' : 'Create your account with your mobile number and a 6-digit PIN. BEVER will then activate your store.'}</Text>
 
         <Text style={styles.label}>Mobile number</Text>
         <View style={styles.phoneRow}>
@@ -66,8 +67,11 @@ export function LoginScreen() {
         />
 
         {error ? <View style={{ marginTop: 18 }}><Banner message={error} tone="bad" onDismiss={() => setError(null)} /></View> : null}
-        <Button label="Sign in" onPress={() => { void submit(); }} loading={busy} disabled={!ready} style={{ marginTop: 22 }} />
-        <Text style={styles.foot}>Need access? Ask BEVER support to link your store to this number.</Text>
+        <Button label={mode === 'in' ? 'Sign in' : 'Create account'} onPress={() => { void submit(); }} loading={busy} disabled={!ready} style={{ marginTop: 22 }} />
+        <Text style={styles.switch} onPress={() => { setError(null); setMode(mode === 'in' ? 'up' : 'in'); }}>
+          {mode === 'in' ? 'New store? Create account' : 'Already have an account? Sign in'}
+        </Text>
+        <Text style={styles.foot}>Store accounts are activated by BEVER after sign-up.</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -85,5 +89,6 @@ const styles = StyleSheet.create({
   prefix: { height: 56, paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: '#F5F5F4', borderWidth: 1, borderColor: colors.lineStrong, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
   prefixText: { fontSize: 16, fontWeight: '800', color: colors.ink2 },
   input: { height: 56, borderRadius: radius.md, borderWidth: 1, borderColor: colors.lineStrong, backgroundColor: colors.surface, paddingHorizontal: 16, fontSize: 17, color: colors.ink },
+  switch: { fontSize: 14, fontWeight: '800', color: colors.brandDark, textAlign: 'center', marginTop: 22, padding: 8 },
   foot: { fontSize: 12, color: colors.muted, textAlign: 'center', marginTop: 18, lineHeight: 18 },
 });

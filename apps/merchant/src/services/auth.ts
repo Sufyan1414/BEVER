@@ -10,16 +10,37 @@ export function phoneEmail(phone: string) {
   return 'customer_' + phone.replace(/\D/g, '') + '@bever.app';
 }
 
-export async function signInMerchant(phone: string, pin: string) {
+function validate(phone: string, pin: string) {
   const normalized = normalizeIndianPhone(phone);
-  if (!normalized) return { ok:false, error:'Enter a valid 10-digit Indian mobile number.' };
-  if (!/^\d{6}$/.test(pin)) return { ok:false, error:'PIN must be exactly 6 digits.' };
-  const { data, error } = await supabase.auth.signInWithPassword({ email: phoneEmail(normalized), password: pin });
-  if (error) return { ok:false, error: error.message };
-  const { data: profile } = await supabase.from('profiles').select('role,full_name,is_active').eq('id', data.user.id).maybeSingle();
-  if (!profile || profile.role !== 'merchant' || !profile.is_active) {
-    await supabase.auth.signOut();
-    return { ok:false, error:'This account is not an active BEVER merchant account.' };
-  }
-  return { ok:true };
+  if (!normalized) return { error: 'Enter a valid 10-digit Indian mobile number.' } as const;
+  if (!/^\d{6}$/.test(pin)) return { error: 'PIN must be exactly 6 digits.' } as const;
+  return { normalized } as const;
+}
+
+function friendlyAuthError(message: string) {
+  if (/invalid login credentials/i.test(message)) return 'Wrong number or PIN. New here? Tap "Create account" below.';
+  if (/already registered|already exists/i.test(message)) return 'This number already has an account. Tap "Sign in" instead.';
+  if (/email not confirmed/i.test(message)) return 'This account is not confirmed yet. Ask BEVER support.';
+  return message;
+}
+
+/** Signs in. Role is checked by the app shell: a non-merchant lands on the "waiting for approval" screen. */
+export async function signInMerchant(phone: string, pin: string) {
+  const v = validate(phone, pin);
+  if ('error' in v) return { ok: false, error: v.error };
+  const { error } = await supabase.auth.signInWithPassword({ email: phoneEmail(v.normalized), password: pin });
+  if (error) return { ok: false, error: friendlyAuthError(error.message) };
+  return { ok: true };
+}
+
+/** Creates a login (always a plain customer role). BEVER staff then activate it as a merchant. */
+export async function signUpMerchant(phone: string, pin: string) {
+  const v = validate(phone, pin);
+  if ('error' in v) return { ok: false, error: v.error };
+  const { data, error } = await supabase.auth.signUp({
+    email: phoneEmail(v.normalized), password: pin, options: { data: { phone: v.normalized } },
+  });
+  if (error) return { ok: false, error: friendlyAuthError(error.message) };
+  if (!data.session) return signInMerchant(phone, pin);
+  return { ok: true };
 }
