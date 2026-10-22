@@ -80,6 +80,14 @@ jobs:
           EXPO_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0dWFhZm93ZG9pam9qZG10Z2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MjIxOTEsImV4cCI6MjEwNjQ5ODE5MX0.hEwDJgb3ZKcBYrZ_iBRcB1YrgOV1JAYYjI1F4QriQJs
         run: node scripts/live-probe.mjs > ci-logs/live-probe.txt 2>&1 || true
 
+      - name: Live customer end-to-end test (one dedicated test account; cancels its order)
+        continue-on-error: true
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://atuaafowdoijojdmtgcr.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0dWFhZm93ZG9pam9qZG10Z2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MjIxOTEsImV4cCI6MjEwNjQ5ODE5MX0.hEwDJgb3ZKcBYrZ_iBRcB1YrgOV1JAYYjI1F4QriQJs
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then node scripts/live-e2e.mjs > ci-logs/live-e2e.txt 2>&1 || true; else echo "skipped on pull_request" > ci-logs/live-e2e.txt; fi
+
       - name: Publish logs to ci-logs branch
         if: always() && github.event_name != 'pull_request'
         run: |
