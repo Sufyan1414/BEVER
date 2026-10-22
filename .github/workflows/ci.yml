@@ -73,6 +73,13 @@ jobs:
         env:
           EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+      - name: Live backend probe (read-only, public anon key, no writes)
+        continue-on-error: true
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://atuaafowdoijojdmtgcr.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0dWFhZm93ZG9pam9qZG10Z2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MjIxOTEsImV4cCI6MjEwNjQ5ODE5MX0.hEwDJgb3ZKcBYrZ_iBRcB1YrgOV1JAYYjI1F4QriQJs
+        run: node scripts/live-probe.mjs > ci-logs/live-probe.txt 2>&1 || true
+
       - name: Publish logs to ci-logs branch
         if: always() && github.event_name != 'pull_request'
         run: |
