@@ -32,7 +32,7 @@ import {
   TextInput,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -283,6 +283,7 @@ export function HomeScreen() {
   const navigation = useNavigation<HomeNavProp>();
 
   const isAuthenticated = session !== null;
+  const insets = useSafeAreaInsets();
 
   const [homeState, setHomeState] = useState<HomeState>({ kind: 'LOADING' });
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>(ALL_KEY);
@@ -433,8 +434,8 @@ export function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={styles.safe} edges={[]}>
+      <StatusBar style="light" />
 
       {/* Change Location Modal */}
       <Modal
@@ -447,7 +448,7 @@ export function HomeScreen() {
       </Modal>
 
       {/* ── Top Header ── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerLeft}>
           <Text style={styles.wordmark}>BEVER</Text>
           {locationLabel ? (
@@ -612,15 +613,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 14,
-    backgroundColor: '#F7F7F3',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EFEFEB',
+    backgroundColor: '#064E3B',
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    paddingBottom: 18,
   },
   headerLeft: { flex: 1, gap: 5 },
   wordmark: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#059669',
+    color: '#6EE7B7',
     letterSpacing: 3,
     lineHeight: 30,
   },
@@ -629,27 +631,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderRadius: 8,
     paddingHorizontal: 9,
     paddingVertical: 5,
     alignSelf: 'flex-start',
     maxWidth: SCREEN_WIDTH * 0.55,
   },
-  locationChipEmpty: { backgroundColor: '#EFEFEB' },
+  locationChipEmpty: { backgroundColor: 'rgba(255,255,255,0.14)' },
   locationChipPin: { fontSize: 11 },
-  locationChipText: { fontSize: 12, fontWeight: '600', color: '#065F46', flexShrink: 1 },
-  locationChipTextEmpty: { color: '#6B6B67' },
-  locationChipCaret: { fontSize: 14, color: '#059669', fontWeight: '700' },
+  locationChipText: { fontSize: 12, fontWeight: '600', color: '#FFFFFF', flexShrink: 1 },
+  locationChipTextEmpty: { color: '#D1FAE5' },
+  locationChipCaret: { fontSize: 14, color: '#6EE7B7', fontWeight: '700' },
 
   signInBtn: {
-    backgroundColor: '#059669',
+    backgroundColor: '#F59E0B',
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginLeft: 12,
   },
-  signInBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  signInBtnText: { color: '#1C1917', fontSize: 13, fontWeight: '800' },
 
   // ── Search ──
   searchWrap: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 4 },

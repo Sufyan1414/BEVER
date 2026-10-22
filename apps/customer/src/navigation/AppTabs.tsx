@@ -82,8 +82,8 @@ export function AppTabs() {
             ? {
                 tabBarBadge: cartCount,
                 tabBarBadgeStyle: {
-                  backgroundColor: '#059669',
-                  color: '#FFFFFF',
+                  backgroundColor: '#F59E0B',
+                  color: '#1C1917',
                   fontSize: 10,
                   fontWeight: '700' as const,
                 },

@@ -102,7 +102,7 @@ export function OrderDetailScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
       >
-        <View style={[styles.statusCard, terminal && styles.statusCardTerminal]}>
+        <View style={[styles.statusCard, terminal && styles.statusCardTerminal, order.status === 'DELIVERED' && styles.statusCardDone]}>
           <Text style={styles.statusEyebrow}>{terminal ? 'ORDER STATUS' : 'LIVE ORDER STATUS'}</Text>
           <Text style={styles.statusTitle}>{formatOrderStatus(order.status)}</Text>
           <Text style={styles.statusSub}>{order.status === 'DELIVERED' ? 'Delivered successfully.' : order.status === 'REJECTED' || order.status === 'CANCELLED' ? 'This order will not be delivered.' : order.status === 'DELIVERY_FAILED' ? (order.deliveryFailureReason ?? 'Delivery could not be completed. BEVER operations has been notified.') : 'We keep this screen updated while your order moves through the store and delivery.'}</Text>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   safe:{flex:1,backgroundColor:'#F3FBF7'},center:{flex:1,alignItems:'center',justifyContent:'center',padding:24},
   header:{height:66,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:18,borderBottomWidth:1,borderBottomColor:'#E7E5E4',backgroundColor:'#F3FBF7'},
   back:{fontSize:38,color:'#1C1917',lineHeight:40},headerCopy:{flex:1,paddingHorizontal:12},title:{fontSize:18,fontWeight:'800',color:'#1C1917'},store:{fontSize:11,color:'#78716C',marginTop:2},
-  content:{padding:20,paddingBottom:48},statusCard:{backgroundColor:'#ECFDF5',borderWidth:1,borderColor:'#A7F3D0',borderRadius:20,padding:18,marginBottom:24},statusCardTerminal:{backgroundColor:'#F5F5F4',borderColor:'#E7E5E4'},
+  content:{padding:20,paddingBottom:48},statusCard:{backgroundColor:'#FFF7E6',borderWidth:1,borderColor:'#FDE68A',borderRadius:20,padding:18,marginBottom:24},statusCardTerminal:{backgroundColor:'#F5F5F4',borderColor:'#E7E5E4'},statusCardDone:{backgroundColor:'#ECFDF5',borderColor:'#A7F3D0'},
   statusEyebrow:{fontSize:10,fontWeight:'800',letterSpacing:1.2,color:'#A16207'},statusTitle:{fontSize:24,fontWeight:'900',color:'#1C1917',marginTop:5},statusSub:{fontSize:12,color:'#78716C',lineHeight:18,marginTop:5},
   section:{fontSize:16,fontWeight:'900',color:'#1C1917',marginBottom:10,marginTop:2},timeline:{backgroundColor:'#fff',borderWidth:1,borderColor:'#EEECE9',borderRadius:18,padding:16,marginBottom:24},
   step:{flexDirection:'row',minHeight:62},stepRail:{width:30,alignItems:'center'},dot:{width:20,height:20,borderRadius:10,borderWidth:2,borderColor:'#D6D3D1',backgroundColor:'#fff',alignItems:'center',justifyContent:'center'},dotDone:{backgroundColor:'#059669',borderColor:'#059669'},dotActive:{borderColor:'#059669'},tick:{fontSize:12,fontWeight:'900',color:'#fff'},rail:{width:2,flex:1,backgroundColor:'#E7E5E4',marginVertical:3},railDone:{backgroundColor:'#059669'},stepCopy:{flex:1,paddingLeft:10,paddingBottom:12},stepTitle:{fontSize:13,fontWeight:'600',color:'#78716C'},stepTitleStrong:{color:'#1C1917',fontWeight:'800'},stepSub:{fontSize:10,color:'#A8A29E',marginTop:3,lineHeight:15},

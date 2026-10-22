@@ -27,11 +27,11 @@ export function FreeDeliveryProgress({ subtotalPaise, style }: { subtotalPaise: 
 }
 
 const styles = StyleSheet.create({
-  box: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#A7F3D0', borderRadius: 14, padding: 14, marginBottom: 14 },
+  box: { backgroundColor: '#FFF7E6', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 14, padding: 14, marginBottom: 14 },
   boxDone: { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' },
-  text: { fontSize: 12, fontWeight: '800', color: '#065F46' },
+  text: { fontSize: 12, fontWeight: '800', color: '#B45309' },
   textDone: { color: '#047857' },
   track: { height: 6, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.07)', marginTop: 10, overflow: 'hidden' },
-  fill: { height: 6, borderRadius: 3, backgroundColor: '#059669' },
-  fillDone: { backgroundColor: '#10B981' },
+  fill: { height: 6, borderRadius: 3, backgroundColor: '#F59E0B' },
+  fillDone: { backgroundColor: '#059669' },
 });
