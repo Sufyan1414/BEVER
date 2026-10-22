@@ -21,29 +21,18 @@ for (const t of ['orders', 'profiles', 'order_items', 'customer_addresses', 'del
   const r = await get(`/rest/v1/${t}?select=id&limit=3`);
   log(`PRIVATE table ${t} (anon must see nothing)`, { status: r.s, rows: Array.isArray(r.b) ? r.b.length : r.b });
 }
-const near = await rpc('get_nearby_stores', { p_lat: 19.8762, p_lng: 75.3433 });
+const near = await rpc('get_nearby_stores', { user_lat: 19.8762, user_lng: 75.3433, limit_count: 20 });
 log('RPC get_nearby_stores', { status: near.s, result: Array.isArray(near.b) ? `${near.b.length} stores` : near.b });
+const U = '00000000-0000-0000-0000-000000000000';
 for (const [fn, args] of [
-  ['create_customer_order', {}], ['transition_order_status', {}], ['complete_order_delivery', {}],
-  ['accept_delivery_assignment', {}], ['assign_order_to_rider', {}], ['ensure_profile', {}], ['quote_customer_order', {}],
+  ['create_customer_order', { p_store_id: U, p_delivery_address_id: U, p_items: [], p_payment_method: 'COD', p_special_instructions: null }],
+  ['transition_order_status', { p_order_id: U, p_to_status: 'CONFIRMED', p_note: null }],
+  ['complete_order_delivery', { p_order_id: U, p_delivery_otp: '0000', p_cod_collected: false, p_failure_note: null }],
+  ['accept_delivery_assignment', { p_order_id: U }],
+  ['ensure_my_profile', {}],
 ]) {
   const r = await rpc(fn, args);
   const code = r.b?.code;
-  log(`RPC ${fn}`, code === 'PGRST202' ? 'MISSING' : `exists (status ${r.s}, ${code ?? ''} ${String(r.b?.message ?? '').slice(0, 70)})`);
+  log(`RPC ${fn}`, code === 'PGRST202' ? `MISSING (${r.b?.message})` : `exists (status ${r.s}: ${String(r.b?.message ?? '').slice(0, 90)})`);
 }
-const buckets = await get('/storage/v1/bucket');
-log('STORAGE buckets (anon)', { status: buckets.s, body: Array.isArray(buckets.b) ? buckets.b.map(b => b.name) : buckets.b });
 console.log(out.join('\n'));
-
-// Authoritative list of exposed functions and their parameter names (PostgREST OpenAPI)
-const spec = await get('/rest/v1/');
-const lines = [];
-for (const [path, def] of Object.entries(spec.b?.paths ?? {})) {
-  if (!path.startsWith('/rpc/')) continue;
-  const params = def?.post?.parameters?.[0]?.schema?.properties ?? {};
-  const req = def?.post?.parameters?.[0]?.schema?.required ?? [];
-  lines.push(`${path.slice(5)}(${Object.keys(params).map(k => k + (req.includes(k) ? '*' : '')).join(', ')})`);
-}
-console.log('\nEXPOSED RPC FUNCTIONS:\n' + (lines.sort().join('\n') || '(none / spec unavailable: ' + spec.s + ')'));
-const tables = Object.entries(spec.b?.definitions ?? {}).map(([n, d]) => `${n}(${Object.keys(d.properties ?? {}).join(', ')})`);
-console.log('\nEXPOSED TABLES/COLUMNS:\n' + tables.sort().join('\n'));
