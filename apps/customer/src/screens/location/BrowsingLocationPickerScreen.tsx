@@ -218,7 +218,7 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
   const isFormValid = Boolean(
     houseNo.trim() &&
     floor.trim() &&
-    (!needsPincode || /^\\d{6}$/.test(pincode.trim()))
+    (!needsPincode || /^\d{6}$/.test(pincode.trim()))
   );
 
   const handleSaveAndContinue = useCallback(async () => {
@@ -230,9 +230,9 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
       lat: selectedResult.lat,
       lng: selectedResult.lng,
       label: selectedResult.areaTitle,
-      city: selectedResult.city || undefined,
-      state: selectedResult.state || undefined,
-      pincode: (selectedResult.pincode || pincode.trim()) || undefined,
+      ...(selectedResult.city ? { city: selectedResult.city } : {}),
+      ...(selectedResult.state ? { state: selectedResult.state } : {}),
+      ...((selectedResult.pincode || pincode.trim()) ? { pincode: (selectedResult.pincode || pincode.trim()) } : {}),
       setAt: new Date().toISOString(),
       houseNo: houseNo.trim(),
       floor: floor.trim(),

@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [ "feature/**", "upgrade/**" ]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Typecheck, export, test (logs kept in ./ci-logs)
+        run: |
+          mkdir -p ci-logs
+          status=0
+          for ws in shared customer merchant rider admin; do
+            dir="apps/$ws"; [ "$ws" = shared ] && dir="packages/shared"
+            (cd "$dir" && npx tsc --noEmit --pretty false) > "ci-logs/tsc-$ws.log" 2>&1 || { echo "typecheck FAILED: $ws"; status=1; }
+          done
+          for app in customer merchant rider; do
+            (cd apps/$app && npx expo export --platform android --output-dir /tmp/out-$app) > "ci-logs/export-$app.log" 2>&1 || { echo "export FAILED: $app"; status=1; }
+          done
+          npm test --workspace=@bever/merchant > ci-logs/test-merchant.log 2>&1 || { echo "tests FAILED: merchant"; status=1; }
+          echo "$status" > ci-logs/status.txt
+          echo "commit: $GITHUB_SHA" >> ci-logs/status.txt
+          exit 0
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+      - name: Visual preview of merchant screens (sample data, dev-only)
+        if: always()
+        run: |
+          set +e
+          mkdir -p ci-logs/shots
+          cd apps/merchant
+          cp index.ts /tmp/index.ts.bak
+          cp preview/entry.ts index.ts && sed -i "s#'./PreviewApp'#'./preview/PreviewApp'#" index.ts
+          npx expo export --platform web --output-dir /tmp/preview-dist > ../../ci-logs/preview-export.log 2>&1
+          cp /tmp/index.ts.bak index.ts
+          cd ../..
+          npm i --no-save --no-audit --no-fund playwright > ci-logs/playwright-install.log 2>&1
+          npx playwright install --with-deps chromium >> ci-logs/playwright-install.log 2>&1
+          node apps/merchant/preview/shoot.mjs /tmp/preview-dist ci-logs/shots > ci-logs/shoot.log 2>&1
+          exit 0
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+      - name: Render smoke test of the real customer app (mocked backend, dev-only)
+        if: always()
+        run: |
+          set +e
+          mkdir -p ci-logs/shots
+          cd apps/customer
+          cp metro.config.js /tmp/metro.config.js.bak
+          node -e "
+            const fs=require('fs');let s=fs.readFileSync('metro.config.js','utf8');
+            s=s.replace('config.watchFolders = [monorepoRoot];', 'config.watchFolders = [monorepoRoot];\nconst prevResolve = config.resolver.resolveRequest;\nconfig.resolver.resolveRequest = (ctx, name, platform) => { if (name === \'react-native-maps\' && platform === \'web\') { return { type: \'sourceFile\', filePath: path.resolve(projectRoot, \'preview/maps-stub.js\') }; } return (prevResolve || ctx.resolveRequest)(ctx, name, platform); };');
+            fs.writeFileSync('metro.config.js', s);"
+          npx expo export --platform web --output-dir /tmp/customer-dist > ../../ci-logs/customer-web-export.log 2>&1
+          cp /tmp/metro.config.js.bak metro.config.js
+          cd ../..
+          node apps/customer/preview/smoke.mjs /tmp/customer-dist ci-logs/shots > ci-logs/customer-smoke.log 2>&1
+          exit 0
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+      - name: Publish logs to ci-logs branch
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          rm -rf /tmp/cilogs && mkdir /tmp/cilogs && cp -r ci-logs/. /tmp/cilogs/
+          cd /tmp/cilogs
+          git init -q -b ci-logs
+          git config user.name "ci-bot"; git config user.email "ci-bot@users.noreply.github.com"
+          git add -A && git commit -q -m "CI logs for $GITHUB_SHA"
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c http.extraheader="AUTHORIZATION: basic $auth" push -f "https://github.com/$GITHUB_REPOSITORY.git" ci-logs:refs/heads/ci-logs
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Fail if anything failed
+        run: test "$(head -1 ci-logs/status.txt)" = "0"

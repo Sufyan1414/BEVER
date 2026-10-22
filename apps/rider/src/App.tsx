@@ -1,4 +1,3 @@
-import './global.css';
 import React,{useCallback,useEffect,useState} from 'react';
 import {ActivityIndicator,RefreshControl,ScrollView,StyleSheet,Switch,Text,TextInput,TouchableOpacity,View} from 'react-native';
 import {StatusBar} from 'expo-status-bar';

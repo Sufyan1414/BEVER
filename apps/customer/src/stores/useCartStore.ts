@@ -121,7 +121,7 @@ export const useCartStore = create<CartState>((set, get) => ({
           : null;
         const oneStoreOnly = validItems !== null &&
           validItems.every((item) => item.storeId === validItems[0]?.storeId) &&
-          (validItems.length === 0 || parsed.storeId === validItems[0].storeId);
+          (validItems.length === 0 || parsed.storeId === validItems[0]?.storeId);
 
         if (validStoreId && validStoreName && validItems && oneStoreOnly) {
           const storeId = validItems.length ? parsed.storeId : null;

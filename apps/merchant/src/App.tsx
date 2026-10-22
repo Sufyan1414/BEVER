@@ -1,129 +1,345 @@
-import './global.css';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, Vibration, View } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import type { Session } from '@supabase/supabase-js';
 import { supabase } from './services/supabase';
-import { signInMerchant } from './services/auth';
+import {
+  createProduct, friendlyError, setProductAvailability, setProductPrice, setStoreOpen, transitionOrder,
+} from './services/merchant';
+import { useMerchantData } from './hooks/useMerchantData';
+import { LoginScreen } from './screens/LoginScreen';
+import { OrdersScreen } from './screens/OrdersScreen';
+import { OrderDetailScreen } from './screens/OrderDetailScreen';
+import { CatalogueScreen } from './screens/CatalogueScreen';
+import { StoreScreen } from './screens/StoreScreen';
+import { AddProductSheet, PriceSheet, RejectSheet } from './components/sheets';
+import { Banner, Button, EmptyState, Pill } from './components/ui';
+import { NEW_STATUSES, rupees } from './lib/format';
+import type { Order, OrderStatus, Product } from './lib/types';
+import { colors, radius } from './theme';
 
-type OrderStatus = 'PENDING'|'MERCHANT_ACCEPTED'|'PREPARING'|'READY_FOR_PICKUP'|'RIDER_ASSIGNED'|'RIDER_AT_STORE'|'PICKED_UP'|'OUT_FOR_DELIVERY'|'DELIVERED'|'REJECTED'|'CANCELLED'|'PAYMENT_FAILED'|'DELIVERY_FAILED'|'REFUND_PENDING'|'REFUNDED';
-type OrderItem = { id:string; product_name_snapshot:string; unit_price:number; quantity:number; total_price:number; unit_snapshot:string|null; };
-type Order = { id:string; order_number:string; status:OrderStatus; total_amount:number; items_total:number; delivery_fee:number; payment_method:string; special_instructions:string|null; created_at:string; customer_id:string; order_items?:OrderItem[]; };
-type Product = { id:string; name:string; price:number; unit:string; is_available:boolean; is_active:boolean; };
-type Store = { id:string; name:string; category:string; is_open:boolean; is_verified:boolean; address_text:string; };
+type Tab = 'orders' | 'catalogue' | 'store';
 
-const rupees=(p:number)=>'₹'+Math.round(p/100);
-const statusLabel=(s:OrderStatus)=>({PENDING:'New order',MERCHANT_ACCEPTED:'Accepted',PREPARING:'Preparing',READY_FOR_PICKUP:'Ready for pickup',RIDER_ASSIGNED:'Rider assigned',RIDER_AT_STORE:'Rider at store',PICKED_UP:'Picked up',OUT_FOR_DELIVERY:'Out for delivery',DELIVERED:'Delivered',REJECTED:'Rejected',CANCELLED:'Cancelled',PAYMENT_FAILED:'Payment failed',DELIVERY_FAILED:'Delivery failed',REFUND_PENDING:'Refund pending',REFUNDED:'Refunded'} as Record<OrderStatus,string>)[s];
-const nextAction=(s:OrderStatus): {to:OrderStatus;label:string}|null => s==='PENDING'?{to:'MERCHANT_ACCEPTED',label:'Accept order'}:s==='MERCHANT_ACCEPTED'?{to:'PREPARING',label:'Start preparing'}:s==='PREPARING'?{to:'READY_FOR_PICKUP',label:'Mark ready'}:null;
-
-export default function App(){
-  const [session,setSession]=useState<any>(null);
-  const [authLoading,setAuthLoading]=useState(true);
-  const [phone,setPhone]=useState('');
-  const [pin,setPin]=useState('');
-  const [authError,setAuthError]=useState<string|null>(null);
-  const [signing,setSigning]=useState(false);
-  const [store,setStore]=useState<Store|null>(null);
-  const [orders,setOrders]=useState<Order[]>([]);
-  const [products,setProducts]=useState<Product[]>([]);
-  const [tab,setTab]=useState<'orders'|'products'|'store'>('orders');
-  const [selectedOrder,setSelectedOrder]=useState<Order|null>(null);
-  const [refreshing,setRefreshing]=useState(false);
-  const [busy,setBusy]=useState(false);
-  const [notice,setNotice]=useState<string|null>(null);
-
-  useEffect(()=>{ supabase.auth.getSession().then(({data})=>{setSession(data.session);setAuthLoading(false);}); const {data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s)); return ()=>data.subscription.unsubscribe();},[]);
-
-  const load=useCallback(async(refresh=false)=>{
-    if(!session) return;
-    if(refresh) setRefreshing(true);
-    setNotice(null);
-    try{
-      const {data:st,error:se}=await supabase.from('stores').select('id,name,category,is_open,is_verified,address_text').eq('merchant_id',session.user.id).maybeSingle();
-      if(se) throw se;
-      setStore(st);
-      if(!st){setOrders([]);setProducts([]);return;}
-      const [{data:os,error:oe},{data:ps,error:pe}]=await Promise.all([
-        supabase.from('orders').select('id,order_number,status,total_amount,items_total,delivery_fee,payment_method,special_instructions,created_at,customer_id,order_items(id,product_name_snapshot,unit_price,quantity,total_price,unit_snapshot)').eq('store_id',st.id).order('created_at',{ascending:false}).limit(50),
-        supabase.from('products').select('id,name,price,unit,is_available,is_active').eq('store_id',st.id).eq('is_active',true).order('sort_order',{ascending:true}).limit(100),
-      ]);
-      if(oe) throw oe;if(pe) throw pe;
-      setOrders((os??[]) as Order[]);setProducts((ps??[]) as Product[]);
-    }catch(e:any){setNotice(e?.message??'Could not load merchant data.');}
-    finally{setRefreshing(false);}
-  },[session]);
-
-  useEffect(()=>{load();},[load]);
-
-  useEffect(()=>{
-    if(!store) return;
-    const channel=supabase
-      .channel(`merchant-store-${store.id}`)
-      .on('postgres_changes',{event:'*',schema:'public',table:'orders',filter:`store_id=eq.${store.id}`},()=>load(true))
-      .on('postgres_changes',{event:'*',schema:'public',table:'products',filter:`store_id=eq.${store.id}`},()=>load(true))
-      .subscribe();
-    const timer=setInterval(()=>load(true),30000);
-    return()=>{clearInterval(timer);supabase.removeChannel(channel);};
-  },[store?.id,load]);
-
-  const transition=async(order:Order,to:OrderStatus)=>{
-    setBusy(true);setNotice(null);
-    try{
-      const {error}=await supabase.rpc('transition_order_status',{p_order_id:order.id,p_to_status:to,p_note:null});
-      if(error) throw error;
-      setSelectedOrder(null);await load(true);
-    }catch(e:any){setNotice(e?.message??'Could not update order.');}
-    finally{setBusy(false);}
-  };
-
-  const reject=async(order:Order)=>{
-    setBusy(true);setNotice(null);
-    try{
-      const {error}=await supabase.rpc('transition_order_status',{p_order_id:order.id,p_to_status:'REJECTED',p_note:'Merchant declined the order.'});
-      if(error) throw error;
-      setSelectedOrder(null);await load(true);
-    }catch(e:any){setNotice(e?.message??'Could not reject order.');}
-    finally{setBusy(false);}
-  };
-
-  const toggleProduct=async(product:Product,value:boolean)=>{
-    setBusy(true);setNotice(null);
-    try{
-      const {error}=await supabase.from('products').update({is_available:value}).eq('id',product.id);
-      if(error) throw error;
-      setProducts(prev=>prev.map(p=>p.id===product.id?{...p,is_available:value}:p));
-    }catch(e:any){setNotice(e?.message??'Could not update availability.');}
-    finally{setBusy(false);}
-  };
-
-  const toggleStore=async(value:boolean)=>{
-    if(!store)return;setBusy(true);setNotice(null);
-    try{
-      const {error}=await supabase.from('stores').update({is_open:value}).eq('id',store.id);
-      if(error) throw error;setStore({...store,is_open:value});
-    }catch(e:any){setNotice(e?.message??'Could not update store status.');}
-    finally{setBusy(false);}
-  };
-
-  if(authLoading)return <View style={styles.center}><ActivityIndicator size="large" color="#F59E0B"/></View>;
-  if(!session)return <View style={styles.auth}><StatusBar style="dark"/><Text style={styles.logo}>BEVER</Text><Text style={styles.role}>Merchant console</Text><Text style={styles.heading}>Manage your store</Text><Text style={styles.sub}>Sign in with the merchant account created for your store.</Text><Text style={styles.label}>Mobile number</Text><TextInput value={phone} onChangeText={v=>setPhone(v.replace(/\D/g,'').slice(0,10))} keyboardType="number-pad" placeholder="98765 43210" style={styles.input}/><Text style={styles.label}>6-digit PIN</Text><TextInput value={pin} onChangeText={v=>setPin(v.replace(/\D/g,'').slice(0,6))} keyboardType="number-pad" secureTextEntry style={styles.input}/>{authError?<Text style={styles.error}>{authError}</Text>:null}<TouchableOpacity style={styles.primary} disabled={signing} onPress={async()=>{setSigning(true);setAuthError(null);const r=await signInMerchant(phone,pin);if(!r.ok)setAuthError(r.error!);setSigning(false);}}>{signing?<ActivityIndicator color="#fff"/>:<Text style={styles.primaryText}>Sign in</Text>}</TouchableOpacity></View>;
-
-  if(!store)return <View style={styles.center}><Text style={styles.heading}>No merchant store linked</Text><Text style={styles.sub}>Your account is signed in, but BEVER has not linked a store to it yet.</Text><TouchableOpacity style={styles.secondary} onPress={()=>supabase.auth.signOut()}><Text style={styles.secondaryText}>Sign out</Text></TouchableOpacity></View>;
-
-  const pending=orders.filter(o=>['PENDING','MERCHANT_ACCEPTED','PREPARING'].includes(o.status)).length;
-  const active=selectedOrder;
-
-  return <View style={styles.safe}><StatusBar style="dark"/>
-    <View style={styles.header}><View style={{flex:1}}><Text style={styles.brand}>BEVER Merchant</Text><Text style={styles.storeName}>{store.name} • {store.is_open?'OPEN':'PAUSED'}</Text></View><Switch value={store.is_open} onValueChange={toggleStore} disabled={busy}/></View>
-    {notice?<View style={styles.notice}><Text style={styles.noticeText}>{notice}</Text></View>:null}
-    {active?<ScrollView contentContainerStyle={styles.content}><TouchableOpacity onPress={()=>setSelectedOrder(null)}><Text style={styles.back}>‹ Back to orders</Text></TouchableOpacity><Text style={styles.pageTitle}>Order #{active.order_number}</Text><View style={styles.card}><Text style={styles.status}>{statusLabel(active.status)}</Text><Text style={styles.amount}>{rupees(active.total_amount)}</Text><Text style={styles.meta}>{new Date(active.created_at).toLocaleString('en-IN')} • Cash on Delivery</Text><View style={styles.orderTotals}><Text style={styles.meta}>Items {rupees(active.items_total)}</Text><Text style={styles.meta}>Delivery {active.delivery_fee===0?'FREE':rupees(active.delivery_fee)}</Text></View>{active.special_instructions?<Text style={styles.note}>Note: {active.special_instructions}</Text>:null}</View><View style={styles.card}><Text style={styles.cardTitle}>Items to prepare</Text>{(active.order_items??[]).map(item=><View key={item.id} style={styles.itemRow}><View style={{flex:1}}><Text style={styles.cardTitle}>{item.product_name_snapshot}</Text><Text style={styles.meta}>{item.quantity} × {rupees(item.unit_price)}{item.unit_snapshot?' • '+item.unit_snapshot:''}</Text></View><Text style={styles.amount}>{rupees(item.total_price)}</Text></View>)}</View>{nextAction(active.status)?<TouchableOpacity style={styles.primary} disabled={busy} onPress={()=>transition(active,nextAction(active.status)!.to)}><Text style={styles.primaryText}>{nextAction(active.status)!.label}</Text></TouchableOpacity>:null}{active.status==='PENDING'?<TouchableOpacity style={styles.reject} disabled={busy} onPress={()=>reject(active)}><Text style={styles.rejectText}>Reject order</Text></TouchableOpacity>:null}</ScrollView>:
-    <><View style={styles.tabs}><TouchableOpacity onPress={()=>setTab('orders')}><Text style={[styles.tab,tab==='orders'&&styles.tabActive]}>Orders {pending>0?'• '+pending:''}</Text></TouchableOpacity><TouchableOpacity onPress={()=>setTab('products')}><Text style={[styles.tab,tab==='products'&&styles.tabActive]}>Products</Text></TouchableOpacity><TouchableOpacity onPress={()=>setTab('store')}><Text style={[styles.tab,tab==='store'&&styles.tabActive]}>Store</Text></TouchableOpacity></View>
-    {tab==='orders'?<ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>load(true)}/>}><Text style={styles.pageTitle}>Orders</Text>{orders.length===0?<Text style={styles.empty}>No orders yet. New customer orders will appear here.</Text>:orders.map(o=><TouchableOpacity key={o.id} style={styles.card} onPress={()=>setSelectedOrder(o)}><View style={styles.row}><View style={{flex:1}}><Text style={styles.cardTitle}>#{o.order_number}</Text><Text style={styles.meta}>{new Date(o.created_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} • COD • {o.order_items?.reduce((sum,i)=>sum+i.quantity,0)??0} items</Text></View><Text style={styles.amount}>{rupees(o.total_amount)}</Text></View><Text style={styles.status}>{statusLabel(o.status)}</Text></TouchableOpacity>)}</ScrollView>:null}
-    {tab==='products'?<ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>load(true)}/>}><Text style={styles.pageTitle}>Availability</Text><Text style={styles.sub}>Keep stock visibility accurate without editing your catalogue.</Text>{products.map(p=><View key={p.id} style={styles.card}><View style={styles.row}><View style={{flex:1}}><Text style={styles.cardTitle}>{p.name}</Text><Text style={styles.meta}>{rupees(p.price)} • {p.unit}</Text></View><Switch value={p.is_available} onValueChange={v=>toggleProduct(p,v)} disabled={busy}/></View></View>)}</ScrollView>:null}
-    {tab==='store'?<ScrollView contentContainerStyle={styles.content}><Text style={styles.pageTitle}>Store settings</Text><View style={styles.card}><Text style={styles.cardTitle}>{store.name}</Text><Text style={styles.meta}>{store.category} • {store.is_verified?'Verified':'Verification pending'}</Text><Text style={styles.address}>{store.address_text}</Text><Text style={styles.meta}>Store status</Text><Switch value={store.is_open} onValueChange={toggleStore} disabled={busy}/></View><TouchableOpacity style={styles.secondary} onPress={()=>supabase.auth.signOut()}><Text style={styles.secondaryText}>Sign out</Text></TouchableOpacity></ScrollView>:null}
-    </>}
-  </View>;
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <Root />
+    </SafeAreaProvider>
+  );
 }
 
-const styles=StyleSheet.create({
- safe:{flex:1,backgroundColor:'#FFFBF5'},center:{flex:1,alignItems:'center',justifyContent:'center',padding:28,backgroundColor:'#FFFBF5'},auth:{flex:1,padding:24,paddingTop:70,backgroundColor:'#FFFBF5'},logo:{fontSize:32,fontWeight:'900',letterSpacing:3,color:'#F59E0B'},role:{fontSize:12,color:'#78716C',marginTop:2},heading:{fontSize:25,fontWeight:'900',color:'#1C1917',marginTop:28},sub:{fontSize:13,color:'#78716C',lineHeight:20,marginTop:6,marginBottom:20},label:{fontSize:12,fontWeight:'800',color:'#44403C',marginBottom:6,marginTop:8},input:{height:54,borderRadius:14,borderWidth:1,borderColor:'#E7E5E4',backgroundColor:'#fff',paddingHorizontal:15,fontSize:16,marginBottom:8},primary:{backgroundColor:'#F59E0B',borderRadius:14,minHeight:54,alignItems:'center',justifyContent:'center',marginTop:10},primaryText:{color:'#fff',fontSize:15,fontWeight:'800'},secondary:{borderWidth:1,borderColor:'#D6D3D1',borderRadius:14,minHeight:48,alignItems:'center',justifyContent:'center',paddingHorizontal:20},secondaryText:{color:'#44403C',fontWeight:'800'},error:{color:'#991B1B',backgroundColor:'#FEE2E2',padding:12,borderRadius:10,marginTop:8},header:{paddingHorizontal:18,paddingTop:48,paddingBottom:14,backgroundColor:'#fff',flexDirection:'row',alignItems:'center',borderBottomWidth:1,borderBottomColor:'#E7E5E4'},brand:{fontSize:17,fontWeight:'900',color:'#1C1917'},storeName:{fontSize:11,color:'#78716C',marginTop:2},notice:{margin:12,padding:12,borderRadius:12,backgroundColor:'#FEF3C7'},noticeText:{fontSize:12,color:'#92400E'},tabs:{height:52,flexDirection:'row',alignItems:'center',justifyContent:'space-around',backgroundColor:'#fff',borderBottomWidth:1,borderBottomColor:'#E7E5E4'},tab:{fontSize:13,color:'#78716C',fontWeight:'700'},tabActive:{color:'#D97706'},content:{padding:18,paddingBottom:40},orderTotals:{flexDirection:'row',justifyContent:'space-between',marginTop:12,paddingTop:12,borderTopWidth:1,borderTopColor:'#F0EFED'},itemRow:{flexDirection:'row',alignItems:'center',paddingVertical:12,borderTopWidth:1,borderTopColor:'#F0EFED'},pageTitle:{fontSize:23,fontWeight:'900',color:'#1C1917',marginBottom:12},card:{backgroundColor:'#fff',borderWidth:1,borderColor:'#EEECE9',borderRadius:16,padding:16,marginBottom:12},cardTitle:{fontSize:14,fontWeight:'800',color:'#1C1917'},meta:{fontSize:11,color:'#78716C',marginTop:4},status:{fontSize:12,fontWeight:'800',color:'#D97706',marginTop:10},amount:{fontSize:16,fontWeight:'900',color:'#1C1917'},row:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},note:{fontSize:12,color:'#57534E',backgroundColor:'#F7F7F4',padding:12,borderRadius:10,marginTop:12},address:{fontSize:13,color:'#57534E',lineHeight:19,marginVertical:12},back:{fontSize:13,fontWeight:'800',color:'#D97706',marginBottom:14},reject:{borderWidth:1,borderColor:'#FCA5A5',borderRadius:14,minHeight:50,alignItems:'center',justifyContent:'center',marginTop:10},rejectText:{color:'#B91C1C',fontWeight:'800'},empty:{fontSize:13,color:'#78716C',lineHeight:20,marginTop:20}
+function Root() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [roleOk, setRoleOk] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    supabase.auth.getSession()
+      .then(({ data }) => { if (alive) setSession(data.session); })
+      .catch(() => { /* treated as signed out */ })
+      .finally(() => { if (alive) setChecking(false); });
+    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    return () => { alive = false; data.subscription.unsubscribe(); };
+  }, []);
+
+  const userId = session?.user.id ?? null;
+  useEffect(() => {
+    if (!userId) { setRoleOk(null); return; }
+    let alive = true;
+    supabase.from('profiles').select('role,is_active').eq('id', userId).maybeSingle()
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) { setRoleOk(null); return; }
+        const ok = !!data && data.role === 'merchant' && data.is_active === true;
+        setRoleOk(ok);
+        if (!ok) void supabase.auth.signOut();
+      });
+    return () => { alive = false; };
+  }, [userId]);
+
+  if (checking) {
+    return <View style={styles.center}><ActivityIndicator size="large" color={colors.brand} /></View>;
+  }
+  if (!session) return <LoginScreen />;
+  if (roleOk === null) {
+    return <View style={styles.center}><StatusBar style="dark" /><ActivityIndicator size="large" color={colors.brand} /></View>;
+  }
+  return <Console userId={session.user.id} />;
+}
+
+function Console({ userId }: { userId: string }) {
+  const insets = useSafeAreaInsets();
+  const [tab, setTab] = useState<Tab>('orders');
+  const [openOrderId, setOpenOrderId] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now());
+  const [alertOrders, setAlertOrders] = useState<Order[]>([]);
+  const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
+  const [busyProducts, setBusyProducts] = useState<ReadonlySet<string>>(new Set());
+  const [rejectTarget, setRejectTarget] = useState<Order | null>(null);
+  const [priceTarget, setPriceTarget] = useState<Product | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [sheetBusy, setSheetBusy] = useState(false);
+  const [storeBusy, setStoreBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const onNewOrders = useCallback((fresh: Order[]) => {
+    setAlertOrders(fresh);
+    Vibration.vibrate([0, 350, 150, 350]);
+  }, []);
+
+  const { store, setStore, orders, products, setProducts, state, error, refreshing, reload } = useMerchantData({ userId, onNewOrders });
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  const openOrder = useMemo(() => orders.find((o) => o.id === openOrderId) ?? null, [orders, openOrderId]);
+  const newCount = useMemo(() => orders.filter((o) => NEW_STATUSES.includes(o.status)).length, [orders]);
+  const activeCount = useMemo(
+    () => orders.filter((o) => !NEW_STATUSES.includes(o.status) && !['DELIVERED', 'REJECTED', 'CANCELLED', 'PAYMENT_FAILED', 'DELIVERY_FAILED', 'REFUND_PENDING', 'REFUNDED'].includes(o.status)).length,
+    [orders],
+  );
+
+  const advance = useCallback(async (order: Order, to: OrderStatus, note: string | null = null) => {
+    if (busyOrderId) return;
+    setBusyOrderId(order.id);
+    setActionError(null);
+    try {
+      await transitionOrder(order.id, to, note);
+      setAlertOrders((prev) => prev.filter((o) => o.id !== order.id));
+      await reload();
+    } catch (e) {
+      setActionError(friendlyError(e));
+      await reload();
+    } finally {
+      setBusyOrderId(null);
+    }
+  }, [busyOrderId, reload]);
+
+  const toggleProduct = useCallback(async (p: Product, available: boolean) => {
+    setBusyProducts((s) => new Set(s).add(p.id));
+    setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, is_available: available } : x)));
+    try {
+      await setProductAvailability(p.id, available);
+    } catch (e) {
+      setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, is_available: !available } : x)));
+      setActionError(friendlyError(e));
+    } finally {
+      setBusyProducts((s) => { const n = new Set(s); n.delete(p.id); return n; });
+    }
+  }, [setProducts]);
+
+  const savePrice = useCallback(async (paise: number) => {
+    if (!priceTarget) return;
+    setSheetBusy(true);
+    try {
+      await setProductPrice(priceTarget.id, paise);
+      setPriceTarget(null);
+      await reload();
+    } catch (e) {
+      setActionError(friendlyError(e));
+    } finally {
+      setSheetBusy(false);
+    }
+  }, [priceTarget, reload]);
+
+  const addProduct = useCallback(async (v: { name: string; unit: string; pricePaise: number }) => {
+    if (!store) return;
+    setSheetBusy(true);
+    try {
+      await createProduct(store.id, v);
+      setAddOpen(false);
+      await reload();
+    } catch (e) {
+      setActionError(friendlyError(e));
+    } finally {
+      setSheetBusy(false);
+    }
+  }, [store, reload]);
+
+  const toggleOpen = useCallback(async (open: boolean) => {
+    if (!store) return;
+    setStoreBusy(true);
+    try {
+      await setStoreOpen(store.id, open);
+      setStore({ ...store, is_open: open });
+    } catch (e) {
+      setActionError(friendlyError(e));
+    } finally {
+      setStoreBusy(false);
+    }
+  }, [store, setStore]);
+
+  const alertRef = useRef(alertOrders);
+  alertRef.current = alertOrders;
+  const firstAlert = alertOrders[0];
+
+  if (state === 'loading') {
+    return <View style={styles.center}><StatusBar style="dark" /><ActivityIndicator size="large" color={colors.brand} /></View>;
+  }
+  if (state === 'error' && !store) {
+    return (
+      <View style={[styles.center, { padding: 24 }]}>
+        <StatusBar style="dark" />
+        <EmptyState icon="cloud-offline-outline" title="Could not load your store" body={error ?? 'Check your connection and try again.'} action={<Button label="Try again" onPress={() => { void reload(); }} />} />
+        <Button label="Sign out" variant="ghost" onPress={() => { void supabase.auth.signOut(); }} />
+      </View>
+    );
+  }
+  if (!store) {
+    return (
+      <View style={[styles.center, { padding: 24 }]}>
+        <StatusBar style="dark" />
+        <EmptyState icon="storefront-outline" title="No store linked yet" body="You are signed in, but BEVER has not linked a store to this account. Contact BEVER support to finish setup." action={<Button label="Sign out" variant="secondary" onPress={() => { void supabase.auth.signOut(); }} />} />
+      </View>
+    );
+  }
+
+  const showDetail = tab === 'orders' && openOrder;
+
+  return (
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      <StatusBar style="dark" />
+      {!showDetail ? (
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.brand}>BEVER MERCHANT</Text>
+            <Text style={styles.storeName} numberOfLines={1}>{store.name}</Text>
+          </View>
+          <Pill label={store.is_open ? 'Open' : 'Paused'} tone={store.is_open ? 'ok' : 'bad'} />
+        </View>
+      ) : null}
+
+      {firstAlert ? (
+        <Pressable
+          style={styles.alert}
+          accessibilityRole="button"
+          onPress={() => { setTab('orders'); setOpenOrderId(firstAlert.id); setAlertOrders([]); }}
+        >
+          <Ionicons name="notifications" size={20} color="#FFFFFF" />
+          <View style={{ flex: 1, marginHorizontal: 10 }}>
+            <Text style={styles.alertTitle}>{alertOrders.length > 1 ? `${alertOrders.length} new orders` : `New order #${firstAlert.order_number}`}</Text>
+            <Text style={styles.alertSub}>{alertOrders.length > 1 ? 'Tap to review' : `${rupees(firstAlert.total_amount)} · tap to review`}</Text>
+          </View>
+          <Pressable onPress={() => setAlertOrders([])} hitSlop={10} accessibilityLabel="Dismiss"><Ionicons name="close" size={20} color="#FFFFFF" /></Pressable>
+        </Pressable>
+      ) : null}
+
+      {(actionError || (error && state === 'ready')) ? (
+        <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+          <Banner message={actionError ?? error ?? ''} tone="bad" onRetry={() => { setActionError(null); void reload(); }} onDismiss={() => setActionError(null)} />
+        </View>
+      ) : null}
+
+      <View style={styles.body}>
+        {showDetail && openOrder ? (
+          <OrderDetailScreen
+            order={openOrder}
+            now={now}
+            busy={busyOrderId === openOrder.id}
+            onBack={() => setOpenOrderId(null)}
+            onAdvance={(to) => { void advance(openOrder, to); }}
+            onReject={() => setRejectTarget(openOrder)}
+          />
+        ) : tab === 'orders' ? (
+          <OrdersScreen
+            orders={orders}
+            loading={false}
+            refreshing={refreshing}
+            now={now}
+            busyId={busyOrderId}
+            onRefresh={() => { void reload({ pull: true }); }}
+            onOpen={(o) => setOpenOrderId(o.id)}
+            onAccept={(o) => { void advance(o, 'MERCHANT_ACCEPTED'); }}
+            onReject={(o) => setRejectTarget(o)}
+          />
+        ) : tab === 'catalogue' ? (
+          <CatalogueScreen
+            products={products}
+            loading={false}
+            refreshing={refreshing}
+            now={now}
+            busyIds={busyProducts}
+            onRefresh={() => { void reload({ pull: true }); }}
+            onToggle={(p, v) => { void toggleProduct(p, v); }}
+            onEditPrice={(p) => setPriceTarget(p)}
+            onAdd={() => setAddOpen(true)}
+          />
+        ) : (
+          <StoreScreen
+            store={store}
+            busy={storeBusy}
+            activeOrders={activeCount}
+            onToggleOpen={(v) => { void toggleOpen(v); }}
+            onSignOut={() => { void supabase.auth.signOut(); }}
+          />
+        )}
+      </View>
+
+      {!showDetail ? (
+        <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+          <TabButton icon="receipt-outline" activeIcon="receipt" label="Orders" active={tab === 'orders'} badge={newCount} onPress={() => setTab('orders')} />
+          <TabButton icon="cube-outline" activeIcon="cube" label="Catalogue" active={tab === 'catalogue'} onPress={() => setTab('catalogue')} />
+          <TabButton icon="storefront-outline" activeIcon="storefront" label="Store" active={tab === 'store'} onPress={() => setTab('store')} />
+        </View>
+      ) : null}
+
+      <RejectSheet
+        visible={!!rejectTarget}
+        orderNumber={rejectTarget ? `#${rejectTarget.order_number}` : ''}
+        busy={!!rejectTarget && busyOrderId === rejectTarget.id}
+        onClose={() => setRejectTarget(null)}
+        onConfirm={(reason) => {
+          const target = rejectTarget;
+          if (!target) return;
+          void advance(target, 'REJECTED', reason).then(() => { setRejectTarget(null); });
+        }}
+      />
+      <PriceSheet
+        visible={!!priceTarget}
+        productName={priceTarget?.name ?? ''}
+        currentPaise={priceTarget?.price ?? 0}
+        busy={sheetBusy}
+        onClose={() => setPriceTarget(null)}
+        onSave={(p) => { void savePrice(p); }}
+      />
+      <AddProductSheet visible={addOpen} busy={sheetBusy} onClose={() => setAddOpen(false)} onSave={(v) => { void addProduct(v); }} />
+    </View>
+  );
+}
+
+function TabButton({ icon, activeIcon, label, active, badge, onPress }: {
+  icon: React.ComponentProps<typeof Ionicons>['name']; activeIcon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string; active: boolean; badge?: number; onPress: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} style={styles.tab} accessibilityRole="tab" accessibilityState={{ selected: active }} accessibilityLabel={label}>
+      <View>
+        <Ionicons name={active ? activeIcon : icon} size={24} color={active ? colors.brandDark : colors.muted} />
+        {badge && badge > 0 ? <View style={styles.badge}><Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text></View> : null}
+      </View>
+      <Text style={[styles.tabLabel, active && { color: colors.brandDark }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 12, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.line },
+  brand: { fontSize: 10, fontWeight: '900', letterSpacing: 1.6, color: colors.brandDark },
+  storeName: { fontSize: 19, fontWeight: '900', color: colors.ink, marginTop: 2 },
+  body: { flex: 1 },
+  alert: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.brandDark, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radius.md },
+  alertTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
+  alertSub: { color: '#FDE68A', fontSize: 12, marginTop: 2 },
+  tabBar: { flexDirection: 'row', backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 8 },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 48 },
+  tabLabel: { fontSize: 11, fontWeight: '800', color: colors.muted, marginTop: 3 },
+  badge: { position: 'absolute', top: -6, right: -12, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  badgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900' },
 });

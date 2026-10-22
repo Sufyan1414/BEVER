@@ -115,3 +115,27 @@ Make large coherent changes, verify them, commit them, and keep this document up
 4. Verify order create, cancellation, order detail, delivery OTP, and merchant/rider state transitions end-to-end against a disposable database or safely isolated environment.
 5. Re-check RLS, function grants/search paths, and Supabase security advisors; never apply speculative production migrations.
 6. Only then mark MVP launch-ready.
+
+## Update — 2026-10-21 (branch `feature/mvp-customer-merchant`)
+
+### Verification method
+GitHub Actions (`.github/workflows/ci.yml`) runs `tsc --noEmit` for shared, customer, merchant, rider and admin, exports Android bundles for customer and merchant, and runs merchant unit tests. Logs are published to the `ci-logs` branch. **This is static verification only; nothing here has been run on a device or against the live database.**
+
+### Fixed
+- Customer `navigation/types.ts` and `OrderDetailScreen.tsx` contained literal `\n` text (the latter would crash React Native: raw text outside `<Text>`).
+- Pincode regexes were double-escaped (`/^\\d{6}$/` in `address.ts` and the location picker), so pincode validation could never pass and `ensureDefaultAddressFromBrowsingLocation` always returned null.
+- Missing `cancelButton`/`cancelText` styles on the customer order detail screen.
+- Customer strict-TypeScript errors (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`); admin type errors.
+- Merchant `index.ts` loaded the placeholder `App.tsx`; the real console in `src/App.tsx` was never shown.
+
+### Merchant app (rewritten into structured screens)
+Orders inbox (new / in progress / history) with order age, accept, reject with required reason, prepare, mark ready; order detail; catalogue with search, out-of-stock filter, price edit, add product, stale-price hint; store open/pause; in-app new-order alert (realtime + 30 s fallback refresh + vibration). Uses existing `transition_order_status` RPC and existing RLS; no schema change.
+
+### Customer app
+Free-delivery progress (₹199) in cart and checkout; checkout no longer says "Place order+"; order placement jumps straight to order tracking; orders list grouped into in-progress/past with realtime refresh.
+
+### Not applied / needs a decision (do not apply blindly)
+- `migrations/020_fix_delivery_otp_regex.sql`: migration 015 checks the OTP with `'^\\d{4}$'`, which never matches a 4-digit code under standard_conforming_strings. Compare with the live function (`pg_get_functiondef`) first; the BRD's order PIN replaces this.
+- Minimum-order unit (rupees vs paise) is still unresolved; the customer store screen divides `minimum_order_amount` by 100 while the live RPC multiplies it by 100.
+- `stores` RLS lets a merchant update every column of their own store (including `is_verified`); restrict columns before launch.
+- Order PIN, UPI, open-box, idempotency key, server quote RPC and real OTP login are BRD requirements not yet implemented.

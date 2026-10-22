@@ -66,7 +66,7 @@ export interface OrderProgressStep {
 }
 
 function normalizeRpcError(message: string): Error {
-  const code = message.split(':')[0];
+  const code = message.split(':')[0] ?? '';
   const messages: Record<string, string> = {
     AUTH_REQUIRED: 'Please sign in to place your order.',
     CART_EMPTY: 'Your cart is empty.',
@@ -242,7 +242,7 @@ export async function transitionCustomerOrder(
     p_note: note?.trim() || null,
   });
   if (error) {
-    const code = error.message.split(':')[0];
+    const code = error.message.split(':')[0] ?? '';
     const messages: Record<string, string> = {
       AUTH_REQUIRED: 'Please sign in again.',
       ORDER_NOT_FOUND: 'This order no longer exists.',

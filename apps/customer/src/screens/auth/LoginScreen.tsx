@@ -92,7 +92,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
           {/* Content */}
           <View style={styles.content}>
             <Text style={styles.wordmark}>BEVER</Text>
-            <Text style={styles.tagline}>Hyperlocal Beverage Marketplace</Text>
+            <Text style={styles.tagline}>Your neighbourhood shops, delivered</Text>
 
             <View style={styles.headerSpacing} />
 

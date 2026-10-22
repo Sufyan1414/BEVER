@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
 
   openBadge: {
     position: 'absolute',
-    bottom: 12,
+    top: 12,
     right: 16,
     flexDirection: 'row',
     alignItems: 'center',
