@@ -1,0 +1,25 @@
+name: Add dependency (one-off)
+on:
+  push:
+    branches: ['deps/**']
+permissions:
+  contents: write
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - name: Install expo-blur at the SDK-compatible version
+        working-directory: apps/customer
+        run: npx expo install expo-blur
+      - name: Commit manifest and lockfile
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add apps/customer/package.json package-lock.json
+          git diff --cached --stat
+          git commit -m "chore: add expo-blur (SDK-compatible version)" || echo "nothing to commit"
+          git push
