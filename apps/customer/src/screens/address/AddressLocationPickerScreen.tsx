@@ -190,7 +190,7 @@ export function AddressLocationPickerScreen({
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F3FBF7',
   },
   header: {
     flexDirection: 'row',
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E7E5E4',
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F3FBF7',
     zIndex: 10,
   },
   backButton: {
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   confirmHeaderText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#F59E0B',
+    color: '#059669',
   },
   disabledHeaderText: {
     color: '#A8A29E',
@@ -240,11 +240,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#D1FAE5',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#FDE68A',
+    borderBottomColor: '#A7F3D0',
   },
   instructionBannerWarning: {
     backgroundColor: '#EFF6FF',
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   confirmPrimaryButton: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',

@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   body: { flex: 1 },
   alert: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.brandDark, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 14, paddingVertical: 12, borderRadius: radius.md },
   alertTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
-  alertSub: { color: '#FDE68A', fontSize: 12, marginTop: 2 },
+  alertSub: { color: '#A7F3D0', fontSize: 12, marginTop: 2 },
   tabBar: { flexDirection: 'row', backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 8 },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 48 },
   tabLabel: { fontSize: 11, fontWeight: '800', color: colors.muted, marginTop: 3 },

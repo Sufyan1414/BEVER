@@ -16,6 +16,7 @@
  *   - Skeleton loading while data resolves.
  */
 
+import { CartBar } from '../../components/CartBar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -77,7 +78,7 @@ type CategoryItem = {
 };
 
 const CATEGORIES: CategoryItem[] = [
-  { key: ALL_KEY,      label: 'All',         emoji: '✨', color: '#F59E0B' },
+  { key: ALL_KEY,      label: 'All',         emoji: '✨', color: '#059669' },
   { key: 'RESTAURANT', label: 'Food',        emoji: '🍽️',  color: '#EF4444' },
   { key: 'GROCERY',    label: 'Grocery',     emoji: '🛒', color: '#10B981' },
   { key: 'PHARMACY',   label: 'Pharmacy',    emoji: '💊', color: '#3B82F6' },
@@ -526,7 +527,7 @@ export function HomeScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#F59E0B" />
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#059669" />
           }
           ListHeaderComponent={renderHeader()}
           ListEmptyComponent={
@@ -535,7 +536,7 @@ export function HomeScreen() {
                 <Text style={{ fontSize: 32, marginBottom: 12 }}>⌕</Text>
                 <Text style={{ fontSize: 17, fontWeight: '800', color: '#20201C', marginBottom: 7 }}>No matching stores</Text>
                 <Text style={{ fontSize: 13, color: '#77776F', lineHeight: 20, textAlign: 'center' }}>Try another name, category, or part of the store address.</Text>
-                <TouchableOpacity onPress={() => setStoreSearchQuery('')} style={{ marginTop: 16, backgroundColor: '#FFF7E6', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
+                <TouchableOpacity onPress={() => setStoreSearchQuery('')} style={{ marginTop: 16, backgroundColor: '#ECFDF5', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
                   <Text style={{ color: '#C8442B', fontWeight: '700' }}>Clear search</Text>
                 </TouchableOpacity>
               </View>
@@ -553,6 +554,7 @@ export function HomeScreen() {
           }
         />
       )}
+      <CartBar />
     </SafeAreaView>
   );
 }
@@ -618,7 +620,7 @@ const styles = StyleSheet.create({
   wordmark: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#F59E0B',
+    color: '#059669',
     letterSpacing: 3,
     lineHeight: 30,
   },
@@ -627,7 +629,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#FFF7E6',
+    backgroundColor: '#ECFDF5',
     borderRadius: 8,
     paddingHorizontal: 9,
     paddingVertical: 5,
@@ -641,7 +643,7 @@ const styles = StyleSheet.create({
   locationChipCaret: { fontSize: 14, color: '#E64A2E', fontWeight: '700' },
 
   signInBtn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -668,7 +670,7 @@ const styles = StyleSheet.create({
   sectionCount: { fontSize: 13, color: '#9A9A94', fontWeight: '500' },
 
   // ── List ──
-  listContent: { paddingBottom: 36 },
+  listContent: { paddingBottom: 110 },
 
   // ── Skeleton ──
   skeletonContainer: { paddingBottom: 36 },
@@ -679,7 +681,7 @@ const styles = StyleSheet.create({
   errorStateTitle: { fontSize: 18, fontWeight: '800', color: '#171717', marginBottom: 8 },
   errorStateBody: { fontSize: 14, color: '#6B6B67', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   retryBtn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -747,7 +749,7 @@ const cardStyles = StyleSheet.create({
   bannerFallback: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#FFF7E6',
+    backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -779,7 +781,7 @@ const cardStyles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#FFF7E6',
+    backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -794,7 +796,7 @@ const cardStyles = StyleSheet.create({
 
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap' },
   catChip: {
-    backgroundColor: '#FFF7E6',
+    backgroundColor: '#ECFDF5',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
@@ -837,7 +839,7 @@ const emptyStyles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '800', color: '#171717', textAlign: 'center', marginBottom: 10 },
   body: { fontSize: 14, color: '#6B6B67', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   btn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 28,

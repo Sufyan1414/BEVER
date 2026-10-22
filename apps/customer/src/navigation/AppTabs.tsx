@@ -19,7 +19,7 @@ import { useCartStore, computeCartSummary } from '../stores/useCartStore';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
-const AMBER = '#F59E0B';
+const AMBER = '#059669';
 const SURFACE = '#F7F7F3';
 const MUTED = '#9A9A94';
 
@@ -82,7 +82,7 @@ export function AppTabs() {
             ? {
                 tabBarBadge: cartCount,
                 tabBarBadgeStyle: {
-                  backgroundColor: '#F59E0B',
+                  backgroundColor: '#059669',
                   color: '#FFFFFF',
                   fontSize: 10,
                   fontWeight: '700' as const,

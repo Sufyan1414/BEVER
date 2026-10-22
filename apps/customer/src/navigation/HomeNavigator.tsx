@@ -20,7 +20,7 @@ export function HomeNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#FFFBF5' },
+        contentStyle: { backgroundColor: '#F3FBF7' },
       }}
     >
       <Stack.Screen name="HomeMain" component={HomeScreen} />

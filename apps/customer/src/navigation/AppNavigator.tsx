@@ -65,7 +65,7 @@ function SplashScreen() {
   return (
     <View style={styles.splash}>
       <Text style={styles.splashLogo}>BEVER</Text>
-      <ActivityIndicator size="large" color="#F59E0B" style={styles.splashSpinner} />
+      <ActivityIndicator size="large" color="#059669" style={styles.splashSpinner} />
     </View>
   );
 }
@@ -109,7 +109,7 @@ export function AppNavigator() {
           screenOptions={{
             headerShown: false,
             gestureEnabled: false,
-            contentStyle: { backgroundColor: '#FFFBF5' },
+            contentStyle: { backgroundColor: '#F3FBF7' },
           }}
         >
           <ProfileGate.Screen name="ProfileSetup" component={ProfileSetupScreen} />
@@ -155,18 +155,18 @@ export function AppNavigator() {
 const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F3FBF7',
   },
   splash: {
     flex: 1,
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F3FBF7',
     alignItems: 'center',
     justifyContent: 'center',
   },
   splashLogo: {
     fontSize: 42,
     fontWeight: '800',
-    color: '#F59E0B',
+    color: '#059669',
     letterSpacing: 4,
   },
   splashSpinner: {

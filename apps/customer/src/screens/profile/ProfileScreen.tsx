@@ -261,7 +261,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F3FBF7',
   },
   container: {
     flex: 1,
@@ -282,9 +282,9 @@ const styles = StyleSheet.create({
     width: 76,
     height: 76,
     borderRadius: 38,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#D1FAE5',
     borderWidth: 2.5,
-    borderColor: '#F59E0B',
+    borderColor: '#059669',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#F59E0B',
+    color: '#059669',
   },
   userName: {
     fontSize: 20,
@@ -303,8 +303,8 @@ const styles = StyleSheet.create({
   userRoleBadge: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#92400E',
-    backgroundColor: '#FEF3C7',
+    color: '#065F46',
+    backgroundColor: '#D1FAE5',
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 12,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   menuChevron: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#F59E0B',
+    color: '#059669',
   },
   infoCard: {
     backgroundColor: '#FFFFFF',
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#F59E0B',
+    color: '#059669',
   },
   infoRow: {
     flexDirection: 'row',
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   signInButton: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 12,
     paddingHorizontal: 32,
     paddingVertical: 14,
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     color: '#78716C',
   },
   modalSaveButton: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,

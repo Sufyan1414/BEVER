@@ -316,7 +316,7 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
           {/* Search Loading Indicator */}
           {isSearching && (
             <View style={styles.searchingRow}>
-              <ActivityIndicator size="small" color="#F59E0B" />
+              <ActivityIndicator size="small" color="#059669" />
               <Text style={styles.searchingText}>Searching areas…</Text>
             </View>
           )}
@@ -541,7 +541,7 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F3FBF7',
   },
   flex1: {
     flex: 1,
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   wordmark: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#F59E0B',
+    color: '#059669',
     letterSpacing: 4,
   },
   wordmarkTagline: {
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   searchBoxFocused: {
-    borderColor: '#F59E0B',
+    borderColor: '#059669',
     backgroundColor: '#FFFFFF',
   },
   searchIcon: {
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   backBtnText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F59E0B',
+    color: '#059669',
   },
 
   detailsScrollContent: {
@@ -762,11 +762,11 @@ const styles = StyleSheet.create({
   selectedLocationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#D1FAE5',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#FDE68A',
+    borderColor: '#A7F3D0',
     gap: 12,
     marginBottom: 20,
   },
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
   selectedLocationLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#B45309',
+    color: '#065F46',
     letterSpacing: 1,
     marginBottom: 2,
   },
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
   },
   selectedLocationSub: {
     fontSize: 12,
-    color: '#92400E',
+    color: '#065F46',
     marginTop: 2,
   },
 
@@ -836,14 +836,14 @@ const styles = StyleSheet.create({
   },
 
   submitCta: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 16,
     height: 56,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
     elevation: 3,
-    shadowColor: '#F59E0B',
+    shadowColor: '#059669',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 6,

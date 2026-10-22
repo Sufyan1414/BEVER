@@ -44,7 +44,7 @@ const noop = () => {};
 const view = (typeof window !== 'undefined' ? window.location.hash.replace('#', '') : '') || 'orders';
 
 export default function PreviewApp() {
-  const frame = { flex: 1, backgroundColor: '#FFFBF5' } as const;
+  const frame = { flex: 1, backgroundColor: '#F3FBF7' } as const;
   let body: React.ReactNode;
   switch (view) {
     case 'detail':

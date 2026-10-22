@@ -23,7 +23,7 @@ export function ProfileNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#FFFBF5' },
+        contentStyle: { backgroundColor: '#F3FBF7' },
         animation: 'slide_from_right',
       }}
     >

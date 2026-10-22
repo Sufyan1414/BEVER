@@ -4,11 +4,8 @@
 -- column restrictions that apply to app users do not block it).
 --
 -- Before running:
---   1. The shopkeeper signs up once in the BEVER Customer app with their mobile number and a
---      6-digit PIN (or you create the user under Authentication > Users with the email
---      customer_91XXXXXXXXXX@bever.app, a 6-digit password and "Auto confirm" ticked).
---   2. Fill in the values below. Use the shop's real location (open Google Maps, long-press the shop,
---      copy the latitude and longitude).
+--   1. The shopkeeper registers in the BEVER Merchant app (Register your shop). Their details are saved with the account.
+--   2. Set the phone, and the shop's real latitude/longitude below (Google Maps: long-press the shop).
 --
 -- It makes the profile a merchant, creates their store (open, verified, with a delivery radius) and
 -- sets minimum_order_amount = 0 on purpose: the rupees-vs-paise question for that column is
@@ -16,27 +13,28 @@
 
 do $$
 declare
-  v_phone   text             := '+919876543210';              -- shopkeeper mobile, +91 then 10 digits
-  v_owner   text             := 'Owner Name';
-  v_store   text             := 'Store Name';
-  v_cat     public.store_category := 'GROCERY';               -- GROCERY, RESTAURANT, PHARMACY, BAKERY, ELECTRONICS, CLOTHING, HARDWARE, STATIONERY, PET_SUPPLIES, OTHER
-  v_addr    text             := 'Shop no., street, area, Chhatrapati Sambhajinagar 4310xx';
-  v_lat     double precision := 19.8762;                      -- REPLACE with the shop's real latitude
+  v_phone   text             := '+919876543210';              -- the shopkeeper's registered mobile, +91 then 10 digits
+  v_lat     double precision := 19.8762;                      -- REPLACE with the shop's real latitude (Google Maps: long-press the shop)
   v_lng     double precision := 75.3433;                      -- REPLACE with the shop's real longitude
   v_radius  integer          := 3000;                         -- delivery radius in metres
+  v_app     jsonb;
   v_user    uuid;
   v_store_id uuid;
 begin
-  select id into v_user
+  select id, raw_user_meta_data -> 'merchant_application'
+    into v_user, v_app
   from auth.users
   where email = 'customer_' || regexp_replace(v_phone, '[^0-9]', '', 'g') || '@bever.app';
 
   if v_user is null then
-    raise exception 'No login found for %. Ask the shopkeeper to sign up in the Customer app first.', v_phone;
+    raise exception 'No login found for %. The shopkeeper must register in the Merchant app first.', v_phone;
+  end if;
+  if v_app is null then
+    raise exception 'No shop application found for %. Ask them to register through "Register your shop" in the Merchant app.', v_phone;
   end if;
 
   update public.profiles
-  set role = 'merchant', full_name = v_owner, is_active = true
+  set role = 'merchant', full_name = coalesce(v_app ->> 'owner_name', full_name), is_active = true
   where id = v_user;
 
   if exists (select 1 from public.stores where merchant_id = v_user) then
@@ -47,13 +45,22 @@ begin
     (merchant_id, name, phone, address_text, location, category,
      is_open, is_verified, is_active, minimum_order_amount, service_radius_meters)
   values
-    (v_user, v_store, v_phone, v_addr, st_setsrid(st_makepoint(v_lng, v_lat), 4326), v_cat,
+    (v_user, v_app ->> 'store_name', v_phone,
+     (v_app ->> 'address') || ', ' || (v_app ->> 'city') || ' ' || (v_app ->> 'pincode'),
+     st_setsrid(st_makepoint(v_lng, v_lat), 4326), (v_app ->> 'category')::public.store_category,
      true, true, true, 0, v_radius)
   returning id into v_store_id;
 
-  raise notice 'Created store % for %', v_store_id, v_phone;
+  raise notice 'Created store % for %  (FSSAI: %, GSTIN: %, hours %-%)', v_store_id, v_phone,
+    coalesce(v_app ->> 'fssai', '-'), coalesce(v_app ->> 'gstin', '-'), v_app ->> 'opens_at', v_app ->> 'closes_at';
 end
 $$;
+
+-- Review pending applications first (what shopkeepers and riders submitted):
+-- select email, raw_user_meta_data -> 'merchant_application' as shop, raw_user_meta_data -> 'rider_application' as rider
+-- from auth.users
+-- where raw_user_meta_data ? 'merchant_application' or raw_user_meta_data ? 'rider_application'
+-- order by created_at desc;
 
 -- Add real products for that store (prices are in PAISE: Rs 155 = 15500). Edit, then run.
 -- insert into public.products (store_id, name, unit, price, is_available, is_active)

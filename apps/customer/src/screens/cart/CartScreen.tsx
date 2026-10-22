@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ctaBtn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 18,
     overflow: 'hidden',
   },
@@ -548,10 +548,10 @@ const itemStyles = StyleSheet.create({
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF7E6',
+    backgroundColor: '#ECFDF5',
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: '#F59E0B',
+    borderColor: '#059669',
     overflow: 'hidden',
   },
   stepperBtn: {
@@ -598,7 +598,7 @@ const emptyStyles = StyleSheet.create({
     lineHeight: 22,
   },
   btn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 32,

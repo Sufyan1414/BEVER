@@ -12,6 +12,7 @@
  *   - Safe handling of race conditions and unmounting.
  */
 
+import { CartBar } from '../../components/CartBar';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
@@ -504,6 +505,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
             );
           })}
       </ScrollView>
+      <CartBar />
     </SafeAreaView>
   );
 }
@@ -513,7 +515,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F3FBF7',
   },
   topHeader: {
     flexDirection: 'row',
@@ -523,7 +525,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E7E5E4',
-    backgroundColor: '#FFFBF5',
+    backgroundColor: '#F3FBF7',
   },
   topHeaderTitle: {
     fontSize: 16,
@@ -539,14 +541,14 @@ const styles = StyleSheet.create({
   backBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#F59E0B',
+    color: '#059669',
   },
   backBtnPlaceholder: {
     width: 48,
   },
 
   scrollContent: {
-    paddingBottom: 36,
+    paddingBottom: 110,
   },
 
   // Banner
@@ -561,7 +563,7 @@ const styles = StyleSheet.create({
   bannerFallback: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -627,7 +629,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   catChip: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#D1FAE5',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -635,7 +637,7 @@ const styles = StyleSheet.create({
   catChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#92400E',
+    color: '#065F46',
   },
   dot: {
     fontSize: 12,
@@ -667,8 +669,8 @@ const styles = StyleSheet.create({
     borderColor: '#E7E5E4',
   },
   categoryChipActive: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#F59E0B',
+    backgroundColor: '#D1FAE5',
+    borderColor: '#059669',
   },
   categoryChipText: {
     fontSize: 13,
@@ -676,7 +678,7 @@ const styles = StyleSheet.create({
     color: '#78716C',
   },
   categoryChipTextActive: {
-    color: '#92400E',
+    color: '#065F46',
     fontWeight: '700',
   },
 
@@ -770,7 +772,7 @@ const styles = StyleSheet.create({
   },
 
   addBtn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -785,10 +787,10 @@ const styles = StyleSheet.create({
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#D1FAE5',
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: '#F59E0B',
+    borderColor: '#059669',
     overflow: 'hidden',
   },
   stepperBtn: {
@@ -800,7 +802,7 @@ const styles = StyleSheet.create({
   stepperBtnText: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#D97706',
+    color: '#047857',
     lineHeight: 20,
   },
   stepperQty: {
@@ -813,7 +815,7 @@ const styles = StyleSheet.create({
 
   // Cart badge
   cartBadge: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -852,7 +854,7 @@ const styles = StyleSheet.create({
   errorIcon: { fontSize: 32 },
   errorText: { fontSize: 14, color: '#991B1B', textAlign: 'center' },
   retryBtn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
@@ -935,7 +937,7 @@ const conflictStyles = StyleSheet.create({
     color: '#1C1917',
   },
   clearBtn: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#059669',
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 24,

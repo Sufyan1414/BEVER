@@ -3,7 +3,8 @@ import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text,
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Button } from '../components/ui';
-import { signInMerchant, signUpMerchant } from '../services/auth';
+import { signInMerchant } from '../services/auth';
+import { SignUpScreen } from './SignUpScreen';
 import { colors, radius } from '../theme';
 
 export function LoginScreen() {
@@ -18,7 +19,7 @@ export function LoginScreen() {
     setBusy(true);
     setError(null);
     try {
-      const r = await (mode === 'in' ? signInMerchant(phone, pin) : signUpMerchant(phone, pin));
+      const r = await signInMerchant(phone, pin);
       if (!r.ok) setError(r.error ?? 'Could not sign in.');
     } catch {
       setError('No internet connection. Check your network and try again.');
@@ -26,6 +27,8 @@ export function LoginScreen() {
       setBusy(false);
     }
   };
+
+  if (mode === 'up') return <SignUpScreen onBack={() => setMode('in')} />;
 
   const ready = phone.length === 10 && pin.length === 6;
 
@@ -36,7 +39,7 @@ export function LoginScreen() {
         <View style={styles.logoBox}><Ionicons name="storefront" size={28} color="#FFFFFF" /></View>
         <Text style={styles.brand}>BEVER Merchant</Text>
         <Text style={styles.heading}>Run your store,{'\n'}one order at a time.</Text>
-        <Text style={styles.sub}>{mode === 'in' ? 'Sign in with your mobile number and 6-digit PIN.' : 'Create your account with your mobile number and a 6-digit PIN. BEVER will then activate your store.'}</Text>
+        <Text style={styles.sub}>Sign in with your mobile number and 6-digit PIN.</Text>
 
         <Text style={styles.label}>Mobile number</Text>
         <View style={styles.phoneRow}>
@@ -67,9 +70,9 @@ export function LoginScreen() {
         />
 
         {error ? <View style={{ marginTop: 18 }}><Banner message={error} tone="bad" onDismiss={() => setError(null)} /></View> : null}
-        <Button label={mode === 'in' ? 'Sign in' : 'Create account'} onPress={() => { void submit(); }} loading={busy} disabled={!ready} style={{ marginTop: 22 }} />
-        <Text style={styles.switch} onPress={() => { setError(null); setMode(mode === 'in' ? 'up' : 'in'); }}>
-          {mode === 'in' ? 'New store? Create account' : 'Already have an account? Sign in'}
+        <Button label="Sign in" onPress={() => { void submit(); }} loading={busy} disabled={!ready} style={{ marginTop: 22 }} />
+        <Text style={styles.switch} onPress={() => { setError(null); setMode('up'); }}>
+          New store? Register your shop
         </Text>
         <Text style={styles.foot}>Store accounts are activated by BEVER after sign-up.</Text>
       </ScrollView>

@@ -34,11 +34,24 @@ export async function signInMerchant(phone: string, pin: string) {
 }
 
 /** Creates a login (always a plain customer role). BEVER staff then activate it as a merchant. */
-export async function signUpMerchant(phone: string, pin: string) {
+export interface MerchantApplication {
+  owner_name: string;
+  store_name: string;
+  category: string;
+  address: string;
+  pincode: string;
+  city: string;
+  opens_at: string;
+  closes_at: string;
+  fssai?: string;
+  gstin?: string;
+}
+
+export async function signUpMerchant(phone: string, pin: string, application?: MerchantApplication) {
   const v = validate(phone, pin);
   if ('error' in v) return { ok: false, error: v.error };
   const { data, error } = await supabase.auth.signUp({
-    email: phoneEmail(v.normalized), password: pin, options: { data: { phone: v.normalized } },
+    email: phoneEmail(v.normalized), password: pin, options: { data: { phone: v.normalized, full_name: application?.owner_name, merchant_application: application ? { ...application, submitted_at: new Date().toISOString() } : undefined } },
   });
   if (error) return { ok: false, error: friendlyAuthError(error.message) };
   if (!data.session) return signInMerchant(phone, pin);
