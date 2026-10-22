@@ -1,7 +1,7 @@
 name: Android test APKs
 
 # Manual build of installable test APKs (customer + merchant + rider) for field testing.
-# Needs one repository secret: EXPO_PUBLIC_SUPABASE_ANON_KEY (Settings > Secrets and variables > Actions).
+# Uses the public Supabase anon key (safe to ship; RLS protects data). A repo secret EXPO_PUBLIC_SUPABASE_ANON_KEY overrides it.
 # Optional repository variable: EXPO_PUBLIC_SUPABASE_URL (defaults to the BEVER project).
 
 on:
@@ -14,7 +14,7 @@ permissions:
 
 env:
   EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://atuaafowdoijojdmtgcr.supabase.co' }}
-  EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0dWFhZm93ZG9pam9qZG10Z2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MjIxOTEsImV4cCI6MjEwNjQ5ODE5MX0.hEwDJgb3ZKcBYrZ_iBRcB1YrgOV1JAYYjI1F4QriQJs' }}
 
 jobs:
   build:
