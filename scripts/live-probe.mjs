@@ -34,3 +34,16 @@ for (const [fn, args] of [
 const buckets = await get('/storage/v1/bucket');
 log('STORAGE buckets (anon)', { status: buckets.s, body: Array.isArray(buckets.b) ? buckets.b.map(b => b.name) : buckets.b });
 console.log(out.join('\n'));
+
+// Authoritative list of exposed functions and their parameter names (PostgREST OpenAPI)
+const spec = await get('/rest/v1/');
+const lines = [];
+for (const [path, def] of Object.entries(spec.b?.paths ?? {})) {
+  if (!path.startsWith('/rpc/')) continue;
+  const params = def?.post?.parameters?.[0]?.schema?.properties ?? {};
+  const req = def?.post?.parameters?.[0]?.schema?.required ?? [];
+  lines.push(`${path.slice(5)}(${Object.keys(params).map(k => k + (req.includes(k) ? '*' : '')).join(', ')})`);
+}
+console.log('\nEXPOSED RPC FUNCTIONS:\n' + (lines.sort().join('\n') || '(none / spec unavailable: ' + spec.s + ')'));
+const tables = Object.entries(spec.b?.definitions ?? {}).map(([n, d]) => `${n}(${Object.keys(d.properties ?? {}).join(', ')})`);
+console.log('\nEXPOSED TABLES/COLUMNS:\n' + tables.sort().join('\n'));
