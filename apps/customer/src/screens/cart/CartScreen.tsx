@@ -563,7 +563,7 @@ const itemStyles = StyleSheet.create({
   stepperBtnText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#E64A2E',
+    color: '#059669',
     lineHeight: 19,
   },
   stepperQty: {

@@ -57,3 +57,11 @@ minutes to accept, orders delivered, repeat orders, and every "I wish it could..
 Repo **Settings > Secrets and variables > Actions > New repository secret**: `EXPO_PUBLIC_SUPABASE_ANON_KEY` = your Supabase project's
 anon (public) key. Optional variable `EXPO_PUBLIC_SUPABASE_URL` if it differs from `https://atuaafowdoijojdmtgcr.supabase.co`.
 Never put the service-role key anywhere in this repo or in these apps.
+
+
+## Onboarding flow (updated)
+
+- **Merchants** open the Merchant app, tap "Register your shop" and fill the mandatory form (owner, shop, category, address, pincode, hours, FSSAI for food shops, optional GSTIN, terms). They then wait on the "Application received" screen.
+- **Riders** open the Rider app, tap "Register here" and fill the mandatory form (name, area, vehicle, vehicle number and licence for motor vehicles, emergency contact, terms).
+- **You** review the submitted details with the commented query in `packages/supabase/field-trial/onboard_merchant.sql`, then run that script (merchants) or the rider snippet at its bottom (riders). The applicant taps "check again" and is in.
+- **Customers** browse as guests. At checkout they sign in with phone + PIN, and if they have no saved address a short delivery-details form appears (flat/street, pincode, city, state). No SMS OTP is used anywhere.

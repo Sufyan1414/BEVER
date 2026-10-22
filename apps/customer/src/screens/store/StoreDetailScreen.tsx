@@ -416,8 +416,8 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
                 : 'This store has not added any products to this category yet.'}
             </Text>
             {normalizedProductQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setProductSearchQuery('')} style={{ marginTop: 14, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#FFF0EA' }}>
-                <Text style={{ color: '#C8442B', fontWeight: '700' }}>Clear search</Text>
+              <TouchableOpacity onPress={() => setProductSearchQuery('')} style={{ marginTop: 14, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#ECFDF5' }}>
+                <Text style={{ color: '#047857', fontWeight: '700' }}>Clear search</Text>
               </TouchableOpacity>
             )}
           </View>

@@ -537,7 +537,7 @@ export function HomeScreen() {
                 <Text style={{ fontSize: 17, fontWeight: '800', color: '#20201C', marginBottom: 7 }}>No matching stores</Text>
                 <Text style={{ fontSize: 13, color: '#77776F', lineHeight: 20, textAlign: 'center' }}>Try another name, category, or part of the store address.</Text>
                 <TouchableOpacity onPress={() => setStoreSearchQuery('')} style={{ marginTop: 16, backgroundColor: '#ECFDF5', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
-                  <Text style={{ color: '#C8442B', fontWeight: '700' }}>Clear search</Text>
+                  <Text style={{ color: '#047857', fontWeight: '700' }}>Clear search</Text>
                 </TouchableOpacity>
               </View>
             ) : selectedCategory !== ALL_KEY && homeState.kind === 'STORE_LIST' ? (
@@ -638,9 +638,9 @@ const styles = StyleSheet.create({
   },
   locationChipEmpty: { backgroundColor: '#EFEFEB' },
   locationChipPin: { fontSize: 11 },
-  locationChipText: { fontSize: 12, fontWeight: '600', color: '#9A321F', flexShrink: 1 },
+  locationChipText: { fontSize: 12, fontWeight: '600', color: '#065F46', flexShrink: 1 },
   locationChipTextEmpty: { color: '#6B6B67' },
-  locationChipCaret: { fontSize: 14, color: '#E64A2E', fontWeight: '700' },
+  locationChipCaret: { fontSize: 14, color: '#059669', fontWeight: '700' },
 
   signInBtn: {
     backgroundColor: '#059669',
@@ -785,7 +785,7 @@ const cardStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#FFD3C8',
+    borderColor: '#A7F3D0',
     flexShrink: 0,
   },
   logoImg: { width: 48, height: 48, borderRadius: 12 },
@@ -801,7 +801,7 @@ const cardStyles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  catChipText: { fontSize: 11, color: '#9A321F', fontWeight: '600' },
+  catChipText: { fontSize: 11, color: '#065F46', fontWeight: '600' },
   dot: { fontSize: 12, color: '#D6D3D1' },
   distance: { fontSize: 12, color: '#6B6B67', fontWeight: '500' },
   deliveryTime: { fontSize: 12, color: '#6B6B67' },
