@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Banner, Button } from '../components/ui';
@@ -13,6 +13,7 @@ export function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
+    Keyboard.dismiss();
     setBusy(true);
     setError(null);
     try {
@@ -35,8 +36,6 @@ export function LoginScreen() {
         <Text style={styles.brand}>BEVER Merchant</Text>
         <Text style={styles.heading}>Run your store,{'\n'}one order at a time.</Text>
         <Text style={styles.sub}>Sign in with the mobile number and PIN BEVER set up for your store.</Text>
-
-        {error ? <Banner message={error} tone="bad" onDismiss={() => setError(null)} /> : null}
 
         <Text style={styles.label}>Mobile number</Text>
         <View style={styles.phoneRow}>
@@ -66,6 +65,7 @@ export function LoginScreen() {
           onSubmitEditing={() => { if (ready) void submit(); }}
         />
 
+        {error ? <View style={{ marginTop: 18 }}><Banner message={error} tone="bad" onDismiss={() => setError(null)} /></View> : null}
         <Button label="Sign in" onPress={() => { void submit(); }} loading={busy} disabled={!ready} style={{ marginTop: 22 }} />
         <Text style={styles.foot}>Need access? Ask BEVER support to link your store to this number.</Text>
       </ScrollView>
