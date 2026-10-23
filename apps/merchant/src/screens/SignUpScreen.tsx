@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Banner, Button, Chip } from '../components/ui';
-import { signUpMerchant } from '../services/auth';
+import { signUpMerchant, submitMerchantApplication } from '../services/auth';
 import { colors, radius } from '../theme';
 
 const CATEGORIES: Array<[string, string]> = [
@@ -28,7 +28,8 @@ function Field(p: { label: string; value: string; onChange: (v: string) => void;
 
 const timeOk = (t: string) => /^([01]?\d|2[0-3]):[0-5]\d$/.test(t);
 
-export function SignUpScreen({ onBack }: { onBack: () => void }) {
+export function SignUpScreen({ onBack, existingPhone }: { onBack: () => void; existingPhone?: string }) {
+  const existing = existingPhone !== undefined;
   const [phone, setPhone] = useState(''); const [pin, setPin] = useState(''); const [pin2, setPin2] = useState('');
   const [owner, setOwner] = useState(''); const [store, setStore] = useState(''); const [category, setCategory] = useState('GROCERY');
   const [address, setAddress] = useState(''); const [pincode, setPincode] = useState(''); const [city, setCity] = useState('Chhatrapati Sambhajinagar');
@@ -40,9 +41,11 @@ export function SignUpScreen({ onBack }: { onBack: () => void }) {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!/^[6-9]\d{9}$/.test(phone)) e['phone'] = 'Enter a valid 10-digit mobile number.';
-    if (!/^\d{6}$/.test(pin)) e['pin'] = 'PIN must be exactly 6 digits.';
-    if (pin2 !== pin) e['pin2'] = 'PINs do not match.';
+    if (!existing) {
+      if (!/^[6-9]\d{9}$/.test(phone)) e['phone'] = 'Enter a valid 10-digit mobile number.';
+      if (!/^\d{6}$/.test(pin)) e['pin'] = 'PIN must be exactly 6 digits.';
+      if (pin2 !== pin) e['pin2'] = 'PINs do not match.';
+    }
     if (owner.trim().length < 3) e['owner'] = 'Enter the owner’s full name.';
     if (store.trim().length < 2) e['store'] = 'Enter your shop name.';
     if (address.trim().length < 8) e['address'] = 'Enter the full shop address (shop no., street, area).';
@@ -63,10 +66,11 @@ export function SignUpScreen({ onBack }: { onBack: () => void }) {
     if (!validate()) { setTop('Please fix the highlighted fields.'); return; }
     setBusy(true);
     try {
-      const r = await signUpMerchant(phone, pin, {
+      const app = {
         owner_name: owner.trim(), store_name: store.trim(), category, address: address.trim(), pincode, city: city.trim(),
         opens_at: opens, closes_at: closes, ...(fssai ? { fssai } : {}), ...(gstin ? { gstin: gstin.toUpperCase() } : {}),
-      });
+      };
+      const r = existing ? await submitMerchantApplication(app) : await signUpMerchant(phone, pin, app);
       if (!r.ok) setTop(r.error ?? 'Could not create the account.');
     } catch { setTop('No internet connection. Check your network and try again.'); }
     finally { setBusy(false); }
@@ -76,16 +80,18 @@ export function SignUpScreen({ onBack }: { onBack: () => void }) {
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={onBack} accessibilityRole="button"><Text style={styles.back}>‹ Back to sign in</Text></Pressable>
+        <Pressable onPress={onBack} accessibilityRole="button"><Text style={styles.back}>{existing ? '‹ Sign out' : '‹ Back to sign in'}</Text></Pressable>
         <Text style={styles.heading}>Register your shop</Text>
-        <Text style={styles.sub}>Fill these once. BEVER checks the details and activates your store, usually within a day.</Text>
+        <Text style={styles.sub}>{existing ? `You are signed in as +91 ${existingPhone}. Add your shop details so BEVER can activate your store.` : 'Fill these once. BEVER checks the details and activates your store, usually within a day.'}</Text>
 
+        {!existing ? <>
         <Text style={styles.section}>1 · Your login</Text>
         <Field label="Mobile number *" value={phone} onChange={(v) => setPhone(v.replace(/\D/g, '').slice(0, 10))} keyboard="number-pad" placeholder="98765 43210" error={errors['phone']} />
         <Field label="Create 6-digit PIN *" value={pin} onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 6))} keyboard="number-pad" secure placeholder="••••••" error={errors['pin']} />
         <Field label="Confirm PIN *" value={pin2} onChange={(v) => setPin2(v.replace(/\D/g, '').slice(0, 6))} keyboard="number-pad" secure placeholder="••••••" error={errors['pin2']} />
+        </> : null}
 
-        <Text style={styles.section}>2 · Shop details</Text>
+        <Text style={styles.section}>{existing ? 'Shop details' : '2 · Shop details'}</Text>
         <Field label="Owner full name *" value={owner} onChange={setOwner} placeholder="As on your ID" error={errors['owner']} />
         <Field label="Shop name *" value={store} onChange={setStore} placeholder="Sharma Kirana & General Store" error={errors['store']} />
         <Text style={[styles.label, { marginTop: 14 }]}>Shop category *</Text>

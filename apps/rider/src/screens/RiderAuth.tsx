@@ -1,7 +1,7 @@
 import React,{useState} from 'react';
 import {ActivityIndicator,Keyboard,KeyboardAvoidingView,Platform,Pressable,ScrollView,StyleSheet,Text,TextInput,TouchableOpacity,View} from 'react-native';
 import {StatusBar} from 'expo-status-bar';
-import {signInRider,signUpRider} from '../services/auth';
+import {signInRider,signUpRider,submitRiderApplication} from '../services/auth';
 
 const VEHICLES:Array<[string,string]>=[['BIKE','Motorbike'],['SCOOTER','Scooter'],['EV','Electric'],['CYCLE','Bicycle']];
 const G='#059669',GD='#065F46';
@@ -10,8 +10,9 @@ function Field(p:{label:string;value:string;onChange:(v:string)=>void;placeholde
   return<View style={{marginTop:14}}><Text style={s.label}>{p.label}</Text><TextInput value={p.value} onChangeText={p.onChange} placeholder={p.placeholder} placeholderTextColor="#A8A29E" keyboardType={p.num?'number-pad':'default'} secureTextEntry={p.secure??false} autoCapitalize={p.caps?'characters':p.num?'none':'words'} style={[s.input,p.error?s.bad:null]} accessibilityLabel={p.label}/>{p.error?<Text style={s.err}>{p.error}</Text>:null}</View>;
 }
 
-export function RiderAuth(){
-  const[mode,setMode]=useState<'in'|'up'>('in');
+export function RiderAuth({existingPhone,onSignOut}:{existingPhone?:string;onSignOut?:()=>void}={}){
+  const existing=existingPhone!==undefined;
+  const[mode,setMode]=useState<'in'|'up'>(existing?'up':'in');
   const[phone,setPhone]=useState(''),[pin,setPin]=useState(''),[pin2,setPin2]=useState('');
   const[name,setName]=useState(''),[city,setCity]=useState('Chhatrapati Sambhajinagar'),[area,setArea]=useState('');
   const[vehicle,setVehicle]=useState('BIKE'),[vno,setVno]=useState(''),[lic,setLic]=useState('');
@@ -24,10 +25,12 @@ export function RiderAuth(){
 
   const validate=()=>{
     const e:Record<string,string>={};
-    if(!/^[6-9]\d{9}$/.test(phone))e['phone']='Enter a valid 10-digit mobile number.';
-    if(!/^\d{6}$/.test(pin))e['pin']='PIN must be exactly 6 digits.';
+    if(!existing){
+      if(!/^[6-9]\d{9}$/.test(phone))e['phone']='Enter a valid 10-digit mobile number.';
+      if(!/^\d{6}$/.test(pin))e['pin']='PIN must be exactly 6 digits.';
+    }
     if(mode==='up'){
-      if(pin2!==pin)e['pin2']='PINs do not match.';
+      if(!existing&&pin2!==pin)e['pin2']='PINs do not match.';
       if(name.trim().length<3)e['name']='Enter your full name as on your ID.';
       if(!city.trim())e['city']='Enter your city.';
       if(area.trim().length<3)e['area']='Enter the area you can deliver in.';
@@ -35,7 +38,7 @@ export function RiderAuth(){
       if(motor&&lic.trim().length<8)e['lic']='Enter your driving licence number.';
       if(en.trim().length<3)e['en']='Enter an emergency contact name.';
       if(!/^[6-9]\d{9}$/.test(ep))e['ep']='Enter a valid 10-digit emergency number.';
-      if(ep&&ep===phone)e['ep']='Emergency number must be different from yours.';
+      if(ep&&ep===(existing?existingPhone:phone))e['ep']='Emergency number must be different from yours.';
       if(!agree)e['agree']='Please accept the rider agreement to continue.';
     }
     setErrors(e);return Object.keys(e).length===0;
@@ -46,7 +49,8 @@ export function RiderAuth(){
     if(!validate()){setTop('Please fix the highlighted fields.');return}
     setBusy(true);
     try{
-      const r=mode==='in'?await signInRider(phone,pin):await signUpRider(phone,pin,{full_name:name.trim(),city:city.trim(),area:area.trim(),vehicle_type:vehicle,vehicle_number:motor?vno.toUpperCase().replace(/\s/g,''):'',licence_number:motor?lic.trim():'',emergency_name:en.trim(),emergency_phone:ep});
+      const appData={full_name:name.trim(),city:city.trim(),area:area.trim(),vehicle_type:vehicle,vehicle_number:motor?vno.toUpperCase().replace(/\s/g,''):'',licence_number:motor?lic.trim():'',emergency_name:en.trim(),emergency_phone:ep};
+      const r=existing?await submitRiderApplication(appData):mode==='in'?await signInRider(phone,pin):await signUpRider(phone,pin,appData);
       if(!r.ok)setTop(r.error??'Something went wrong.');
     }catch{setTop('No internet connection. Check your network and try again.')}
     finally{setBusy(false)}
@@ -58,10 +62,10 @@ export function RiderAuth(){
       <Text style={s.heading}>{mode==='in'?'Your deliveries':'Register as a rider'}</Text>
       <Text style={s.sub}>{mode==='in'?'Sign in with your mobile number and 6-digit PIN.':'Fill these once. BEVER verifies your details and activates your account.'}</Text>
 
-      <Field label="Mobile number *" value={phone} onChange={v=>setPhone(v.replace(/\D/g,'').slice(0,10))} num placeholder="98765 43210" error={errors['phone']}/>
-      <Field label={mode==='in'?'6-digit PIN *':'Create 6-digit PIN *'} value={pin} onChange={v=>setPin(v.replace(/\D/g,'').slice(0,6))} num secure placeholder="••••••" error={errors['pin']}/>
+      {!existing?<><Field label="Mobile number *" value={phone} onChange={v=>setPhone(v.replace(/\D/g,'').slice(0,10))} num placeholder="98765 43210" error={errors['phone']}/>
+      <Field label={mode==='in'?'6-digit PIN *':'Create 6-digit PIN *'} value={pin} onChange={v=>setPin(v.replace(/\D/g,'').slice(0,6))} num secure placeholder="••••••" error={errors['pin']}/></>:null}
       {mode==='up'?<>
-        <Field label="Confirm PIN *" value={pin2} onChange={v=>setPin2(v.replace(/\D/g,'').slice(0,6))} num secure placeholder="••••••" error={errors['pin2']}/>
+        {!existing?<Field label="Confirm PIN *" value={pin2} onChange={v=>setPin2(v.replace(/\D/g,'').slice(0,6))} num secure placeholder="••••••" error={errors['pin2']}/>:null}
         <Text style={s.section}>Your details</Text>
         <Field label="Full name *" value={name} onChange={setName} placeholder="As on your ID" error={errors['name']}/>
         <Field label="City *" value={city} onChange={setCity} error={errors['city']}/>
@@ -78,7 +82,7 @@ export function RiderAuth(){
 
       {top?<View style={s.banner}><Text style={s.bannerText}>{top}</Text></View>:null}
       <TouchableOpacity style={[s.primary,busy&&{opacity:0.7}]} disabled={busy} onPress={()=>{void submit()}}>{busy?<ActivityIndicator color="#fff"/>:<Text style={s.primaryText}>{mode==='in'?'Sign in':'Submit for activation'}</Text>}</TouchableOpacity>
-      <Text style={s.switch} onPress={()=>{setErrors({});setTop(null);setMode(mode==='in'?'up':'in')}}>{mode==='in'?'New rider? Register here':'Already registered? Sign in'}</Text>
+      <Text style={s.switch} onPress={()=>{if(existing){onSignOut?.();return}setErrors({});setTop(null);setMode(mode==='in'?'up':'in')}}>{existing?'Sign out':mode==='in'?'New rider? Register here':'Already registered? Sign in'}</Text>
     </ScrollView>
   </KeyboardAvoidingView>;
 }

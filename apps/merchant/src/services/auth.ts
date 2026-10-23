@@ -57,3 +57,12 @@ export async function signUpMerchant(phone: string, pin: string, application?: M
   if (!data.session) return signInMerchant(phone, pin);
   return { ok: true };
 }
+
+/** For an account that already exists (e.g. a customer): attach the shop application to it. */
+export async function submitMerchantApplication(application: MerchantApplication) {
+  const { error } = await supabase.auth.updateUser({
+    data: { full_name: application.owner_name, merchant_application: { ...application, submitted_at: new Date().toISOString() } },
+  });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}

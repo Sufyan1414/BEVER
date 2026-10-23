@@ -34,3 +34,9 @@ export async function signUpRider(phone:string,pin:string,app:RiderApplication){
   if(!data.session)return signInRider(phone,pin);
   return{ok:true};
 }
+
+export async function submitRiderApplication(app:RiderApplication){
+  const {error}=await supabase.auth.updateUser({data:{full_name:app.full_name,rider_application:{...app,submitted_at:new Date().toISOString()}}});
+  if(error)return{ok:false,error:error.message};
+  return{ok:true};
+}

@@ -11,6 +11,7 @@ import {
 import { useMerchantData } from './hooks/useMerchantData';
 import { LoginScreen } from './screens/LoginScreen';
 import { PendingApprovalScreen } from './screens/PendingApprovalScreen';
+import { SignUpScreen } from './screens/SignUpScreen';
 import { OrdersScreen } from './screens/OrdersScreen';
 import { OrderDetailScreen } from './screens/OrderDetailScreen';
 import { CatalogueScreen } from './screens/CatalogueScreen';
@@ -66,6 +67,10 @@ function Root() {
   if (!session) return <LoginScreen />;
   if (roleOk === null) {
     return <View style={styles.center}><StatusBar style="dark" /><ActivityIndicator size="large" color={colors.brand} /></View>;
+  }
+  const phoneDigits = String(session.user.email ?? '').replace(/\D/g, '').slice(-10);
+  if (!roleOk && !(session.user.user_metadata as Record<string, unknown> | undefined)?.['merchant_application']) {
+    return <SignUpScreen existingPhone={phoneDigits} onBack={() => { void supabase.auth.signOut(); }} />;
   }
   if (!roleOk) return <PendingApprovalScreen phone={String(session.user.email ?? '').replace(/\D/g, '').slice(-10)} onCheck={() => { setRoleOk(null); void supabase.from('profiles').select('role,is_active').eq('id', session.user.id).maybeSingle().then(({ data }) => setRoleOk(!!data && data.role === 'merchant' && data.is_active === true)); }} />;
   return <Console userId={session.user.id} />;
