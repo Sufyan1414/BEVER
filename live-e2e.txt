@@ -1,0 +1,15 @@
+PASS  Sign in with phone+PIN pseudo-email  ok
+PASS  ensure_my_profile  ok
+PASS  Profile created with role customer  {"role":"customer","full_name":"","phone":"+919000000001"}
+PASS  get_nearby_stores returns stores  1 stores: BEVER Test Store
+PASS  Store has purchasable products  [{"id":"ff1aa429-1cd6-4db3-a277-e5549d503dd4","name":"Parle-G Biscuits","price":1000},{"id":"55cc540d-5b92-482e-af07-bf642d6f433d","name":"Tata Salt","price":2800},{"id":"60a3a15f-bdbf-47e2-b71f-4afb11bf2812","name":"Aashirvaad Atta","price":6200}]
+PASS  Delivery address exists
+PASS  create_customer_order (server pricing)  {"number":"BVR-20261023-0011","items":1000,"fee":2000,"total":3000,"productPrice":1000}
+PASS  Server item total equals product price  {"server":1000,"product":1000}
+PASS  Customer can read own order  {"status":"PENDING","delivery_otp":"8549","payment_method":"COD","total_amount":3000}
+PASS  Customer CANNOT directly edit order status/total  {"patchStatus":204,"order":{"status":"PENDING","total_amount":3000}}
+PASS  Customer can cancel own order (cleanup)  cancelled
+PASS  Customer CANNOT promote self to admin  {"patch":500,"role":"customer"}
+PASS  Customer CANNOT edit a store  {"patch":204,"store":{"name":"BEVER Test Store","is_verified":true}}
+
+ALL PASSED

@@ -1,0 +1,13 @@
+Expo Autolinking module resolution enabled
+Starting Metro Bundler
+
+Android Bundled 16361ms apps/rider/index.ts (1025 modules)
+Could not parse Expo config: android.googleServicesFile: "./google-services.json"
+
+› android bundles (1):
+_expo/static/js/android/index-3227c10335329cb533dd982e3f57f168.hbc (3.2MB)
+
+› Files (1):
+metadata.json (150B)
+
+Exported: /tmp/out-rider
