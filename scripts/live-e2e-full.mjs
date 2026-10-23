@@ -80,4 +80,5 @@ finally {
     if (st) await call('PATCH', `/rest/v1/stores?id=eq.${st.id}`, merchant.tok, { is_open: false });
   }
 }
-console.log(lines.join('\n') + `\n\n${failed === 0 ? 'ALL PASSED' : failed + ' FAILED'}`);
+const setup = lines.some(l => l.startsWith('SETUP NEEDED'));
+console.log(lines.join('\n') + `\n\n${setup ? 'NOT RUN - SETUP NEEDED' : failed === 0 ? 'ALL PASSED' : failed + ' FAILED'}`);
