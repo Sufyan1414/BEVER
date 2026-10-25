@@ -17,7 +17,6 @@ Module._resolveFilename = function(request, parent, isMain, options) {
 };
 
 const { getDefaultConfig } = require("expo/metro-config");
-const { withNativeWind } = require("nativewind/metro");
 
 const config = getDefaultConfig(projectRoot);
 
@@ -27,7 +26,4 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
-module.exports = withNativeWind(config, { 
-  input: "./global.css",
-  configPath: path.resolve(projectRoot, "tailwind.config.js")
-});
+module.exports = config;
