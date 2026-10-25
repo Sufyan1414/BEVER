@@ -1,0 +1,25 @@
+name: Add dependency (one-off)
+on:
+  push:
+    branches: ['deps/**']
+permissions:
+  contents: write
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - name: Install expo-image-picker at the SDK-compatible version
+        working-directory: apps/merchant
+        run: npx expo install expo-image-picker expo-image-manipulator
+      - name: Commit manifest and lockfile
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add apps/merchant/package.json package-lock.json
+          git diff --cached --stat
+          git commit -m "chore: add expo-image-picker and expo-image-manipulator (SDK-compatible)" || echo "nothing to commit"
+          git push
