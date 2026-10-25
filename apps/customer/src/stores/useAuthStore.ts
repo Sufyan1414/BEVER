@@ -103,7 +103,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
       return null;
     }
 
-    set({ isProfileLoading: true });
+    // Silent refresh when we already have this user's profile: never flash a loading state.
+    if (!get().profile) set({ isProfileLoading: true });
     try {
       const profileData = await fetchMyProfile();
       const complete = profileIsComplete(profileData);
@@ -114,8 +115,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
       });
       return profileData;
     } catch (err) {
-      set({ profile: null, isProfileComplete: false, isProfileLoading: false });
-      return null;
+      // Keep whatever we already had; a failed refresh must not wipe the profile.
+      set({ isProfileLoading: false });
+      return get().profile;
     }
   };
 
@@ -245,7 +247,6 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     updateProfileName: async (fullName: string): Promise<AuthActionResult> => {
-      set({ isProfileLoading: true });
       const result = await updateMyProfile(fullName);
 
       if (result.success && result.profile) {
@@ -258,7 +259,6 @@ export const useAuthStore = create<AuthState>((set, get) => {
         return { success: true };
       }
 
-      set({ isProfileLoading: false });
       return { success: false, error: result.error || 'Could not update profile.' };
     },
 

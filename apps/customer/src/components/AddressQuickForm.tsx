@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { createAddress } from '../services/address';
+import { useAuthStore } from '../stores/useAuthStore';
 import type { CustomerAddress } from '../types/address';
 
 interface Props {
@@ -18,16 +19,23 @@ export function AddressQuickForm({ defaults, receiverName, phone, onSaved }: Pro
   const [city, setCity] = useState(defaults.city ?? 'Chhatrapati Sambhajinagar');
   const [state, setState] = useState(defaults.state ?? 'Maharashtra');
   const [label, setLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
+  const [name, setName] = useState(receiverName);
+  const updateProfileName = useAuthStore((st) => st.updateProfileName);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const save = async () => {
     setErr(null);
+    if (name.trim().length < 2) { setErr('Enter the name of the person receiving the order.'); return; }
     if (line1.trim().length < 3) { setErr('Enter your flat / house number and street.'); return; }
     if (!/^\d{6}$/.test(pincode)) { setErr('Pincode must be exactly 6 digits.'); return; }
     if (!city.trim() || !state.trim()) { setErr('City and state are required.'); return; }
     setBusy(true);
     try {
+      if (name.trim() !== receiverName.trim()) {
+        const r = await updateProfileName(name.trim());
+        if (!r.success) { setErr(r.error ?? 'Could not save your name.'); return; }
+      }
       const a = await createAddress({
         label, address_line_1: line1.trim(), address_line_2: line2.trim() || null,
         city: city.trim(), state: state.trim(), pincode,
@@ -41,7 +49,9 @@ export function AddressQuickForm({ defaults, receiverName, phone, onSaved }: Pro
   return (
     <View style={s.card}>
       <Text style={s.head}>Where should we deliver?</Text>
-      <Text style={s.help}>Delivering to {receiverName || 'you'} · {phone}</Text>
+      <Text style={s.help}>Delivering to {name.trim() || 'you'} · {phone}</Text>
+      <Text style={s.label}>Your name *</Text>
+      <TextInput value={name} onChangeText={setName} style={s.input} placeholder="Full name" placeholderTextColor="#A8A29E" autoCapitalize="words" accessibilityLabel="Your name" />
       <View style={s.tags}>
         {(['Home', 'Work', 'Other'] as const).map((t) => (
           <TouchableOpacity key={t} onPress={() => setLabel(t)} style={[s.tag, label === t && s.tagOn]} accessibilityRole="button">

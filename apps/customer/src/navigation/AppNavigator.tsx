@@ -39,7 +39,6 @@ import { useLocationStore } from '../stores/useLocationStore';
 import { useCartStore } from '../stores/useCartStore';
 import { AppTabs } from './AppTabs';
 import { AuthStack } from './AuthStack';
-import { ProfileSetupScreen } from '../screens/auth/ProfileSetupScreen';
 import { BrowsingLocationPickerScreen } from '../screens/location/BrowsingLocationPickerScreen';
 
 // ─── Root stack (guest browse + Auth modal) ───────────────────────────────────
@@ -51,13 +50,6 @@ type RootStackParamList = {
 
 const Root = createNativeStackNavigator<RootStackParamList>();
 
-// ─── Profile gate stack ───────────────────────────────────────────────────────
-
-type ProfileGateParamList = {
-  ProfileSetup: undefined;
-};
-
-const ProfileGate = createNativeStackNavigator<ProfileGateParamList>();
 
 // ─── Splash ───────────────────────────────────────────────────────────────────
 
@@ -73,7 +65,7 @@ function SplashScreen() {
 // ─── Root navigator ───────────────────────────────────────────────────────────
 
 export function AppNavigator() {
-  const { isLoading, isProfileLoading, session, isProfileComplete, initialize } = useAuthStore();
+  const { isLoading, session, initialize } = useAuthStore();
   const { isLocationLoading, needsLocationSetup, loadPersistedLocation } = useLocationStore();
   const { loadPersistedCart } = useCartStore();
 
@@ -97,26 +89,11 @@ export function AppNavigator() {
   }, []);
 
   // ── 1. Loading gate ──────────────────────────────────────────────────────────
-  if (isLoading || (session !== null && isProfileLoading) || isLocationLoading) {
+  if (isLoading || isLocationLoading) {
     return <SplashScreen />;
   }
 
-  // ── 2. Authenticated + profile incomplete → profile setup gate ───────────────
-  if (session !== null && !isProfileComplete) {
-    return (
-      <NavigationContainer>
-        <ProfileGate.Navigator
-          screenOptions={{
-            headerShown: false,
-            gestureEnabled: false,
-            contentStyle: { backgroundColor: '#F3FBF7' },
-          }}
-        >
-          <ProfileGate.Screen name="ProfileSetup" component={ProfileSetupScreen} />
-        </ProfileGate.Navigator>
-      </NavigationContainer>
-    );
-  }
+  // (Name is collected at checkout, not as a blocking gate.)
 
   // ── 3. Location not yet set → location setup gate ────────────────────────────
   // Applies to BOTH guests and authenticated users.
