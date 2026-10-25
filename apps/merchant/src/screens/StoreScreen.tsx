@@ -33,6 +33,7 @@ export function StoreScreen({ store, busy, activeOrders, onToggleOpen, onSignOut
       </Card>
 
       <Button label="Sign out" variant="secondary" icon="log-out-outline" onPress={onSignOut} style={{ marginTop: 8 }} />
+      <Text style={styles.footnote}>Build: photos + search + order code (8a37d87)</Text>
     </ScrollView>
   );
 }
