@@ -65,3 +65,12 @@ Never put the service-role key anywhere in this repo or in these apps.
 - **Riders** open the Rider app, tap "Register here" and fill the mandatory form (name, area, vehicle, vehicle number and licence for motor vehicles, emergency contact, terms).
 - **You** review the submitted details with the commented query in `packages/supabase/field-trial/onboard_merchant.sql`, then run that script (merchants) or the rider snippet at its bottom (riders). The applicant taps "check again" and is in.
 - **Customers** browse as guests. At checkout they sign in with phone + PIN, and if they have no saved address a short delivery-details form appears (flat/street, pincode, city, state). No SMS OTP is used anywhere.
+
+## Approving shopkeepers and riders (after migration 023)
+Run in the Supabase SQL editor:
+
+    select * from public.pending_applications();                       -- who is waiting
+    select public.approve_merchant('9284140185', 19.8910613, 75.3262617, 3000);  -- phone, shop lat, lng, radius (m)
+    select public.approve_rider('9000000003');
+
+The applicant taps "Check again" on the waiting screen and is let in.
