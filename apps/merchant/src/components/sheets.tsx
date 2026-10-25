@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
-  KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View,
+  Image, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { colors, radius } from '../theme';
 import { Button } from './ui';
 import { REJECT_REASONS } from '../lib/format';
 import { parseRupeesToPaise } from '../lib/money';
+import { choosePhoto, type PhotoSource } from '../services/media';
 
 function Sheet({ visible, title, onClose, children }: { visible: boolean; title: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -74,12 +75,22 @@ export function PriceSheet({ visible, productName, currentPaise, busy, onClose, 
 }
 
 export function AddProductSheet({ visible, busy, onClose, onSave }: {
-  visible: boolean; busy: boolean; onClose: () => void; onSave: (v: { name: string; unit: string; pricePaise: number }) => void;
+  visible: boolean; busy: boolean; onClose: () => void; onSave: (v: { name: string; unit: string; pricePaise: number; photoUri: string | null }) => void;
 }) {
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [photoMsg, setPhotoMsg] = useState<string | null>(null);
+  const pick = async (src: PhotoSource) => {
+    setPhotoMsg(null);
+    try {
+      const r = await choosePhoto(src);
+      if (r.denied) setPhotoMsg(src === 'camera' ? 'Camera access is off. Allow it in phone settings.' : 'Photo access is off. Allow it in phone settings.');
+      else if (r.uri) setPhoto(r.uri);
+    } catch { setPhotoMsg('Could not open the photo picker. Try again.'); }
+  };
   const [name, setName] = useState('');
   const [unit, setUnit] = useState('');
   const [price, setPrice] = useState('');
-  useEffect(() => { if (visible) { setName(''); setUnit(''); setPrice(''); } }, [visible]);
+  useEffect(() => { if (visible) { setName(''); setUnit(''); setPrice(''); setPhoto(null); setPhotoMsg(null); } }, [visible]);
   const paise = parseRupeesToPaise(price);
   const valid = name.trim().length >= 2 && unit.trim().length >= 1 && paise !== null;
   return (
@@ -90,10 +101,20 @@ export function AddProductSheet({ visible, busy, onClose, onSave }: {
       <TextInput value={unit} onChangeText={setUnit} placeholder="e.g. 1 kg" placeholderTextColor={colors.faint} style={styles.input} maxLength={30} />
       <Text style={styles.label}>Selling price (₹)</Text>
       <TextInput value={price} onChangeText={(v) => setPrice(v.replace(/[^0-9.]/g, ''))} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.faint} style={styles.input} maxLength={9} />
-      <Text style={styles.hint}>Photos can be added later by BEVER staff on request.</Text>
+      <Text style={styles.label}>Photo (optional, helps it sell)</Text>
+      <View style={styles.photoRow}>
+        <View style={styles.photoBox}>
+          {photo ? <Image source={{ uri: photo }} style={styles.photoImg} /> : <Text style={styles.photoEmpty}>No photo</Text>}
+        </View>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Button label="Take photo" variant="secondary" small onPress={() => { void pick('camera'); }} style={{ marginBottom: 8 }} />
+          <Button label="Choose from gallery" variant="secondary" small onPress={() => { void pick('library'); }} />
+        </View>
+      </View>
+      {photoMsg ? <Text style={styles.err}>{photoMsg}</Text> : null}
       <View style={styles.actions}>
         <Button label="Cancel" variant="secondary" onPress={onClose} style={{ flex: 1, marginRight: 10 }} />
-        <Button label="Add product" loading={busy} disabled={!valid} onPress={() => { if (valid && paise !== null) onSave({ name: name.trim(), unit: unit.trim(), pricePaise: paise }); }} style={{ flex: 1 }} />
+        <Button label="Add product" loading={busy} disabled={!valid} onPress={() => { if (valid && paise !== null) onSave({ name: name.trim(), unit: unit.trim(), pricePaise: paise, photoUri: photo }); }} style={{ flex: 1 }} />
       </View>
     </Sheet>
   );
@@ -111,6 +132,10 @@ const styles = StyleSheet.create({
   err: { fontSize: 12, color: colors.danger, marginTop: 6 },
   hint: { fontSize: 12, color: colors.muted, lineHeight: 18, marginTop: 10 },
   actions: { flexDirection: 'row', marginTop: 20 },
+  photoRow: { flexDirection: 'row', alignItems: 'center' },
+  photoBox: { width: 96, height: 96, borderRadius: radius.md, borderWidth: 1, borderColor: colors.lineStrong, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  photoImg: { width: 96, height: 96 },
+  photoEmpty: { fontSize: 12, color: colors.faint },
   option: { flexDirection: 'row', alignItems: 'center', minHeight: 52, borderRadius: radius.md, borderWidth: 1, borderColor: colors.lineStrong, paddingHorizontal: 14, marginBottom: 8 },
   optionActive: { borderColor: colors.brand, backgroundColor: colors.brandSoft },
   optionText: { fontSize: 14, fontWeight: '700', color: colors.ink, marginLeft: 12, flex: 1 },

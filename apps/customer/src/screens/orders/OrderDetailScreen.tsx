@@ -141,7 +141,7 @@ export function OrderDetailScreen() {
           ))}
         </View>
 
-        {order.status === 'OUT_FOR_DELIVERY' && order.deliveryOtp ? <View style={styles.otpCard}><Text style={styles.otpEyebrow}>DELIVERY CODE</Text><Text style={styles.otpTitle}>{order.deliveryOtp}</Text><Text style={styles.otpBody}>Share this code with your BEVER rider when your order arrives.</Text></View> : null}
+        {!terminal && order.deliveryOtp ? <View style={styles.otpCard}><Text style={styles.otpEyebrow}>YOUR ORDER CODE</Text><Text style={styles.otpTitle}>{order.deliveryOtp}</Text><Text style={styles.otpBody}>Tell this code to the delivery person only when your order is at your door. Never share it by phone or message.</Text></View> : null}
 
         <Text style={styles.section}>Delivery & payment</Text>
         <View style={styles.card}>

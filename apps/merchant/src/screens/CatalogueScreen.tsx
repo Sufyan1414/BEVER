@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, Chip, EmptyState, Skeleton } from '../components/ui';
 import { rupees, timeAgo } from '../lib/format';
@@ -9,9 +9,9 @@ import type { Product } from '../lib/types';
 type Filter = 'all' | 'unavailable';
 const STALE_DAYS = 7;
 
-export function CatalogueScreen({ products, loading, refreshing, now, busyIds, onRefresh, onToggle, onEditPrice, onAdd }: {
+export function CatalogueScreen({ products, loading, refreshing, now, busyIds, onRefresh, onToggle, onEditPrice, onAdd, onEditPhoto }: {
   products: Product[]; loading: boolean; refreshing: boolean; now: number; busyIds: ReadonlySet<string>;
-  onRefresh: () => void; onToggle: (p: Product, available: boolean) => void; onEditPrice: (p: Product) => void; onAdd: () => void;
+  onRefresh: () => void; onToggle: (p: Product, available: boolean) => void; onEditPrice: (p: Product) => void; onAdd: () => void; onEditPhoto?: (p: Product) => void;
 }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -56,7 +56,10 @@ export function CatalogueScreen({ products, loading, refreshing, now, busyIds, o
           return (
             <Card key={p.id} style={!p.is_available ? styles.off : undefined}>
               <View style={styles.row}>
-                <View style={{ flex: 1, paddingRight: 10 }}>
+                <Pressable onPress={() => onEditPhoto?.(p)} style={styles.thumb} accessibilityRole="button" accessibilityLabel={`Change photo of ${p.name}`}>
+                  {p.image_url ? <Image source={{ uri: p.image_url }} style={styles.thumbImg} /> : <Ionicons name="camera-outline" size={22} color={colors.faint} />}
+                </Pressable>
+                <View style={{ flex: 1, paddingRight: 10, marginLeft: 12 }}>
                   <Text style={styles.name} numberOfLines={2}>{p.name}</Text>
                   <Text style={styles.unit}>{p.unit}</Text>
                   <Pressable onPress={() => onEditPrice(p)} style={styles.priceBtn} accessibilityRole="button" accessibilityLabel={`Edit price of ${p.name}`}>
@@ -96,6 +99,8 @@ const styles = StyleSheet.create({
   chipRow: { flexDirection: 'row', marginBottom: 14 },
   off: { backgroundColor: '#FAFAF9' },
   row: { flexDirection: 'row', alignItems: 'center' },
+  thumb: { width: 60, height: 60, borderRadius: radius.md, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.lineStrong, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  thumbImg: { width: 60, height: 60 },
   name: { fontSize: 15, fontWeight: '800', color: colors.ink },
   unit: { fontSize: 12, color: colors.muted, marginTop: 2 },
   priceBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginTop: 8, paddingVertical: 4, paddingHorizontal: 10, borderRadius: radius.pill, backgroundColor: colors.brandSoft, borderWidth: 1, borderColor: colors.brandLine },

@@ -35,7 +35,7 @@ export async function fetchOrders(storeId: string): Promise<Order[]> {
 export async function fetchProducts(storeId: string): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
-    .select('id,name,unit,price,is_available,is_active,updated_at')
+    .select('id,name,unit,price,is_available,is_active,updated_at,image_url')
     .eq('store_id', storeId)
     .eq('is_active', true)
     .order('name', { ascending: true })
@@ -59,8 +59,9 @@ export async function setProductPrice(productId: string, pricePaise: number): Pr
   if (error) throw error;
 }
 
-export async function createProduct(storeId: string, input: { name: string; unit: string; pricePaise: number }): Promise<void> {
+export async function createProduct(storeId: string, input: { name: string; unit: string; pricePaise: number; imageUrl?: string | null }): Promise<void> {
   const { error } = await supabase.from('products').insert({
+    image_url: input.imageUrl ?? null,
     store_id: storeId,
     name: input.name,
     unit: input.unit,
@@ -73,5 +74,10 @@ export async function createProduct(storeId: string, input: { name: string; unit
 
 export async function setStoreOpen(storeId: string, open: boolean): Promise<void> {
   const { error } = await supabase.from('stores').update({ is_open: open }).eq('id', storeId);
+  if (error) throw error;
+}
+
+export async function setProductImage(productId: string, url: string): Promise<void> {
+  const { error } = await supabase.from('products').update({ image_url: url }).eq('id', productId);
   if (error) throw error;
 }

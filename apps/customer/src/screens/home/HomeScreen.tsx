@@ -40,7 +40,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useLocationStore } from '../../stores/useLocationStore';
-import { fetchNearbyStores } from '../../services/store';
+import { fetchNearbyStores, searchProducts, type ProductHit } from '../../services/store';
 import { BrowsingLocationPickerScreen } from '../location/BrowsingLocationPickerScreen';
 import type { NearbyStore, StoreCategory } from '../../types/store';
 import { STORE_CATEGORY_LABELS } from '../../types/store';
@@ -288,6 +288,22 @@ export function HomeScreen() {
   const [homeState, setHomeState] = useState<HomeState>({ kind: 'LOADING' });
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>(ALL_KEY);
   const [storeSearchQuery, setStoreSearchQuery] = useState('');
+  const [productHits, setProductHits] = useState<ProductHit[]>([]);
+  const [productSearching, setProductSearching] = useState(false);
+  useEffect(() => {
+    const q = storeSearchQuery.trim();
+    const ids = homeState.kind === 'STORE_LIST' ? homeState.stores.map((st) => st.id) : [];
+    if (q.length < 2 || ids.length === 0) { setProductHits([]); setProductSearching(false); return; }
+    let alive = true;
+    setProductSearching(true);
+    const t = setTimeout(() => {
+      searchProducts(ids, q)
+        .then((hits) => { if (alive) setProductHits(hits); })
+        .catch(() => { if (alive) setProductHits([]); })
+        .finally(() => { if (alive) setProductSearching(false); });
+    }, 300);
+    return () => { alive = false; clearTimeout(t); };
+  }, [storeSearchQuery, homeState]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showChangeLocation, setShowChangeLocation] = useState(false);
 
@@ -395,12 +411,12 @@ export function HomeScreen() {
           <TextInput
             value={storeSearchQuery}
             onChangeText={setStoreSearchQuery}
-            placeholder="Search nearby stores"
+            placeholder="Search stores and products"
             placeholderTextColor="#9A9A94"
             returnKeyType="search"
             autoCapitalize="none"
             style={{ flex: 1, color: '#20201C', fontSize: 14, paddingVertical: 0 }}
-            accessibilityLabel="Search nearby stores"
+            accessibilityLabel="Search stores and products"
           />
           {storeSearchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setStoreSearchQuery('')} accessibilityLabel="Clear store search">
@@ -409,6 +425,37 @@ export function HomeScreen() {
           )}
         </View>
       </View>
+
+      {/* Product search results (real products from nearby stores) */}
+      {normalizedSearchQuery.length >= 2 && productHits.length > 0 && (
+        <View style={{ paddingHorizontal: 20, marginTop: 6, marginBottom: 6 }}>
+          <Text style={styles.sectionTitle}>Products</Text>
+          {productHits.map((hit) => {
+            const hitStore = allStores.find((st) => st.id === hit.store_id);
+            return (
+              <TouchableOpacity
+                key={hit.id}
+                activeOpacity={0.85}
+                onPress={() => { if (hitStore) (navigation as any).navigate('StoreDetail', { store: hitStore }); }}
+                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, padding: 10, marginTop: 10, borderWidth: 1, borderColor: '#E7E5E4' }}
+                accessibilityLabel={`${hit.name} at ${hitStore?.name ?? 'store'}`}
+              >
+                <View style={{ width: 52, height: 52, borderRadius: 12, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  {hit.image_url ? <Image source={{ uri: hit.image_url }} style={{ width: 52, height: 52 }} /> : <Text style={{ fontSize: 22 }}>🛍️</Text>}
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '800', color: '#1C1917' }} numberOfLines={1}>{hit.name}{hit.unit ? ` · ${hit.unit}` : ''}</Text>
+                  <Text style={{ fontSize: 12, color: '#78716C', marginTop: 2 }} numberOfLines={1}>{hitStore?.name ?? 'Nearby store'}</Text>
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: '900', color: '#047857' }}>₹{Math.round(hit.price / 100)}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+      {normalizedSearchQuery.length >= 2 && productSearching && productHits.length === 0 && (
+        <Text style={{ paddingHorizontal: 20, marginTop: 10, color: '#78716C', fontSize: 12 }}>Searching products…</Text>
+      )}
 
       {/* Category row */}
       {homeState.kind === 'STORE_LIST' && (
@@ -535,8 +582,8 @@ export function HomeScreen() {
             storeSearchQuery.trim().length > 0 && homeState.kind === 'STORE_LIST' ? (
               <View style={{ alignItems: 'center', paddingHorizontal: 30, paddingTop: 44, paddingBottom: 60 }}>
                 <Text style={{ fontSize: 32, marginBottom: 12 }}>⌕</Text>
-                <Text style={{ fontSize: 17, fontWeight: '800', color: '#20201C', marginBottom: 7 }}>No matching stores</Text>
-                <Text style={{ fontSize: 13, color: '#77776F', lineHeight: 20, textAlign: 'center' }}>Try another name, category, or part of the store address.</Text>
+                <Text style={{ fontSize: 17, fontWeight: '800', color: '#20201C', marginBottom: 7 }}>{productHits.length > 0 ? 'No matching stores' : `Nothing found for “${storeSearchQuery.trim()}”`}</Text>
+                <Text style={{ fontSize: 13, color: '#77776F', lineHeight: 20, textAlign: 'center' }}>{productHits.length > 0 ? 'The products above match your search.' : 'Nearby shops do not list this yet. Try another word, or ask your local shop to add it to BEVER.'}</Text>
                 <TouchableOpacity onPress={() => setStoreSearchQuery('')} style={{ marginTop: 16, backgroundColor: '#ECFDF5', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}>
                   <Text style={{ color: '#047857', fontWeight: '700' }}>Clear search</Text>
                 </TouchableOpacity>

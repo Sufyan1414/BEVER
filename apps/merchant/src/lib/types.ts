@@ -36,6 +36,7 @@ export interface Product {
   is_available: boolean;
   is_active: boolean;
   updated_at: string;
+  image_url?: string | null | undefined;
 }
 
 export interface Store {

@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, Vibration, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, Vibration, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './services/supabase';
 import {
-  createProduct, friendlyError, setProductAvailability, setProductPrice, setStoreOpen, transitionOrder,
+  createProduct, friendlyError, setProductAvailability, setProductImage, setProductPrice, setStoreOpen, transitionOrder,
 } from './services/merchant';
+import { choosePhoto, uploadProductPhoto } from './services/media';
 import { useMerchantData } from './hooks/useMerchantData';
 import { LoginScreen } from './screens/LoginScreen';
 import { PendingApprovalScreen } from './screens/PendingApprovalScreen';
@@ -153,11 +154,12 @@ function Console({ userId }: { userId: string }) {
     }
   }, [priceTarget, reload]);
 
-  const addProduct = useCallback(async (v: { name: string; unit: string; pricePaise: number }) => {
+  const addProduct = useCallback(async (v: { name: string; unit: string; pricePaise: number; photoUri: string | null }) => {
     if (!store) return;
     setSheetBusy(true);
     try {
-      await createProduct(store.id, v);
+      const imageUrl = v.photoUri ? await uploadProductPhoto(store.id, v.photoUri) : null;
+      await createProduct(store.id, { name: v.name, unit: v.unit, pricePaise: v.pricePaise, imageUrl });
       setAddOpen(false);
       await reload();
     } catch (e) {
@@ -165,6 +167,26 @@ function Console({ userId }: { userId: string }) {
     } finally {
       setSheetBusy(false);
     }
+  }, [store, reload]);
+
+  const editPhoto = useCallback((p: Product) => {
+    if (!store) return;
+    const run = async (src: 'camera' | 'library') => {
+      try {
+        const r = await choosePhoto(src);
+        if (r.denied) { setActionError('Allow camera or photo access in your phone settings to add pictures.'); return; }
+        if (!r.uri) return;
+        setSheetBusy(true);
+        const url = await uploadProductPhoto(store.id, r.uri);
+        await setProductImage(p.id, url);
+        await reload();
+      } catch (e) { setActionError(friendlyError(e)); } finally { setSheetBusy(false); }
+    };
+    Alert.alert('Product photo', p.name, [
+      { text: 'Take photo', onPress: () => { void run('camera'); } },
+      { text: 'Choose from gallery', onPress: () => { void run('library'); } },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   }, [store, reload]);
 
   const toggleOpen = useCallback(async (open: boolean) => {
@@ -183,6 +205,12 @@ function Console({ userId }: { userId: string }) {
   const alertRef = useRef(alertOrders);
   alertRef.current = alertOrders;
   const firstAlert = alertOrders[0];
+  // Keep buzzing until the shopkeeper opens or dismisses the alert, so a busy shop does not miss orders.
+  useEffect(() => {
+    if (alertOrders.length === 0) { Vibration.cancel(); return; }
+    Vibration.vibrate([0, 600, 500, 600, 1500], true);
+    return () => { Vibration.cancel(); };
+  }, [alertOrders.length]);
 
   if (state === 'loading') {
     return <View style={styles.center}><StatusBar style="dark" /><ActivityIndicator size="large" color={colors.brand} /></View>;
@@ -273,6 +301,7 @@ function Console({ userId }: { userId: string }) {
             onRefresh={() => { void reload({ pull: true }); }}
             onToggle={(p, v) => { void toggleProduct(p, v); }}
             onEditPrice={(p) => setPriceTarget(p)}
+            onEditPhoto={editPhoto}
             onAdd={() => setAddOpen(true)}
           />
         ) : (

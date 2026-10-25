@@ -86,3 +86,30 @@ export async function fetchStoreProducts(storeId: string): Promise<Product[]> {
   return (data ?? []) as Product[];
 }
 
+
+
+export interface ProductHit {
+  id: string;
+  name: string;
+  unit: string | null;
+  price: number; // paise
+  image_url: string | null;
+  store_id: string;
+}
+
+/** Searches real products of the given (already serviceable) stores. Never invents matches. */
+export async function searchProducts(storeIds: string[], query: string): Promise<ProductHit[]> {
+  const q = query.trim().replace(/[%_,()]/g, ' ').trim();
+  if (q.length < 2 || storeIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('products')
+    .select('id,name,unit,price,image_url,store_id')
+    .in('store_id', storeIds)
+    .eq('is_active', true)
+    .eq('is_available', true)
+    .ilike('name', `%${q}%`)
+    .order('name', { ascending: true })
+    .limit(20);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ProductHit[];
+}
