@@ -14,7 +14,7 @@ export function friendlyError(e: unknown): string {
 export async function fetchMerchantStore(userId: string): Promise<Store | null> {
   const { data, error } = await supabase
     .from('stores')
-    .select('id,name,category,is_open,is_verified,address_text')
+    .select('id,name,category,is_open,is_verified,address_text,phone')
     .eq('merchant_id', userId)
     .maybeSingle();
   if (error) throw error;
@@ -74,6 +74,11 @@ export async function createProduct(storeId: string, input: { name: string; unit
 
 export async function setStoreOpen(storeId: string, open: boolean): Promise<void> {
   const { error } = await supabase.from('stores').update({ is_open: open }).eq('id', storeId);
+  if (error) throw error;
+}
+
+export async function updateStoreDetails(storeId: string, name: string, phone: string): Promise<void> {
+  const { error } = await supabase.from('stores').update({ name, phone }).eq('id', storeId);
   if (error) throw error;
 }
 

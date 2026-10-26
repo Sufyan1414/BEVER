@@ -46,4 +46,5 @@ export interface Store {
   is_open: boolean;
   is_verified: boolean;
   address_text: string | null;
+  phone?: string | null;
 }

@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './services/supabase';
 import {
-  createProduct, friendlyError, setProductAvailability, setProductImage, setProductPrice, setStoreOpen, transitionOrder,
+  createProduct, friendlyError, setProductAvailability, setProductImage, setProductPrice, setStoreOpen, transitionOrder, updateStoreDetails,
 } from './services/merchant';
 import { choosePhoto, uploadProductPhoto } from './services/media';
 import { useMerchantData } from './hooks/useMerchantData';
@@ -189,6 +189,17 @@ function Console({ userId }: { userId: string }) {
     ]);
   }, [store, reload]);
 
+  const saveStoreDetails = useCallback(async (name: string, phone: string) => {
+    if (!store) return;
+    try {
+      await updateStoreDetails(store.id, name, phone);
+      setStore({ ...store, name, phone });
+    } catch (e) {
+      setActionError(friendlyError(e));
+      throw e;
+    }
+  }, [store, setStore]);
+
   const toggleOpen = useCallback(async (open: boolean) => {
     if (!store) return;
     setStoreBusy(true);
@@ -310,6 +321,7 @@ function Console({ userId }: { userId: string }) {
             busy={storeBusy}
             activeOrders={activeCount}
             onToggleOpen={(v) => { void toggleOpen(v); }}
+            onSaveDetails={saveStoreDetails}
             onSignOut={() => { void supabase.auth.signOut(); }}
           />
         )}
