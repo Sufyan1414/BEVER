@@ -423,87 +423,58 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
           </View>
         )}
 
-        {/* Products List */}
-        {!isLoading &&
-          !error &&
-          visibleProducts.map((product) => {
-            const qty = getQty(product.id);
-            return (
-              <View key={product.id} style={styles.productCard}>
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName}>{product.name}</Text>
-
-                  {product.unit ? (
-                    <Text style={styles.productUnit}>{product.unit}</Text>
-                  ) : null}
-
-                  {product.description ? (
-                    <Text style={styles.productDesc} numberOfLines={2}>
-                      {product.description}
-                    </Text>
-                  ) : null}
-
-                  <View style={styles.priceRow}>
-                    <Text style={styles.productPrice}>{formatRupees(product.price)}</Text>
-                    {product.compare_at_price && product.compare_at_price > product.price ? (
-                      <Text style={styles.comparePrice}>
-                        {formatRupees(product.compare_at_price)}
-                      </Text>
+        {/* Products grid */}
+        {!isLoading && !error && (
+          <View style={styles.grid}>
+            {visibleProducts.map((product) => {
+              const qty = getQty(product.id);
+              const hasDiscount = !!product.compare_at_price && product.compare_at_price > product.price;
+              const off = hasDiscount ? Math.round(((product.compare_at_price! - product.price) / product.compare_at_price!) * 100) : 0;
+              return (
+                <View key={product.id} style={styles.gridCard}>
+                  <View style={styles.gridImgWrap}>
+                    {product.image_url ? (
+                      <Image source={{ uri: product.image_url }} style={styles.gridImg} resizeMode="cover" />
+                    ) : (
+                      <View style={styles.gridImgFallback}>
+                        <Text style={{ fontSize: 40 }}>🛍️</Text>
+                      </View>
+                    )}
+                    {hasDiscount ? (
+                      <View style={styles.offBadge}><Text style={styles.offBadgeText}>{off}% OFF</Text></View>
+                    ) : null}
+                    {product.is_available ? (
+                      qty === 0 ? (
+                        <TouchableOpacity style={styles.gridAdd} onPress={() => handleAdd(product)} accessibilityLabel={`Add ${product.name} to cart`} activeOpacity={0.8}>
+                          <Text style={styles.gridAddText}>ADD</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <View style={styles.gridStepper}>
+                          <TouchableOpacity style={styles.gridStepBtn} onPress={() => decrementItem(product.id)} accessibilityLabel={`Decrease ${product.name} quantity`}>
+                            <Text style={styles.gridStepText}>−</Text>
+                          </TouchableOpacity>
+                          <Text style={styles.gridQty}>{qty}</Text>
+                          <TouchableOpacity style={styles.gridStepBtn} onPress={() => incrementItem(product.id)} accessibilityLabel={`Increase ${product.name} quantity`}>
+                            <Text style={styles.gridStepText}>+</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )
+                    ) : null}
+                    {!product.is_available ? (
+                      <View style={styles.soldOutVeil}><Text style={styles.soldOutText}>Out of stock</Text></View>
                     ) : null}
                   </View>
+                  <Text style={styles.gridPrice}>
+                    {formatRupees(product.price)}
+                    {hasDiscount ? <Text style={styles.gridCompare}>  {formatRupees(product.compare_at_price!)}</Text> : null}
+                  </Text>
+                  <Text style={styles.gridName} numberOfLines={2}>{product.name}</Text>
+                  {product.unit ? <Text style={styles.gridUnit}>{product.unit}</Text> : null}
                 </View>
-
-                <View style={styles.productRight}>
-                  {product.image_url ? (
-                    <Image
-                      source={{ uri: product.image_url }}
-                      style={styles.productImg}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View style={styles.productImgFallback}>
-                      <Text style={styles.productImgEmoji}>🛍️</Text>
-                    </View>
-                  )}
-
-                  {/* Add / Stepper control */}
-                  {product.is_available ? (
-                    qty === 0 ? (
-                      <TouchableOpacity
-                        style={styles.addBtn}
-                        onPress={() => handleAdd(product)}
-                        accessibilityLabel={`Add ${product.name} to cart`}
-                      >
-                        <Text style={styles.addBtnText}>+ ADD</Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <View style={styles.stepper}>
-                        <TouchableOpacity
-                          style={styles.stepperBtn}
-                          onPress={() => decrementItem(product.id)}
-                          accessibilityLabel={`Decrease ${product.name} quantity`}
-                        >
-                          <Text style={styles.stepperBtnText}>−</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.stepperQty}>{qty}</Text>
-                        <TouchableOpacity
-                          style={styles.stepperBtn}
-                          onPress={() => incrementItem(product.id)}
-                          accessibilityLabel={`Increase ${product.name} quantity`}
-                        >
-                          <Text style={styles.stepperBtnText}>+</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )
-                  ) : (
-                    <View style={styles.outOfStockBadge}>
-                      <Text style={styles.outOfStockText}>Out of Stock</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            );
-          })}
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
       <CartBar />
     </SafeAreaView>
@@ -513,6 +484,25 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 14, justifyContent: 'space-between' },
+  gridCard: { width: '48%', marginBottom: 18 },
+  gridImgWrap: { aspectRatio: 1, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#D1FAE5', overflow: 'visible', marginBottom: 10 },
+  gridImg: { width: '100%', height: '100%', borderRadius: 18 },
+  gridImgFallback: { flex: 1, borderRadius: 18, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' },
+  offBadge: { position: 'absolute', top: 0, left: 10, backgroundColor: '#F59E0B', paddingHorizontal: 7, paddingVertical: 4, borderBottomLeftRadius: 8, borderBottomRightRadius: 8 },
+  offBadgeText: { fontSize: 10, fontWeight: '900', color: '#451A03' },
+  gridAdd: { position: 'absolute', right: 8, bottom: -14, minWidth: 74, height: 34, borderRadius: 10, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#059669', alignItems: 'center', justifyContent: 'center', shadowColor: '#064E3B', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
+  gridAddText: { color: '#059669', fontWeight: '900', fontSize: 13, letterSpacing: 0.5 },
+  gridStepper: { position: 'absolute', right: 8, bottom: -14, height: 34, borderRadius: 10, backgroundColor: '#059669', flexDirection: 'row', alignItems: 'center', elevation: 3 },
+  gridStepBtn: { width: 30, height: 34, alignItems: 'center', justifyContent: 'center' },
+  gridStepText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  gridQty: { color: '#fff', fontWeight: '900', fontSize: 14, minWidth: 18, textAlign: 'center' },
+  soldOutVeil: { ...StyleSheet.absoluteFillObject, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.75)', alignItems: 'center', justifyContent: 'center' },
+  soldOutText: { fontSize: 12, fontWeight: '800', color: '#78716C' },
+  gridPrice: { fontSize: 15, fontWeight: '900', color: '#064E3B', marginTop: 6 },
+  gridCompare: { fontSize: 12, fontWeight: '600', color: '#A8A29E', textDecorationLine: 'line-through' },
+  gridName: { fontSize: 13, fontWeight: '700', color: '#1C1917', marginTop: 2, lineHeight: 18 },
+  gridUnit: { fontSize: 12, color: '#78716C', marginTop: 2 },
   safe: {
     flex: 1,
     backgroundColor: '#F3FBF7',
