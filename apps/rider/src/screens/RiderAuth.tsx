@@ -59,6 +59,7 @@ export function RiderAuth({existingPhone,onSignOut}:{existingPhone?:string;onSig
   return<KeyboardAvoidingView style={s.flex} behavior={Platform.OS==='ios'?'padding':undefined}><StatusBar style="dark"/>
     <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
       <Text style={s.logo}>BEVER</Text><Text style={s.role}>Rider</Text>
+      {existing?<View style={{backgroundColor:'#FFF7E6',borderColor:'#FDE68A',borderWidth:1,borderRadius:14,padding:12,marginTop:18}}><Text style={{fontWeight:'800',color:'#B45309'}}>You are signed in as +91 {existingPhone}</Text><Text style={{color:'#78350F',marginTop:4,fontSize:12,lineHeight:18}}>This number is not a rider yet. Fill in the form once to apply. You do not need to register again.</Text></View>:null}
       <Text style={s.heading}>{mode==='in'?'Your deliveries':'Register as a rider'}</Text>
       <Text style={s.sub}>{mode==='in'?'Sign in with your mobile number and 6-digit PIN.':'Fill these once. BEVER verifies your details and activates your account.'}</Text>
 

@@ -30,7 +30,15 @@ export async function signUpRider(phone:string,pin:string,app:RiderApplication){
   if(!normalized)return{ok:false,error:'Enter a valid 10-digit Indian mobile number.'};
   if(!/^\d{6}$/.test(pin))return{ok:false,error:'PIN must be exactly 6 digits.'};
   const {data,error}=await supabase.auth.signUp({email:email(normalized),password:pin,options:{data:{phone:normalized,full_name:app.full_name,rider_application:{...app,submitted_at:new Date().toISOString()}}}});
-  if(error)return{ok:false,error:friendly(error.message)};
+  if(error){
+    if(/already registered|already exists/i.test(error.message)){
+      // The number already has a BEVER login (e.g. from the customer app). If the PIN matches, sign in and attach the rider application.
+      const si=await signInRider(phone,pin);
+      if(!si.ok)return{ok:false,error:'This number already has a BEVER account with a different PIN. Enter that PIN to continue.'};
+      return submitRiderApplication(app);
+    }
+    return{ok:false,error:friendly(error.message)};
+  }
   if(!data.session)return signInRider(phone,pin);
   return{ok:true};
 }
