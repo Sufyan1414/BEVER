@@ -13,6 +13,7 @@
  */
 
 import { CartBar } from '../../components/CartBar';
+import { ProductDetailSheet } from '../../components/ProductDetailSheet';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
@@ -136,6 +137,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
   const summary = computeCartSummary(items);
 
   // Pending product when cross-store conflict is detected
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [conflictProduct, setConflictProduct] = useState<Product | null>(null);
   const [conflictExistingStore, setConflictExistingStore] = useState<string>('');
 
@@ -228,6 +230,17 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
         existingStoreName={conflictExistingStore}
         onKeep={handleConflictKeep}
         onClear={handleConflictClear}
+      />
+
+      <ProductDetailSheet
+        product={detailProduct ? products.find((p) => p.id === detailProduct.id) ?? detailProduct : null}
+        qty={detailProduct ? getQty(detailProduct.id) : 0}
+        storeName={store.name}
+        etaMinutes={store.estimated_delivery_minutes}
+        onAdd={() => { if (detailProduct) handleAdd(detailProduct); }}
+        onInc={() => { if (detailProduct) incrementItem(detailProduct.id); }}
+        onDec={() => { if (detailProduct) decrementItem(detailProduct.id); }}
+        onClose={() => setDetailProduct(null)}
       />
 
       {/* Top Header Bar */}
@@ -335,52 +348,23 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
           )}
         </View>
 
-        {/* Category Pills Bar */}
-        {categories.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryScroll}
-          >
-            <TouchableOpacity
-              style={[
-                styles.categoryChip,
-                selectedCategory === ALL_CATEGORY_KEY && styles.categoryChipActive,
-              ]}
-              onPress={() => setSelectedCategory(ALL_CATEGORY_KEY)}
-            >
-              <Text
-                style={[
-                  styles.categoryChipText,
-                  selectedCategory === ALL_CATEGORY_KEY && styles.categoryChipTextActive,
-                ]}
-              >
-                All Products
-              </Text>
-            </TouchableOpacity>
-
-            {categories.map((cat) => {
-              const isActive = selectedCategory === cat.id;
-              return (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={[styles.categoryChip, isActive && styles.categoryChipActive]}
-                  onPress={() => setSelectedCategory(cat.id)}
-                >
-                  <Text
-                    style={[
-                      styles.categoryChipText,
-                      isActive && styles.categoryChipTextActive,
-                    ]}
-                  >
-                    {cat.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
-
+        <View style={styles.railLayout}>
+          {categories.length > 0 ? (
+            <View style={styles.rail}>
+              {[{ id: ALL_CATEGORY_KEY, name: 'All' } as { id: string; name: string }, ...categories].map((cat) => {
+                const active = selectedCategory === cat.id;
+                return (
+                  <TouchableOpacity key={cat.id} style={[styles.railItem, active && styles.railItemOn]} onPress={() => setSelectedCategory(cat.id)} accessibilityRole="button">
+                    <View style={[styles.railIcon, active && styles.railIconOn]}>
+                      <Text style={[styles.railInitial, active && { color: '#fff' }]}>{cat.id === ALL_CATEGORY_KEY ? '★' : cat.name.charAt(0).toUpperCase()}</Text>
+                    </View>
+                    <Text style={[styles.railLabel, active && styles.railLabelOn]} numberOfLines={2}>{cat.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : null}
+          <View style={{ flex: 1 }}>
         {/* Section Heading */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Catalogue</Text>
@@ -432,7 +416,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
               const off = hasDiscount ? Math.round(((product.compare_at_price! - product.price) / product.compare_at_price!) * 100) : 0;
               return (
                 <View key={product.id} style={styles.gridCard}>
-                  <View style={styles.gridImgWrap}>
+                  <TouchableOpacity activeOpacity={0.9} onPress={() => setDetailProduct(product)} accessibilityLabel={`View ${product.name}`} style={styles.gridImgWrap}>
                     {product.image_url ? (
                       <Image source={{ uri: product.image_url }} style={styles.gridImg} resizeMode="cover" />
                     ) : (
@@ -463,18 +447,20 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
                     {!product.is_available ? (
                       <View style={styles.soldOutVeil}><Text style={styles.soldOutText}>Out of stock</Text></View>
                     ) : null}
-                  </View>
+                  </TouchableOpacity>
                   <Text style={styles.gridPrice}>
                     {formatRupees(product.price)}
                     {hasDiscount ? <Text style={styles.gridCompare}>  {formatRupees(product.compare_at_price!)}</Text> : null}
                   </Text>
-                  <Text style={styles.gridName} numberOfLines={2}>{product.name}</Text>
+                  <Text style={styles.gridName} numberOfLines={2} onPress={() => setDetailProduct(product)}>{product.name}</Text>
                   {product.unit ? <Text style={styles.gridUnit}>{product.unit}</Text> : null}
                 </View>
               );
             })}
           </View>
         )}
+          </View>
+        </View>
       </ScrollView>
       <CartBar />
     </SafeAreaView>
@@ -484,7 +470,16 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 14, justifyContent: 'space-between' },
+  railLayout: { flexDirection: 'row', alignItems: 'flex-start' },
+  rail: { width: 78, paddingTop: 6, backgroundColor: '#ECFDF5', borderTopRightRadius: 18, borderBottomRightRadius: 18, paddingBottom: 10 },
+  railItem: { alignItems: 'center', paddingVertical: 10, paddingHorizontal: 4, borderLeftWidth: 4, borderLeftColor: 'transparent' },
+  railItemOn: { borderLeftColor: '#059669', backgroundColor: '#fff' },
+  railIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: '#D1FAE5', alignItems: 'center', justifyContent: 'center' },
+  railIconOn: { backgroundColor: '#059669' },
+  railInitial: { fontSize: 18, fontWeight: '900', color: '#047857' },
+  railLabel: { fontSize: 10.5, fontWeight: '700', color: '#57534E', marginTop: 5, textAlign: 'center' },
+  railLabelOn: { color: '#064E3B', fontWeight: '900' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'space-between' },
   gridCard: { width: '48%', marginBottom: 18 },
   gridImgWrap: { aspectRatio: 1, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#D1FAE5', overflow: 'visible', marginBottom: 10 },
   gridImg: { width: '100%', height: '100%', borderRadius: 18 },
