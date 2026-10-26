@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   gridStepBtn: { width: 30, height: 34, alignItems: 'center', justifyContent: 'center' },
   gridStepText: { color: '#fff', fontSize: 18, fontWeight: '800' },
   gridQty: { color: '#fff', fontWeight: '900', fontSize: 14, minWidth: 18, textAlign: 'center' },
-  soldOutVeil: { ...StyleSheet.absoluteFillObject, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.75)', alignItems: 'center', justifyContent: 'center' },
+  soldOutVeil: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.75)', alignItems: 'center', justifyContent: 'center' },
   soldOutText: { fontSize: 12, fontWeight: '800', color: '#78716C' },
   gridPrice: { fontSize: 15, fontWeight: '900', color: '#064E3B', marginTop: 6 },
   gridCompare: { fontSize: 12, fontWeight: '600', color: '#A8A29E', textDecorationLine: 'line-through' },
