@@ -30,6 +30,12 @@
           "photosPermission": "BEVER Merchant needs your photos so you can add product pictures.",
           "cameraPermission": "BEVER Merchant needs the camera so you can photograph your products."
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "BEVER Merchant uses your location once to record where your shop is, so riders can find it."
+        }
       ]
     ]
   }

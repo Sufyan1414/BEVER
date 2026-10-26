@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as Location from 'expo-location';
 import { createAddress } from '../services/address';
 import { useAuthStore } from '../stores/useAuthStore';
 import type { CustomerAddress } from '../types/address';
@@ -21,6 +22,27 @@ export function AddressQuickForm({ defaults, receiverName, phone, onSaved }: Pro
   const [label, setLabel] = useState<'Home' | 'Work' | 'Other'>('Home');
   const [name, setName] = useState(receiverName);
   const updateProfileName = useAuthStore((st) => st.updateProfileName);
+  const [pt, setPt] = useState<{ lat: number; lng: number } | null>(defaults.lat != null && defaults.lng != null ? { lat: defaults.lat, lng: defaults.lng } : null);
+  const [gps, setGps] = useState<'idle' | 'busy' | 'done'>('idle');
+  const useGps = async () => {
+    setErr(null); setGps('busy');
+    try {
+      const perm = await Location.requestForegroundPermissionsAsync();
+      if (perm.status !== 'granted') throw new Error('Allow location access to pin your exact doorstep, or type the address.');
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      setPt({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      try {
+        const [g] = await Location.reverseGeocodeAsync(pos.coords);
+        if (g) {
+          if (g.postalCode && /^\d{6}$/.test(g.postalCode)) setPincode(g.postalCode);
+          if (g.city || g.subregion) setCity((g.city ?? g.subregion) as string);
+          if (g.region) setState(g.region);
+          if (!line1.trim()) setLine1([g.name, g.street, g.district].filter(Boolean).join(', '));
+        }
+      } catch { /* address text is optional; coordinates are what matter */ }
+      setGps('done');
+    } catch (e: any) { setGps('idle'); setErr(e?.message ?? 'Could not get your location.'); }
+  };
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -39,7 +61,7 @@ export function AddressQuickForm({ defaults, receiverName, phone, onSaved }: Pro
       const a = await createAddress({
         label, address_line_1: line1.trim(), address_line_2: line2.trim() || null,
         city: city.trim(), state: state.trim(), pincode,
-        latitude: defaults.lat ?? null, longitude: defaults.lng ?? null, is_default: true,
+        latitude: pt?.lat ?? null, longitude: pt?.lng ?? null, is_default: true,
       });
       onSaved(a);
     } catch (e: any) { setErr(e?.message ?? 'Could not save the address.'); }
@@ -52,6 +74,9 @@ export function AddressQuickForm({ defaults, receiverName, phone, onSaved }: Pro
       <Text style={s.help}>Delivering to {name.trim() || 'you'} · {phone}</Text>
       <Text style={s.label}>Your name *</Text>
       <TextInput value={name} onChangeText={setName} style={s.input} placeholder="Full name" placeholderTextColor="#A8A29E" autoCapitalize="words" accessibilityLabel="Your name" />
+      <TouchableOpacity style={s.gpsBtn} onPress={() => { void useGps(); }} disabled={gps === 'busy'} accessibilityRole="button">
+        {gps === 'busy' ? <ActivityIndicator color="#047857" /> : <Text style={s.gpsText}>{gps === 'done' || pt ? '✓ Exact location pinned · tap to update' : '◎  Use my current location'}</Text>}
+      </TouchableOpacity>
       <View style={s.tags}>
         {(['Home', 'Work', 'Other'] as const).map((t) => (
           <TouchableOpacity key={t} onPress={() => setLabel(t)} style={[s.tag, label === t && s.tagOn]} accessibilityRole="button">
@@ -85,6 +110,8 @@ export function AddressQuickForm({ defaults, receiverName, phone, onSaved }: Pro
 }
 
 const s = StyleSheet.create({
+  gpsBtn: { borderWidth: 1, borderColor: '#A7F3D0', backgroundColor: '#ECFDF5', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginBottom: 12 },
+  gpsText: { color: '#047857', fontWeight: '800', fontSize: 13 },
   card: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#A7F3D0', borderRadius: 20, padding: 18, marginBottom: 18 },
   head: { fontSize: 17, fontWeight: '900', color: '#064E3B' },
   help: { fontSize: 12, color: '#78716C', marginTop: 3, marginBottom: 12 },

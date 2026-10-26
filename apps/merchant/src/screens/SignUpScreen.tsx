@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Keyboard, Platform, Pressable, ScrollView, StyleS
 import { StatusBar } from 'expo-status-bar';
 import { Banner, Button, Chip } from '../components/ui';
 import { signUpMerchant, submitMerchantApplication } from '../services/auth';
+import { captureExactLocation, type ExactFix } from '../services/location';
 import { colors, radius } from '../theme';
 
 const CATEGORIES: Array<[string, string]> = [
@@ -36,6 +37,12 @@ export function SignUpScreen({ onBack, existingPhone }: { onBack: () => void; ex
   const [opens, setOpens] = useState('09:00'); const [closes, setCloses] = useState('21:00');
   const [fssai, setFssai] = useState(''); const [gstin, setGstin] = useState('');
   const [agree, setAgree] = useState(false);
+  const [fix, setFix] = useState<ExactFix | null>(null); const [locBusy, setLocBusy] = useState(false); const [locErr, setLocErr] = useState<string | null>(null);
+  const capture = async () => {
+    setLocBusy(true); setLocErr(null);
+    try { setFix(await captureExactLocation()); } catch (e: any) { setLocErr(e?.message ?? 'Could not get your location.'); }
+    finally { setLocBusy(false); }
+  };
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false); const [top, setTop] = useState<string | null>(null);
 
@@ -56,6 +63,7 @@ export function SignUpScreen({ onBack, existingPhone }: { onBack: () => void; ex
     if (FOOD.has(category) && !/^\d{14}$/.test(fssai)) e['fssai'] = 'FSSAI licence number (14 digits) is required for food shops.';
     if (fssai && !/^\d{14}$/.test(fssai)) e['fssai'] = 'FSSAI number must be 14 digits.';
     if (gstin && !/^[0-9A-Z]{15}$/.test(gstin.toUpperCase())) e['gstin'] = 'GSTIN must be 15 characters, or leave it empty.';
+    if (!fix) e['loc'] = 'Stand inside your shop and capture its exact location. Riders and customers rely on it.';
     if (!agree) e['agree'] = 'Please accept the merchant terms to continue.';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -68,7 +76,7 @@ export function SignUpScreen({ onBack, existingPhone }: { onBack: () => void; ex
     try {
       const app = {
         owner_name: owner.trim(), store_name: store.trim(), category, address: address.trim(), pincode, city: city.trim(),
-        opens_at: opens, closes_at: closes, ...(fssai ? { fssai } : {}), ...(gstin ? { gstin: gstin.toUpperCase() } : {}),
+        opens_at: opens, closes_at: closes, ...(fix ? { lat: fix.lat, lng: fix.lng, location_accuracy_m: fix.accuracy } : {}), ...(fssai ? { fssai } : {}), ...(gstin ? { gstin: gstin.toUpperCase() } : {}),
       };
       const r = existing ? await submitMerchantApplication(app) : await signUpMerchant(phone, pin, app);
       if (!r.ok) setTop(r.error ?? 'Could not create the account.');
@@ -102,6 +110,14 @@ export function SignUpScreen({ onBack, existingPhone }: { onBack: () => void; ex
           <View style={{ width: 10 }} />
           <View style={{ flex: 1.4 }}><Field label="City *" value={city} onChange={setCity} error={errors['city']} /></View>
         </View>
+        <View style={[styles.locCard, errors['loc'] ? { borderColor: colors.danger } : null]}>
+          <Text style={styles.label}>Exact shop location *</Text>
+          <Text style={styles.hint}>Stand inside your shop and tap the button. This is where riders will navigate to.</Text>
+          {fix ? <Text style={styles.locOk}>✓ Saved ({fix.lat.toFixed(5)}, {fix.lng.toFixed(5)}) · accurate to about {fix.accuracy} m{fix.accuracy > 50 ? '. Move near a window or outdoors and capture again for a better fix.' : ''}</Text> : null}
+          {locErr ? <Text style={styles.err}>{locErr}</Text> : null}
+          {errors['loc'] ? <Text style={styles.err}>{errors['loc']}</Text> : null}
+          <Button label={fix ? 'Capture again' : 'Use my current location'} icon="locate-outline" variant={fix ? 'secondary' : 'primary'} loading={locBusy} onPress={() => { void capture(); }} style={{ marginTop: 12 }} />
+        </View>
         <View style={styles.row}>
           <View style={{ flex: 1 }}><Field label="Opens at *" value={opens} onChange={setOpens} placeholder="09:00" error={errors['opens']} /></View>
           <View style={{ width: 10 }} />
@@ -126,6 +142,8 @@ export function SignUpScreen({ onBack, existingPhone }: { onBack: () => void; ex
 }
 
 const styles = StyleSheet.create({
+  locCard: { marginTop: 16, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.brandSoft },
+  locOk: { fontSize: 12, color: colors.brandDark, marginTop: 8, lineHeight: 18, fontWeight: '700' },
   flex: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 24, paddingTop: 64, paddingBottom: 60 },
   back: { fontSize: 14, fontWeight: '800', color: colors.brandDark, paddingVertical: 6 },

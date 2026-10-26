@@ -45,6 +45,9 @@ export interface MerchantApplication {
   closes_at: string;
   fssai?: string;
   gstin?: string;
+  lat?: number;
+  lng?: number;
+  location_accuracy_m?: number;
 }
 
 export async function signUpMerchant(phone: string, pin: string, application?: MerchantApplication) {

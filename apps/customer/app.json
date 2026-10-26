@@ -21,6 +21,14 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.bever.customer"
-    }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "BEVER uses your location to pin your exact delivery spot so the rider can find you."
+        }
+      ]
+    ]
   }
 }
