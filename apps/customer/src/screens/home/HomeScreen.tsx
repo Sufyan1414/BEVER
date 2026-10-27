@@ -393,6 +393,8 @@ export function HomeScreen() {
     return [store.name, store.description ?? '', store.address_text ?? '', category]
       .some((value) => value.toLocaleLowerCase().includes(normalizedSearchQuery));
   });
+  const nearestOpen = visibleStores.find((st) => st.is_open) ?? null;
+  const heroEta = nearestOpen ? (nearestOpen.estimated_delivery_minutes ?? Math.round(10 + (nearestOpen.distance_meters / 1000) * 4)) : 0;
 
   // Header location label
   const locationLabel: string =
@@ -497,7 +499,15 @@ export function HomeScreen() {
       {/* ── Top Header ── */}
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerLeft}>
-          <Text style={styles.wordmark}>BEVER</Text>
+          {nearestOpen ? (
+            <>
+              <Text style={styles.heroLabel}>BEVER delivers in</Text>
+              <View style={styles.heroRow}>
+                <Text style={styles.heroEta}>{heroEta} minutes</Text>
+                <View style={styles.heroChip}><Text style={styles.heroChipText}>{formatDistance(nearestOpen.distance_meters)} away</Text></View>
+              </View>
+            </>
+          ) : <Text style={styles.wordmark}>BEVER</Text>}
           {locationLabel ? (
             <TouchableOpacity
               style={styles.locationChip}
@@ -650,6 +660,11 @@ function EmptyCategory({ label, onClear }: { label: string; onClear: () => void 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  heroLabel: { fontSize: 13, fontWeight: '800', color: '#A7F3D0' },
+  heroRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 6 },
+  heroEta: { fontSize: 30, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  heroChip: { marginLeft: 10, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  heroChipText: { fontSize: 12, fontWeight: '800', color: '#fff' },
   safe: { flex: 1, backgroundColor: '#F7F7F3' },
 
   // ── Header ──
