@@ -1,6 +1,7 @@
 import React,{useCallback,useEffect,useState} from 'react';
 import {ActivityIndicator,Linking,Platform,RefreshControl,ScrollView,StatusBar as RNStatusBar,StyleSheet,Switch,Text,TextInput,TouchableOpacity,View} from 'react-native';
 import {StatusBar} from 'expo-status-bar';
+import * as Location from 'expo-location';
 import {supabase} from './services/supabase';
 import {RiderAuth} from './screens/RiderAuth';
 
@@ -39,6 +40,19 @@ export default function App(){
  const deliver=async()=>{if(!selected)return;if(!/^\d{4}$/.test(otp)){setNotice('Enter the 4-digit delivery code from the customer.');return}setBusy(true);setNotice(null);try{const{error}=await supabase.rpc('complete_order_delivery',{p_order_id:selected.order_id,p_delivery_otp:otp,p_cod_collected:codCollected,p_failure_note:null});if(error)throw error;setOtp('');setCodCollected(false);setSelected(null);await load(true)}catch(e:any){setNotice(e?.message==='INVALID_DELIVERY_OTP'?'Incorrect delivery code. Ask the customer to show the code again.':e?.message==='COD_NOT_COLLECTED'?'Confirm that the cash was collected before completing the delivery.':e?.message??'Could not complete delivery.')}finally{setBusy(false)}};
  const[route,setRoute]=useState<any>(null);
  useEffect(()=>{setRoute(null);if(!selected)return;let live=true;supabase.rpc('get_delivery_route',{p_order_id:selected.order_id}).then(({data})=>{if(live&&Array.isArray(data)&&data[0])setRoute(data[0])});return()=>{live=false}},[selected?.order_id]);
+ const liveIds=assignments.filter(a=>['RIDER_ASSIGNED','RIDER_AT_STORE','PICKED_UP','OUT_FOR_DELIVERY'].includes(a.orders?.status)).map(a=>a.order_id).join(',');
+ useEffect(()=>{
+  if(role!=='ok'||!liveIds)return;
+  let stopped=false;let sub:Location.LocationSubscription|null=null;
+  const ids=liveIds.split(',');
+  const push=(la:number,ln:number)=>{ids.forEach(id=>{supabase.rpc('update_rider_location',{p_order_id:id,p_lat:la,p_lng:ln}).then(()=>undefined,()=>undefined)})};
+  (async()=>{
+   const perm=await Location.requestForegroundPermissionsAsync();
+   if(perm.status!=='granted'){setNotice('Allow location so the customer can see you on the map.');return}
+   sub=await Location.watchPositionAsync({accuracy:Location.Accuracy.High,timeInterval:8000,distanceInterval:10},p=>{if(!stopped)push(p.coords.latitude,p.coords.longitude)});
+  })().catch(()=>undefined);
+  return()=>{stopped=true;sub?.remove()};
+ },[role,liveIds]);
  const hasPt=(la:any,ln:any)=>typeof la==='number'&&typeof ln==='number';
  const navTo=(la:any,ln:any,fallbackText:string,via?:{la:any;ln:any})=>{const dest=hasPt(la,ln)?`${la},${ln}`:encodeURIComponent(fallbackText);const wp=via&&hasPt(via.la,via.ln)?`&waypoints=${via.la},${via.ln}`:'';Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${dest}${wp}&travelmode=driving`).catch(()=>setNotice('Could not open Maps. Install Google Maps.'))};
  const callNum=(n?:string|null)=>{if(n)Linking.openURL('tel:'+n).catch(()=>setNotice('Could not start the call.'))};
