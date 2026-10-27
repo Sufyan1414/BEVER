@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, TextInput, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -10,13 +10,26 @@ import { createCustomerOrder, type CheckoutPaymentMethod } from '../../services/
 import type { CustomerAddress } from '../../types/address';
 import { AddressQuickForm } from '../../components/AddressQuickForm';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { AddressSheet } from '../../components/AddressSheet';
+import { fetchStoreProducts } from '../../services/store';
+import type { Product } from '../../types/store';
 import { FreeDeliveryProgress, FREE_DELIVERY_THRESHOLD_PAISE } from '../../components/FreeDeliveryProgress';
 
 const formatRupees = (paise: number) => `₹${Math.round(paise / 100)}`;
 
 export function CheckoutScreen() {
   const navigation = useNavigation<any>();
-  const { storeId, storeName, items, clearCart } = useCartStore();
+  const { storeId, storeName, items, clearCart, addItem, incrementItem, decrementItem } = useCartStore();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [suggest, setSuggest] = useState<Product[]>([]);
+  React.useEffect(() => {
+    if (!storeId) return;
+    let live = true;
+    fetchStoreProducts(storeId).then((r) => { if (live) setSuggest(r); }).catch(() => undefined);
+    return () => { live = false; };
+  }, [storeId]);
+  const inCart = new Set(items.map((i) => i.productId));
+  const suggestions = suggest.filter((p) => p.is_available && !inCart.has(p.id)).slice(0, 10);
   const { browsingLocation } = useLocationStore();
   const profile = useAuthStore((st) => st.profile);
   const summary = computeCartSummary(items);
@@ -67,24 +80,51 @@ export function CheckoutScreen() {
       <Text style={styles.eyebrow}>DELIVERING FROM</Text><Text style={styles.store}>{storeName ?? 'Store'}</Text>
       <Text style={styles.section}>Delivery address</Text>
       {address && !profile?.full_name?.trim() ? <NameCard /> : null}
-      {address ? <View style={styles.card}><View style={styles.addressTop}><Text style={styles.addressLabel}>{address.label}</Text><Text style={styles.default}>DEFAULT</Text></View><Text style={styles.addressMain}>{address.address_line_1}</Text>{address.address_line_2 ? <Text style={styles.addressSub}>{address.address_line_2}</Text> : null}<Text style={styles.addressSub}>{address.city}, {address.state} — {address.pincode}</Text><Text style={styles.addressSub}>Deliver to {profile?.full_name || 'you'} · {profile?.phone ?? ''}</Text><TouchableOpacity onPress={() => setAddress(null)}><Text style={styles.change}>Change address</Text></TouchableOpacity></View> : <AddressQuickForm defaults={{ city: browsingLocation?.city, state: browsingLocation?.state, pincode: browsingLocation?.pincode, line1: [browsingLocation?.houseNo, browsingLocation?.building].filter(Boolean).join(', '), lat: browsingLocation?.lat, lng: browsingLocation?.lng }} receiverName={profile?.full_name ?? ''} phone={profile?.phone ?? ''} onSaved={(a) => { setAddress(a); setError(null); }} />}
+      {address ? <View style={styles.card}><View style={styles.addressTop}><Text style={styles.addressLabel}>{address.label}</Text><Text style={styles.default}>DEFAULT</Text></View><Text style={styles.addressMain}>{address.address_line_1}</Text>{address.address_line_2 ? <Text style={styles.addressSub}>{address.address_line_2}</Text> : null}<Text style={styles.addressSub}>{address.city}, {address.state} — {address.pincode}</Text><Text style={styles.addressSub}>Deliver to {profile?.full_name || 'you'} · {profile?.phone ?? ''}</Text><TouchableOpacity onPress={() => setSheetOpen(true)}><Text style={styles.change}>Change address</Text></TouchableOpacity></View> : <AddressQuickForm defaults={{ city: browsingLocation?.city, state: browsingLocation?.state, pincode: browsingLocation?.pincode, line1: [browsingLocation?.houseNo, browsingLocation?.building].filter(Boolean).join(', '), lat: browsingLocation?.lat, lng: browsingLocation?.lng }} receiverName={profile?.full_name ?? ''} phone={profile?.phone ?? ''} onSaved={(a) => { setAddress(a); setError(null); }} />}
       <FreeDeliveryProgress subtotalPaise={summary.subtotalPaise} />
+      <View style={[styles.card, { flexDirection: 'row', alignItems: 'center' }]}>
+        <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}><Text style={{ fontSize: 22 }}>⏱</Text></View>
+        <View style={{ flex: 1 }}><Text style={{ fontSize: 17, fontWeight: '900', color: '#064E3B' }}>Delivering from {storeName}</Text><Text style={{ fontSize: 12, color: '#78716C', marginTop: 2 }}>Shipment of {summary.totalItems} item{summary.totalItems === 1 ? '' : 's'}</Text></View>
+      </View>
       <Text style={styles.section}>Review your items</Text>
       <View style={styles.card}>
         {items.map((item, index) => (
           <View key={item.productId}>
             {index > 0 ? <View style={styles.line} /> : null}
             <View style={styles.itemRow}>
+              {item.productImageUrl ? <Image source={{ uri: item.productImageUrl }} style={{ width: 62, height: 62, borderRadius: 14, marginRight: 12, backgroundColor: '#ECFDF5' }} /> : <View style={{ width: 62, height: 62, borderRadius: 14, marginRight: 12, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 26 }}>🛍️</Text></View>}
               <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.productName}</Text>
+                <Text style={styles.itemName} numberOfLines={2}>{item.productName}</Text>
                 {item.unit ? <Text style={styles.itemUnit}>{item.unit}</Text> : null}
-                <Text style={styles.itemQuantity}>Qty {item.quantity} × {formatRupees(item.unitPricePaise)}</Text>
               </View>
-              <Text style={styles.itemTotal}>{formatRupees(item.unitPricePaise * item.quantity)}</Text>
+              <View style={{ alignItems: 'flex-end' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#059669', borderRadius: 10, height: 34 }}>
+                  <TouchableOpacity onPress={() => decrementItem(item.productId)} style={{ width: 32, height: 34, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={`Decrease ${item.productName}`}><Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>−</Text></TouchableOpacity>
+                  <Text style={{ color: '#fff', fontWeight: '900', minWidth: 18, textAlign: 'center' }}>{item.quantity}</Text>
+                  <TouchableOpacity onPress={() => incrementItem(item.productId)} style={{ width: 32, height: 34, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={`Increase ${item.productName}`}><Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>+</Text></TouchableOpacity>
+                </View>
+                <Text style={[styles.itemTotal, { marginTop: 6 }]}>{formatRupees(item.unitPricePaise * item.quantity)}</Text>
+              </View>
             </View>
           </View>
         ))}
       </View>
+      {suggestions.length > 0 ? <>
+        <Text style={styles.section}>You might also like</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 10 }}>
+          {suggestions.map((p) => (
+            <View key={p.id} style={{ width: 128, marginRight: 12 }}>
+              <View style={{ height: 128, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#D1FAE5', overflow: 'visible' }}>
+                {p.image_url ? <Image source={{ uri: p.image_url }} style={{ width: '100%', height: '100%', borderRadius: 16 }} /> : <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 34 }}>🛍️</Text></View>}
+                <TouchableOpacity onPress={() => addItem(p, { id: storeId as string, name: storeName ?? '' })} style={{ position: 'absolute', right: 6, bottom: -13, minWidth: 66, height: 30, borderRadius: 9, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#059669', alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={`Add ${p.name}`}><Text style={{ color: '#059669', fontWeight: '900', fontSize: 12 }}>ADD</Text></TouchableOpacity>
+              </View>
+              <Text style={{ fontSize: 14, fontWeight: '900', color: '#064E3B', marginTop: 16 }}>{formatRupees(p.price)}</Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#1C1917' }} numberOfLines={2}>{p.name}</Text>
+              {p.unit ? <Text style={{ fontSize: 11, color: '#78716C' }}>{p.unit}</Text> : null}
+            </View>
+          ))}
+        </ScrollView>
+      </> : null}
       <Text style={styles.section}>Payment</Text>
       <View style={styles.card}><View style={styles.paymentRow}><View style={[styles.radio, styles.radioSelected]}><View style={styles.radioDot} /></View><View><Text style={styles.paymentTitle}>Cash on Delivery</Text><Text style={styles.paymentSub}>Pay when your order arrives</Text></View></View></View>
       <Text style={styles.section}>Order notes <Text style={styles.optional}>OPTIONAL</Text></Text>
@@ -96,6 +136,7 @@ export function CheckoutScreen() {
       </View>
     </ScrollView>
     <View style={styles.footer}><TouchableOpacity disabled={placing || !address || !items.length} onPress={placeOrder} style={[styles.place, (placing || !address || !items.length) && styles.disabled]}>{placing ? <ActivityIndicator color="#fff" /> : <Text style={styles.placeText}>Place order</Text>}</TouchableOpacity><Text style={styles.footerNote}>Final price and delivery fee are verified when you place the order.</Text></View>
+  <AddressSheet visible={sheetOpen} selectedId={address?.id} onClose={() => setSheetOpen(false)} onSelect={(a) => { setAddress(a); setSheetOpen(false); setError(null); }} onAddNew={() => { setSheetOpen(false); setAddress(null); }} />
   </SafeAreaView>;
 }
 
