@@ -12,7 +12,7 @@ interface Tracking {
 }
 interface Pt { latitude: number; longitude: number }
 
-const ok = (a: number | null, b: number | null): a is number => typeof a === 'number' && typeof b === 'number';
+const toPt = (a: number | null | undefined, b: number | null | undefined): Pt | null => (typeof a === 'number' && typeof b === 'number' ? { latitude: a, longitude: b } : null);
 
 async function fetchRoute(from: Pt, to: Pt): Promise<{ coords: Pt[]; minutes: number } | null> {
   try {
@@ -48,9 +48,9 @@ export function TrackingPanel({ orderId, status }: { orderId: string; status: st
     return () => clearInterval(id);
   }, [active, pull]);
 
-  const rider: Pt | null = t && ok(t.rider_lat, t.rider_lng) ? { latitude: t.rider_lat, longitude: t.rider_lng } : null;
-  const store: Pt | null = t && ok(t.store_lat, t.store_lng) ? { latitude: t.store_lat, longitude: t.store_lng } : null;
-  const drop: Pt | null = t && ok(t.drop_lat, t.drop_lng) ? { latitude: t.drop_lat, longitude: t.drop_lng } : null;
+  const rider: Pt | null = toPt(t?.rider_lat, t?.rider_lng);
+  const store: Pt | null = toPt(t?.store_lat, t?.store_lng);
+  const drop: Pt | null = toPt(t?.drop_lat, t?.drop_lng);
   const toStore = status === 'RIDER_ASSIGNED' || status === 'RIDER_AT_STORE';
   const target = toStore ? store : drop;
 
