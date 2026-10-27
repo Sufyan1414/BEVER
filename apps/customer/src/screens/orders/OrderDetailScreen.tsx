@@ -14,6 +14,7 @@ import { supabase } from '../../services/supabase';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../navigation/types';
+import { TrackingPanel } from '../../components/TrackingPanel';
 import {
   fetchOrderDetail,
   formatOrderStatus,
@@ -102,6 +103,7 @@ export function OrderDetailScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
       >
+        <TrackingPanel orderId={order.id} status={order.status} />
         <View style={[styles.statusCard, terminal && styles.statusCardTerminal, order.status === 'DELIVERED' && styles.statusCardDone]}>
           <Text style={styles.statusEyebrow}>{terminal ? 'ORDER STATUS' : 'LIVE ORDER STATUS'}</Text>
           <Text style={styles.statusTitle}>{formatOrderStatus(order.status)}</Text>
