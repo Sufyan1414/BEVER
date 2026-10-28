@@ -41,6 +41,7 @@ import type { CompositeNavigationProp } from '@react-navigation/native';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useLocationStore } from '../../stores/useLocationStore';
 import { fetchNearbyStores, searchProducts, type ProductHit } from '../../services/store';
+import { supabase } from '../../services/supabase';
 import { BrowsingLocationPickerScreen } from '../location/BrowsingLocationPickerScreen';
 import type { NearbyStore, StoreCategory } from '../../types/store';
 import { STORE_CATEGORY_LABELS } from '../../types/store';
@@ -240,6 +241,40 @@ function StoreCard({ store, onPress }: { store: NearbyStore; onPress: () => void
   );
 }
 
+function MosaicCard({ store, thumb, onPress }: { store: NearbyStore; thumb: { images: string[]; count: number } | undefined; onPress: () => void }) {
+  const icon = CATEGORY_ICONS[store.category] ?? '🏪';
+  const imgs = thumb?.images ?? [];
+  const more = Math.max(0, (thumb?.count ?? 0) - imgs.length);
+  const eta = store.estimated_delivery_minutes ?? Math.round(10 + (store.distance_meters / 1000) * 4);
+  return (
+    <TouchableOpacity activeOpacity={0.9} onPress={onPress} style={mosaic.card} accessibilityRole="button" accessibilityLabel={`Open ${store.name}`}>
+      <View style={mosaic.grid}>
+        {[0, 1, 2, 3].map((n) => (
+          <View key={n} style={mosaic.cell}>
+            {imgs[n] ? <Image source={{ uri: imgs[n] }} style={mosaic.img} resizeMode="cover" /> : <Text style={{ fontSize: 22, opacity: n === 0 ? 1 : 0.35 }}>{n === 0 ? icon : '🛍️'}</Text>}
+          </View>
+        ))}
+        {more > 0 ? <View style={mosaic.more}><Text style={mosaic.moreText}>+{more} more</Text></View> : null}
+      </View>
+      <Text style={mosaic.name} numberOfLines={2}>{store.name}</Text>
+      <Text style={mosaic.meta}>{formatDistance(store.distance_meters)} · ~{eta} min</Text>
+      {!store.is_open ? <Text style={mosaic.closed}>Closed now</Text> : null}
+    </TouchableOpacity>
+  );
+}
+
+const mosaic = StyleSheet.create({
+  card: { width: '48%', backgroundColor: '#ECFDF5', borderRadius: 22, padding: 8, marginBottom: 14, borderWidth: 1, borderColor: '#D1FAE5' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  cell: { width: '48.5%', aspectRatio: 1, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden' },
+  img: { width: '100%', height: '100%' },
+  more: { position: 'absolute', alignSelf: 'center', left: '50%', bottom: 0, marginLeft: -34, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 1, borderColor: '#D1FAE5' },
+  moreText: { fontSize: 11, fontWeight: '800', color: '#57534E' },
+  name: { fontSize: 15, fontWeight: '900', color: '#064E3B', textAlign: 'center', marginTop: 6, lineHeight: 20 },
+  meta: { fontSize: 11, color: '#57534E', textAlign: 'center', marginTop: 2, marginBottom: 4, fontWeight: '600' },
+  closed: { fontSize: 11, fontWeight: '800', color: '#B91C1C', textAlign: 'center', marginBottom: 4 },
+});
+
 // ─── Category Grid ────────────────────────────────────────────────────────────
 
 function CategoryRow({
@@ -290,6 +325,23 @@ export function HomeScreen() {
   const [storeSearchQuery, setStoreSearchQuery] = useState('');
   const [productHits, setProductHits] = useState<ProductHit[]>([]);
   const [productSearching, setProductSearching] = useState(false);
+  const [thumbs, setThumbs] = useState<Record<string, { images: string[]; count: number }>>({});
+  useEffect(() => {
+    const ids = homeState.kind === 'STORE_LIST' ? homeState.stores.map((st) => st.id) : [];
+    if (ids.length === 0) return;
+    let alive = true;
+    supabase.from('products').select('store_id,image_url').in('store_id', ids).eq('is_available', true).limit(400).then(({ data }) => {
+      if (!alive || !data) return;
+      const out: Record<string, { images: string[]; count: number }> = {};
+      for (const r of data as Array<{ store_id: string; image_url: string | null }>) {
+        const e = (out[r.store_id] ??= { images: [], count: 0 });
+        e.count += 1;
+        if (r.image_url && e.images.length < 4) e.images.push(r.image_url);
+      }
+      setThumbs(out);
+    }, () => undefined);
+    return () => { alive = false; };
+  }, [homeState]);
   useEffect(() => {
     const q = storeSearchQuery.trim();
     const ids = homeState.kind === 'STORE_LIST' ? homeState.stores.map((st) => st.id) : [];
@@ -406,27 +458,26 @@ export function HomeScreen() {
 
   const renderHeader = () => (
     <View>
-      {/* Search real nearby store data; never invent product or store matches. */}
-      <View style={styles.searchWrap}>
-        <View style={searchStyles.bar}>
-          <Text style={searchStyles.icon}>⌕</Text>
-          <TextInput
-            value={storeSearchQuery}
-            onChangeText={setStoreSearchQuery}
-            placeholder="Search stores and products"
-            placeholderTextColor="#9A9A94"
-            returnKeyType="search"
-            autoCapitalize="none"
-            style={{ flex: 1, color: '#20201C', fontSize: 14, paddingVertical: 0 }}
-            accessibilityLabel="Search stores and products"
-          />
-          {storeSearchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setStoreSearchQuery('')} accessibilityLabel="Clear store search">
-              <Text style={{ color: '#77776F', fontSize: 20, paddingHorizontal: 4 }}>×</Text>
-            </TouchableOpacity>
-          )}
+      {/* Category row */}
+      {homeState.kind === 'STORE_LIST' && (
+        <View style={styles.catWrap}>
+          <CategoryRow selected={selectedCategory} onSelect={setSelectedCategory} />
         </View>
+      )}
+
+      {/* Welcome banner + real offers only */}
+      <View style={styles.banner}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.bannerTitle}>Fresh from your{'\n'}neighbourhood shops</Text>
+          <Text style={styles.bannerSub}>Order now, pay cash on delivery</Text>
+        </View>
+        <Text style={{ fontSize: 64 }}>🛍️</Text>
       </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offerRow}>
+        <View style={styles.offerCard}><Text style={styles.offerIcon}>🛵</Text><View><Text style={styles.offerTitle}>FREE delivery</Text><Text style={styles.offerSub}>On orders of ₹199 and above</Text></View></View>
+        <View style={styles.offerCard}><Text style={styles.offerIcon}>💵</Text><View><Text style={styles.offerTitle}>Pay on delivery</Text><Text style={styles.offerSub}>Cash when your order arrives</Text></View></View>
+        <View style={styles.offerCard}><Text style={styles.offerIcon}>📍</Text><View><Text style={styles.offerTitle}>Live tracking</Text><Text style={styles.offerSub}>Watch your rider on the map</Text></View></View>
+      </ScrollView>
 
       {/* Product search results (real products from nearby stores) */}
       {normalizedSearchQuery.length >= 2 && productHits.length > 0 && (
@@ -457,13 +508,6 @@ export function HomeScreen() {
       )}
       {normalizedSearchQuery.length >= 2 && productSearching && productHits.length === 0 && (
         <Text style={{ paddingHorizontal: 20, marginTop: 10, color: '#78716C', fontSize: 12 }}>Searching products…</Text>
-      )}
-
-      {/* Category row */}
-      {homeState.kind === 'STORE_LIST' && (
-        <View style={styles.catWrap}>
-          <CategoryRow selected={selectedCategory} onSelect={setSelectedCategory} />
-        </View>
       )}
 
       {/* Section heading */}
@@ -498,6 +542,7 @@ export function HomeScreen() {
 
       {/* ── Top Header ── */}
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+        <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
           {nearestOpen ? (
             <>
@@ -543,6 +588,28 @@ export function HomeScreen() {
             <Text style={styles.signInBtnText}>Sign In</Text>
           </TouchableOpacity>
         )}
+        </View>
+        <View style={styles.headerSearch}>
+
+        <View style={searchStyles.bar}>
+          <Text style={searchStyles.icon}>⌕</Text>
+          <TextInput
+            value={storeSearchQuery}
+            onChangeText={setStoreSearchQuery}
+            placeholder="Search stores and products"
+            placeholderTextColor="#9A9A94"
+            returnKeyType="search"
+            autoCapitalize="none"
+            style={{ flex: 1, color: '#20201C', fontSize: 14, paddingVertical: 0 }}
+            accessibilityLabel="Search stores and products"
+          />
+          {storeSearchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setStoreSearchQuery('')} accessibilityLabel="Clear store search">
+              <Text style={{ color: '#77776F', fontSize: 20, paddingHorizontal: 4 }}>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        </View>
       </View>
 
       {/* ── Body ── */}
@@ -574,9 +641,12 @@ export function HomeScreen() {
         <FlatList
           data={visibleStores}
           keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={{ paddingHorizontal: 16, justifyContent: 'space-between' }}
           renderItem={({ item }) => (
-            <StoreCard
+            <MosaicCard
               store={item}
+              thumb={thumbs[item.id]}
               onPress={() => {
                 (navigation as any).navigate('StoreDetail', { store: item });
               }}
@@ -669,9 +739,6 @@ const styles = StyleSheet.create({
 
   // ── Header ──
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 12,
     backgroundColor: '#064E3B',
@@ -679,6 +746,17 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 22,
     paddingBottom: 18,
   },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerSearch: { marginTop: 14 },
+  banner: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 14, padding: 18, borderRadius: 24, backgroundColor: '#059669' },
+  bannerTitle: { fontSize: 22, fontWeight: '900', color: '#fff', lineHeight: 28 },
+  bannerSub: { fontSize: 13, color: '#D1FAE5', marginTop: 6, fontWeight: '600' },
+  offerRow: { paddingHorizontal: 16, paddingVertical: 12, gap: 10 },
+  offerCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#FFF7E6', borderRadius: 18, borderWidth: 1, borderColor: '#FDE68A', paddingVertical: 12, paddingHorizontal: 14, minWidth: 220 },
+  offerIcon: { fontSize: 26 },
+  offerTitle: { fontSize: 14, fontWeight: '900', color: '#92400E' },
+  offerSub: { fontSize: 12, color: '#B45309', marginTop: 1 },
+  shopsTitle: { fontSize: 20, fontWeight: '900', color: '#064E3B', marginHorizontal: 18, marginTop: 6, marginBottom: 12 },
   headerLeft: { flex: 1, gap: 5 },
   wordmark: {
     fontSize: 26,

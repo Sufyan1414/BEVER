@@ -32,6 +32,7 @@ import {
   Animated,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocationStore, BrowsingLocation } from '../../stores/useLocationStore';
 
@@ -116,6 +117,36 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
   // ── Step State ──────────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>('SEARCH');
   const [selectedResult, setSelectedResult] = useState<ParsedLocationResult | null>(null);
+  const [gpsBusy, setGpsBusy] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+
+  const useCurrentLocation = useCallback(async () => {
+    setGpsBusy(true); setGpsError(null);
+    try {
+      const perm = await Location.requestForegroundPermissionsAsync();
+      if (perm.status !== 'granted') throw new Error('Allow location access in your phone settings, or search for your area below.');
+      if (!(await Location.hasServicesEnabledAsync())) throw new Error('Turn on your phone’s location (GPS) and try again.');
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      let city = ''; let state = ''; let pin = ''; let label = '';
+      try {
+        const [g] = await Location.reverseGeocodeAsync(pos.coords);
+        if (g) {
+          city = (g.city ?? g.subregion ?? '') as string;
+          state = (g.region ?? '') as string;
+          pin = g.postalCode && /^\d{6}$/.test(g.postalCode) ? g.postalCode : '';
+          label = [g.district ?? g.name ?? g.street, city].filter(Boolean).join(', ');
+        }
+      } catch { /* label is optional */ }
+      await setBrowsingLocation({
+        lat: pos.coords.latitude, lng: pos.coords.longitude,
+        label: label || 'Current location',
+        ...(city ? { city } : {}), ...(state ? { state } : {}), ...(pin ? { pincode: pin } : {}),
+        setAt: new Date().toISOString(),
+      });
+      onLocationSet();
+    } catch (e: any) { setGpsError(e?.message ?? 'Could not get your location.'); }
+    finally { setGpsBusy(false); }
+  }, [setBrowsingLocation, onLocationSet]);
 
   // ── Search State ────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
@@ -217,7 +248,6 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
   const needsPincode = Boolean(selectedResult && !selectedResult.pincode);
   const isFormValid = Boolean(
     houseNo.trim() &&
-    floor.trim() &&
     (!needsPincode || /^\d{6}$/.test(pincode.trim()))
   );
 
@@ -282,6 +312,12 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
             </Text>
           </View>
 
+          <TouchableOpacity style={styles.gpsPrimary} onPress={() => { void useCurrentLocation(); }} disabled={gpsBusy} accessibilityRole="button" accessibilityLabel="Use my current location">
+            {gpsBusy ? <ActivityIndicator color="#fff" /> : <Text style={styles.gpsPrimaryText}>◎  Use my current location</Text>}
+          </TouchableOpacity>
+          {gpsError ? <View style={styles.errorBox}><Text style={styles.errorText}>{gpsError}</Text></View> : null}
+          <Text style={styles.orText}>or search for your area</Text>
+
           {/* Search Box */}
           <View style={[styles.searchBox, isFocused && styles.searchBoxFocused]}>
             <Text style={styles.searchIcon}>🔍</Text>
@@ -293,7 +329,6 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
               onChangeText={setSearchQuery}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              autoFocus
               returnKeyType="search"
               onSubmitEditing={() => executeSearch(searchQuery)}
               accessibilityLabel="Search delivery area"
@@ -444,9 +479,9 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
               />
             </View>
 
-            {/* Floor (Required) */}
+            {/* Floor (optional) */}
             <View style={styles.inputGroup}>
-              <Text style={styles.fieldLabel}>Floor *</Text>
+              <Text style={styles.fieldLabel}>Floor (optional)</Text>
               <TextInput
                 style={styles.formInput}
                 placeholder="e.g. 3rd Floor / Ground Floor"
@@ -539,6 +574,9 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  gpsPrimary: { height: 54, borderRadius: 16, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  gpsPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+  orText: { textAlign: 'center', color: '#78716C', fontSize: 12, fontWeight: '700', marginVertical: 8 },
   safe: {
     flex: 1,
     backgroundColor: '#F3FBF7',
