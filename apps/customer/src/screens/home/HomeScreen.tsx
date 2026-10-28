@@ -109,10 +109,6 @@ function formatDistance(metres: number): string {
   return `${(metres / 1000).toFixed(1)} km`;
 }
 
-function formatRupees(paise: number): string {
-  return `₹${Math.round(paise / 100)}`;
-}
-
 // ─── Skeleton component ───────────────────────────────────────────────────────
 
 function SkeletonCard() {
