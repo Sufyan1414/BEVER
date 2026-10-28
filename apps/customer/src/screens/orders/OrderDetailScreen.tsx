@@ -15,6 +15,7 @@ import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/nativ
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../navigation/types';
 import { TrackingPanel } from '../../components/TrackingPanel';
+import { RateOrderCard } from '../../components/RateOrderCard';
 import {
   fetchOrderDetail,
   formatOrderStatus,
@@ -109,6 +110,8 @@ export function OrderDetailScreen() {
           <Text style={styles.statusTitle}>{formatOrderStatus(order.status)}</Text>
           <Text style={styles.statusSub}>{order.status === 'DELIVERED' ? 'Delivered successfully.' : order.status === 'REJECTED' || order.status === 'CANCELLED' ? 'This order will not be delivered.' : order.status === 'DELIVERY_FAILED' ? (order.deliveryFailureReason ?? 'Delivery could not be completed. BEVER operations has been notified.') : 'We keep this screen updated while your order moves through the store and delivery.'}</Text>
         </View>
+
+        {order.status === 'DELIVERED' ? <RateOrderCard orderId={order.id} storeName={order.storeName} /> : null}
 
         <Text style={styles.section}>Order progress</Text>
         <View style={styles.timeline}>
