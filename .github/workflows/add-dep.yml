@@ -1,0 +1,27 @@
+name: Add dependency (one-off)
+on:
+  push:
+    branches: ['deps/**']
+permissions:
+  contents: write
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - name: Install fonts in each app
+        run: |
+          for app in customer merchant rider; do
+            (cd apps/$app && npx expo install expo-font @expo-google-fonts/plus-jakarta-sans)
+          done
+      - name: Commit manifests and lockfile
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add apps/*/package.json package-lock.json
+          git diff --cached --stat
+          git commit -m "chore: add expo-font and Plus Jakarta Sans to apps" || echo "nothing to commit"
+          git push
