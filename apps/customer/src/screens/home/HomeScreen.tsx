@@ -448,7 +448,7 @@ export function HomeScreen() {
             <>
               <Text style={styles.heroLabel}>BEVER delivers in</Text>
               <View style={styles.heroRow}>
-                <Text style={styles.heroEta}>{heroEta} minutes</Text>
+                <Text style={styles.heroEta} numberOfLines={1}>{heroEta} minutes</Text>
                 <View style={styles.heroChip}><Text style={styles.heroChipText}>{formatDistance(nearestOpen.distance_meters)} away</Text></View>
               </View>
             </>
@@ -641,9 +641,9 @@ function EmptyCategory({ label, onClear }: { label: string; onClear: () => void 
 
 const styles = StyleSheet.create({
   heroLabel: { fontSize: 15, fontWeight: '800', color: '#A7F3D0' },
-  heroRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 6 },
-  heroEta: { fontSize: 36, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
-  heroChip: { marginLeft: 10, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  heroRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 2, marginBottom: 6 },
+  heroEta: { fontSize: 30, fontWeight: '900', color: '#fff', letterSpacing: -0.5, flexShrink: 1 },
+  heroChip: { marginLeft: 8, marginTop: 2, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   heroChipText: { fontSize: 12, fontWeight: '800', color: '#fff' },
   safe: { flex: 1, backgroundColor: '#F7F7F3' },
 
@@ -657,9 +657,9 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerSearch: { marginTop: 14, marginBottom: 12 },
   profileBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: '#022C22', alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
-  welcome: { backgroundColor: '#047857', alignItems: 'center', paddingTop: 22, paddingBottom: 30 },
-  welcomeTitle: { fontSize: 38, fontWeight: '900', color: '#ECFDF5', letterSpacing: 1 },
-  welcomeSub: { fontSize: 16, color: '#D1FAE5', marginTop: 6, fontWeight: '600' },
+  welcome: { backgroundColor: '#047857', alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
+  welcomeTitle: { fontSize: 30, fontWeight: '900', color: '#ECFDF5', letterSpacing: 1 },
+  welcomeSub: { fontSize: 14, color: '#D1FAE5', marginTop: 6, fontWeight: '600' },
   offersTabWrap: { backgroundColor: '#047857', alignItems: 'center', height: 24 },
   offersTab: { position: 'absolute', bottom: 0, backgroundColor: '#FBBF24', borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingHorizontal: 22, paddingVertical: 6 },
   offersTabText: { fontSize: 14, fontWeight: '900', color: '#451A03', letterSpacing: 1 },
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
   offerTitle: { fontSize: 15, fontWeight: '900', color: '#92400E' },
   offerSub: { fontSize: 12, color: '#B45309', marginTop: 1 },
   shopsTitle: { fontSize: 20, fontWeight: '900', color: '#064E3B', marginHorizontal: 18, marginTop: 6, marginBottom: 12 },
-  headerLeft: { flex: 1, gap: 5 },
+  headerLeft: { flex: 1, minWidth: 0, gap: 5 },
   wordmark: {
     fontSize: 26,
     fontWeight: '900',
@@ -724,7 +724,7 @@ const styles = StyleSheet.create({
   sectionCount: { fontSize: 13, color: '#9A9A94', fontWeight: '500' },
 
   // ── List ──
-  listContent: { paddingBottom: 110 },
+  listContent: { paddingBottom: 150 },
 
   // ── Skeleton ──
   skeletonContainer: { paddingBottom: 36 },

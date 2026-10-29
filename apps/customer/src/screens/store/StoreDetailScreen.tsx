@@ -364,7 +364,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
               })}
             </View>
           ) : null}
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
         {/* Section Heading */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Catalogue</Text>
@@ -429,9 +429,6 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
                         <View style={styles.soldOutVeil}><Text style={styles.soldOutText}>Out of stock</Text></View>
                       ) : null}
                     </TouchableOpacity>
-                    <View style={styles.gridStrip}>
-                      <Text style={styles.gridStripText} numberOfLines={1}>{product.unit || '1 pc'}</Text>
-                    </View>
                     {product.is_available ? (
                       qty === 0 ? (
                         <TouchableOpacity style={styles.gridAdd} onPress={() => handleAdd(product)} accessibilityLabel={`Add ${product.name} to cart`} activeOpacity={0.8}>
@@ -456,6 +453,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
                   </View>
                   {hasDiscount ? <Text style={styles.gridOff}>{off}% OFF on MRP</Text> : null}
                   <Text style={styles.gridName} numberOfLines={2} onPress={() => setDetailProduct(product)}>{product.name}</Text>
+                  <Text style={styles.gridUnit} numberOfLines={1}>{product.unit || '1 pc'}</Text>
                   {store.estimated_delivery_minutes != null ? <Text style={styles.gridEta}>⏱ {store.estimated_delivery_minutes} mins</Text> : null}
                 </View>
               );
@@ -482,23 +480,23 @@ const styles = StyleSheet.create({
   railInitial: { fontSize: 18, fontWeight: '900', color: '#047857' },
   railLabel: { fontSize: 10.5, fontWeight: '700', color: '#57534E', marginTop: 5, textAlign: 'center' },
   railLabelOn: { color: '#064E3B', fontWeight: '900' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'space-between' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, justifyContent: 'space-between' },
   gridCard: { width: '48%', marginBottom: 20 },
-  gridMedia: { borderRadius: 16, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#fff', marginBottom: 8 },
+  gridMedia: { borderRadius: 16, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#fff', marginBottom: 8, overflow: 'hidden' },
   gridStrip: { height: 46, backgroundColor: '#F3F4F6', borderBottomLeftRadius: 15, borderBottomRightRadius: 15, justifyContent: 'center', paddingLeft: 12, paddingRight: 90 },
   gridStripText: { fontSize: 13, fontWeight: '700', color: '#1C1917' },
   gridPriceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 4 },
   gridOff: { fontSize: 12, fontWeight: '800', color: '#2563EB', marginTop: 1 },
   gridEta: { fontSize: 11, fontWeight: '700', color: '#6B7280', marginTop: 4 },
-  gridImgWrap: { aspectRatio: 1.05, borderTopLeftRadius: 15, borderTopRightRadius: 15, backgroundColor: '#fff', overflow: 'hidden' },
+  gridImgWrap: { aspectRatio: 1.05, backgroundColor: '#fff', overflow: 'hidden' },
   gridImg: { width: '100%', height: '100%' },
   gridImgFallback: { flex: 1, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' },
   offBadge: { position: 'absolute', top: 0, left: 10, backgroundColor: '#F59E0B', paddingHorizontal: 7, paddingVertical: 4, borderBottomLeftRadius: 8, borderBottomRightRadius: 8 },
   offBadgeText: { fontSize: 10, fontWeight: '900', color: '#451A03' },
-  gridAdd: { position: 'absolute', right: 6, bottom: 3, minWidth: 80, height: 40, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#059669', alignItems: 'center', justifyContent: 'center', shadowColor: '#064E3B', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
+  gridAdd: { position: 'absolute', right: 6, bottom: 6, minWidth: 68, height: 36, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#059669', alignItems: 'center', justifyContent: 'center', shadowColor: '#064E3B', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
   gridAddText: { color: '#059669', fontWeight: '900', fontSize: 15, letterSpacing: 0.5 },
-  gridStepper: { position: 'absolute', right: 6, bottom: 3, height: 40, borderRadius: 12, backgroundColor: '#059669', flexDirection: 'row', alignItems: 'center', elevation: 3 },
-  gridStepBtn: { width: 32, height: 40, alignItems: 'center', justifyContent: 'center' },
+  gridStepper: { position: 'absolute', right: 6, bottom: 6, height: 36, borderRadius: 12, backgroundColor: '#059669', flexDirection: 'row', alignItems: 'center', elevation: 3 },
+  gridStepBtn: { width: 28, height: 36, alignItems: 'center', justifyContent: 'center' },
   gridStepText: { color: '#fff', fontSize: 18, fontWeight: '800' },
   gridQty: { color: '#fff', fontWeight: '900', fontSize: 14, minWidth: 18, textAlign: 'center' },
   soldOutVeil: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.75)', alignItems: 'center', justifyContent: 'center' },
@@ -522,6 +520,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3FBF7',
   },
   topHeaderTitle: {
+    paddingHorizontal: 8,
     fontSize: 16,
     fontWeight: '800',
     color: '#1C1917',
