@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useState} from 'react';
-import { ActivityIndicator, Linking, Platform, RefreshControl, ScrollView, StatusBar as RNStatusBar, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, Vibration, Platform, RefreshControl, ScrollView, StatusBar as RNStatusBar, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { Text, TextInput } from './AppText';
 import {StatusBar} from 'expo-status-bar';
 import {useAppFonts} from './fonts';
@@ -24,6 +24,8 @@ export default function App(){
  const load=useCallback(async(refresh=false)=>{if(!session)return;if(refresh)setRefreshing(true);try{const{data,error}=await supabase.from('delivery_assignments').select('id,order_id,accepted_at,arrived_at_store_at,picked_up_at,delivered_at,cod_collected,cod_amount,orders(order_number,status,total_amount,items_total,delivery_fee,payment_method,special_instructions,delivery_address_snapshot,stores(name,address_text))').order('created_at',{ascending:false}).limit(30);if(error)throw error;setAssignments((data??[]) as Assignment[]);const er=await supabase.rpc('rider_earnings_summary');const row=Array.isArray(er.data)?er.data[0]:null;if(row&&typeof row.today_earnings==='number')setEarnToday(row.today_earnings)}catch(e:any){setNotice(e?.message??'Could not load deliveries.')}finally{setRefreshing(false)}},[session]);
  useEffect(()=>{load()},[load]);
  const[available,setAvailable]=useState<any[]>([]);
+ const seenAvail=React.useRef<Set<string>|null>(null);
+ useEffect(()=>{const ids=new Set<string>(available.map((d:any)=>String(d.order_id??d.id)));if(seenAvail.current===null){seenAvail.current=ids;return}let fresh=false;ids.forEach(i=>{if(!seenAvail.current!.has(i))fresh=true});seenAvail.current=ids;if(fresh)Vibration.vibrate([0,300,150,300])},[available]);
  const[earnToday,setEarnToday]=useState(0);
  const loadAvailable=useCallback(async()=>{if(role!=='ok')return;try{const{data}=await supabase.rpc('list_available_deliveries');setAvailable(Array.isArray(data)?data:[])}catch{setAvailable([])}},[role]);
  useEffect(()=>{loadAvailable();const t=setInterval(loadAvailable,15000);return()=>clearInterval(t)},[loadAvailable]);
