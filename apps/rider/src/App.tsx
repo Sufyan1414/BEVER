@@ -1,6 +1,8 @@
 import React,{useCallback,useEffect,useState} from 'react';
-import {ActivityIndicator,Linking,Platform,RefreshControl,ScrollView,StatusBar as RNStatusBar,StyleSheet,Switch,Text,TextInput,TouchableOpacity,View} from 'react-native';
+import { ActivityIndicator, Linking, Platform, RefreshControl, ScrollView, StatusBar as RNStatusBar, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from './AppText';
 import {StatusBar} from 'expo-status-bar';
+import {useAppFonts} from './fonts';
 import * as Location from 'expo-location';
 import {supabase} from './services/supabase';
 import {RiderAuth} from './screens/RiderAuth';
@@ -11,6 +13,7 @@ const rupees=(p:number)=>'₹'+Math.round(p/100);
 const label=(s:Status)=>({RIDER_ASSIGNED:'Assigned',RIDER_AT_STORE:'At store',PICKED_UP:'Picked up',OUT_FOR_DELIVERY:'Out for delivery',DELIVERED:'Delivered',DELIVERY_FAILED:'Delivery failed'} as Record<Status,string>)[s];
 
 export default function App(){
+ const fontsReady=useAppFonts();
  const[session,setSession]=useState<any>(null),[authLoading,setAuthLoading]=useState(true);
  const[assignments,setAssignments]=useState<Assignment[]>([]),[selected,setSelected]=useState<Assignment|null>(null),[refreshing,setRefreshing]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState<string|null>(null),[tab,setTab]=useState<'available'|'mine'>('available'),[otp,setOtp]=useState(''),[codCollected,setCodCollected]=useState(false);
  useEffect(()=>{supabase.auth.getSession().then(({data})=>{setSession(data.session);setAuthLoading(false)});const{data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s));return()=>data.subscription.unsubscribe()},[]);
@@ -64,6 +67,7 @@ export default function App(){
  const cashToday=doneToday.reduce((n,a)=>n+(a.cod_collected?(a.cod_amount??0):0),0);
  const activeList=assignments.filter(a=>!['DELIVERED','DELIVERY_FAILED'].includes(a.orders?.status));
  const pastList=assignments.filter(a=>['DELIVERED','DELIVERY_FAILED'].includes(a.orders?.status));
+ if(!fontsReady)return null;
  if(authLoading)return<View style={styles.center}><ActivityIndicator size="large" color="#059669"/></View>;
  if(!session)return<RiderAuth/>;
  if(role==='loading')return<View style={styles.center}><ActivityIndicator size="large" color="#059669"/></View>;

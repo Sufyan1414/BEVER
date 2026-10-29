@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from './AppText';
 import * as Location from 'expo-location';
 import { createAddress } from '../services/address';
 import { useAuthStore } from '../stores/useAuthStore';

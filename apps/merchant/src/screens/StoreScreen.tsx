@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Text, TextInput } from '../components/AppText';
 import { Button, Card, Pill } from '../components/ui';
 import { colors } from '../theme';
 import type { Store } from '../lib/types';

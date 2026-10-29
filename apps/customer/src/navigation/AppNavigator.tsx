@@ -33,7 +33,8 @@
 import React, { useEffect, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { Text } from '../components/AppText';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useLocationStore } from '../stores/useLocationStore';
 import { useCartStore } from '../stores/useCartStore';

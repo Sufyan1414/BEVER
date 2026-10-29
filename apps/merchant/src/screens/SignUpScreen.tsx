@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Keyboard, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text, TextInput } from '../components/AppText';
 import { StatusBar } from 'expo-status-bar';
 import { Banner, Button, Chip } from '../components/ui';
 import { signUpMerchant, submitMerchantApplication } from '../services/auth';

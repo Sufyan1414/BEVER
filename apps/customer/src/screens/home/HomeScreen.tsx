@@ -18,20 +18,8 @@
 
 import { CartBar } from '../../components/CartBar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  RefreshControl,
-  Modal,
-  Animated,
-  Image,
-  TextInput,
-  Dimensions,
-} from 'react-native';
+import { View, TouchableOpacity, FlatList, ScrollView, StyleSheet, RefreshControl, Modal, Animated, Image, Dimensions } from 'react-native';
+import { Text, TextInput } from '../../components/AppText';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';

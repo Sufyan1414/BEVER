@@ -14,14 +14,8 @@
  */
 
 import React, { useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  Platform,
-} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
+import { Text } from '../../components/AppText';
 import { StatusBar } from 'expo-status-bar';
 import MapView, { UrlTile, Region } from 'react-native-maps';
 import type { AddressLocationPickerProps } from '../../navigation/types';

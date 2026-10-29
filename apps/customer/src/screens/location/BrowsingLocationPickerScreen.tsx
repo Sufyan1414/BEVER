@@ -18,19 +18,8 @@
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Platform,
-  TextInput,
-  KeyboardAvoidingView,
-  ScrollView,
-  Keyboard,
-  Animated,
-} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, KeyboardAvoidingView, ScrollView, Keyboard, Animated } from 'react-native';
+import { Text, TextInput } from '../../components/AppText';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';

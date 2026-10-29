@@ -1,5 +1,6 @@
 import React from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity, View, type ViewStyle } from 'react-native';
+import { Text } from './AppText';
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
 import { useCartStore, computeCartSummary } from '../stores/useCartStore';

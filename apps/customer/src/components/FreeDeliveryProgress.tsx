@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Text } from './AppText';
 
 /** Matches the server rule in create_customer_order: merchandise subtotal >= ₹199 ships free. */
 export const FREE_DELIVERY_THRESHOLD_PAISE = 19900;

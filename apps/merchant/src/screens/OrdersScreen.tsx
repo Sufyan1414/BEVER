@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../components/AppText';
 import { Card, Chip, EmptyState, Skeleton } from '../components/ui';
 import { OrderCard } from '../components/OrderCard';
 import { ACTIVE_STATUSES, NEW_STATUSES, isToday, rupees } from '../lib/format';

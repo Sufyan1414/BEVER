@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from './AppText';
 import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
 import { supabase } from '../services/supabase';
 

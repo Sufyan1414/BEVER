@@ -15,17 +15,8 @@
 import { CartBar } from '../../components/CartBar';
 import { ProductDetailSheet } from '../../components/ProductDetailSheet';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Image,
-  Animated,
-  Modal,
-  TextInput,
-} from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet, Image, Animated, Modal } from 'react-native';
+import { Text, TextInput } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import type { StoreDetailProps } from '../../navigation/types';

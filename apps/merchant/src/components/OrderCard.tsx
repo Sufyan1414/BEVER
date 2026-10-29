@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from './AppText';
 import { Button, Card, Pill } from './ui';
 import { colors } from '../theme';
 import { STATUS_META, minutesSince, rupees, timeAgo } from '../lib/format';

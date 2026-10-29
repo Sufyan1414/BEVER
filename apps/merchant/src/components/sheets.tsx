@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Image, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View,
-} from 'react-native';
+import { Image, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Text, TextInput } from './AppText';
 import { colors, radius } from '../theme';
 import { Button } from './ui';
 import { REJECT_REASONS } from '../lib/format';

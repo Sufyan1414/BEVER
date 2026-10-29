@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, Pill, SectionTitle } from '../components/ui';
 import { STATUS_META, nextAction, rupees, timeAgo, timeOfDay } from '../lib/format';

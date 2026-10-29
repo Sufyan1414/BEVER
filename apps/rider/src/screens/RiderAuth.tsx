@@ -1,5 +1,6 @@
 import React,{useState} from 'react';
-import {ActivityIndicator,Keyboard,KeyboardAvoidingView,Platform,Pressable,ScrollView,StyleSheet,Text,TextInput,TouchableOpacity,View} from 'react-native';
+import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput } from '../AppText';
 import {StatusBar} from 'expo-status-bar';
 import {signInRider,signUpRider,submitRiderApplication} from '../services/auth';
 

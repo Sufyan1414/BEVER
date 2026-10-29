@@ -1,8 +1,6 @@
 import React from 'react';
-import {
-  ActivityIndicator, Pressable, StyleSheet, Text, View,
-  type StyleProp, type TextStyle, type ViewStyle,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { Text } from './AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, shadow } from '../theme';
 import type { Tone } from '../lib/format';

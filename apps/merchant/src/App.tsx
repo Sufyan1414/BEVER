@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, Vibration, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Vibration, View } from 'react-native';
+import { Text } from './components/AppText';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppFonts } from './fonts';
 import { Ionicons } from '@expo/vector-icons';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './services/supabase';
@@ -26,6 +28,8 @@ import { colors, radius } from './theme';
 type Tab = 'orders' | 'catalogue' | 'store';
 
 export default function App() {
+  const fontsReady = useAppFonts();
+  if (!fontsReady) return null;
   return (
     <SafeAreaProvider>
       <Root />

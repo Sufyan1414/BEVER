@@ -13,17 +13,8 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  SafeAreaView,
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-} from 'react-native';
+import { View, TouchableOpacity, FlatList, StyleSheet, SafeAreaView, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { Text } from '../../components/AppText';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
 import type { AddressListProps } from '../../navigation/types';
