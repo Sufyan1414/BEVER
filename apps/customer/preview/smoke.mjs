@@ -62,10 +62,11 @@ await page.goto('http://localhost:4174/');
 await shot('c-home');
 await step('open store', async () => { await page.getByText('Sharma Kirana & General Store').first().click({ timeout: 8000 }); await shot('c-store'); });
 await step('add item', async () => { await page.getByLabel('Add Sunflower Oil to cart').click({ timeout: 5000 }); await shot('c-store-added'); });
-await step('cart', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('Cart', { exact: true }).last().click({ timeout: 8000 }); await shot('c-cart'); });
-await step('orders tab', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('Orders', { exact: true }).last().click({ timeout: 8000 }); await shot('c-orders-guest'); });
+await step('cart', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('View cart').first().click({ timeout: 8000 }); await shot('c-cart'); });
+await step('orders tab', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('Order Again', { exact: true }).last().click({ timeout: 8000 }); await shot('c-orders-guest'); });
+await step('categories tab', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('Categories', { exact: true }).last().click({ timeout: 8000 }); await shot('c-categories'); });
 await step('profile tab', async () => { await page.getByText('Profile', { exact: true }).last().click({ timeout: 8000 }); await shot('c-profile-guest'); });
-await step('checkout->login', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('Cart', { exact: true }).last().click({ timeout: 8000 }); await page.waitForTimeout(800); await page.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot('c-login'); });
+await step('checkout->login', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(1500); await page.getByText('View cart').first().click({ timeout: 8000 }); await page.waitForTimeout(800); await page.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot('c-login'); });
 
 
 // ---- Signed-in flow: checkout -> order tracking (all backend responses are SAMPLE data) ----
@@ -117,9 +118,9 @@ const shot2 = async (name) => { await page2.waitForTimeout(1800); await page2.sc
 const step2 = async (name, fn) => { try { await fn(); } catch (e) { errors.push(`[signed-in] step ${name}: ${String(e).slice(0, 300)}`); } };
 await page2.goto('http://localhost:4174/');
 await shot2('s-home');
-await step2('checkout', async () => { await page2.getByText('Cart', { exact: true }).last().click({ timeout: 8000 }); await page2.waitForTimeout(800); await page2.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot2('s-checkout'); });
+await step2('checkout', async () => { await page2.getByText('View cart').first().click({ timeout: 8000 }); await page2.waitForTimeout(800); await page2.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot2('s-checkout'); });
 await step2('place order', async () => { await page2.getByText('Place order', { exact: true }).first().click({ timeout: 5000 }); await shot2('s-order-detail'); });
-await step2('orders tab', async () => { await page2.goto('http://localhost:4174/'); await page2.waitForTimeout(1200); await page2.getByText('Orders', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-orders'); });
+await step2('orders tab', async () => { await page2.goto('http://localhost:4174/'); await page2.waitForTimeout(1200); await page2.getByText('Order Again', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-orders'); });
 await step2('profile tab', async () => { await page2.getByText('Profile', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-profile'); });
 
 fs.writeFileSync(path.join(out, 'customer-errors.txt'), errors.join('\n'));

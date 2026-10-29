@@ -325,7 +325,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
           <TextInput
             value={productSearchQuery}
             onChangeText={setProductSearchQuery}
-            placeholder={'Search ' + store.name + ' catalogue'}
+            placeholder="Search in this shop"
             placeholderTextColor="#96968E"
             autoCapitalize="none"
             returnKeyType="search"
