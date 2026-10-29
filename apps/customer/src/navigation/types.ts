@@ -13,7 +13,7 @@ import type { NearbyStore } from '../types/store';
 // ─── Home Stack ───────────────────────────────────────────────────────────────
 
 export type HomeStackParamList = {
-  HomeMain: undefined;
+  HomeMain: { query?: string; category?: string } | undefined;
   StoreDetail: { store: NearbyStore };
 };
 
@@ -68,6 +68,7 @@ export type OrdersStackParamList = {
 
 export type AppTabParamList = {
   Home: undefined;
+  Categories: undefined;
   Cart: undefined;
   Checkout: undefined;
   Orders: undefined;

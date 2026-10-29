@@ -11,11 +11,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import type { AppTabParamList } from './types';
 import { HomeNavigator } from './HomeNavigator';
+import { CategoriesScreen } from '../screens/categories/CategoriesScreen';
 import { CartScreen } from '../screens/cart/CartScreen';
 import { OrdersNavigator } from './OrdersNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
 import { CheckoutNavigator } from './CheckoutNavigator';
-import { useCartStore, computeCartSummary } from '../stores/useCartStore';
+import { useCartStore } from '../stores/useCartStore';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
@@ -27,6 +28,7 @@ type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 const TAB_ICONS: Record<keyof AppTabParamList, { active: IoniconName; inactive: IoniconName }> = {
   Home: { active: 'home', inactive: 'home-outline' },
+  Categories: { active: 'grid', inactive: 'grid-outline' },
   Cart: { active: 'cart', inactive: 'cart-outline' },
   Checkout: { active: 'card', inactive: 'card-outline' },
   Orders: { active: 'receipt', inactive: 'receipt-outline' },
@@ -34,9 +36,7 @@ const TAB_ICONS: Record<keyof AppTabParamList, { active: IoniconName; inactive: 
 };
 
 export function AppTabs() {
-  const { items, pendingCheckout, consumeCheckoutIntent } = useCartStore();
-  const summary = computeCartSummary(items);
-  const cartCount = summary.totalItems;
+  const { pendingCheckout, consumeCheckoutIntent } = useCartStore();
 
   // After guest authentication/profile setup, AppNavigator mounts a fresh
   // AppTabs tree. Start directly at Checkout when that was the user's intent.
@@ -76,20 +76,7 @@ export function AppTabs() {
       <Tab.Screen
         name="Cart"
         component={CartScreen}
-        options={{
-          title: 'Cart',
-          ...(cartCount > 0
-            ? {
-                tabBarBadge: cartCount,
-                tabBarBadgeStyle: {
-                  backgroundColor: '#F59E0B',
-                  color: '#1C1917',
-                  fontSize: 10,
-                  fontWeight: '700' as const,
-                },
-              }
-            : {}),
-        }}
+        options={{ title: 'Cart', tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
       />
       <Tab.Screen
         name="Checkout"
@@ -99,7 +86,8 @@ export function AppTabs() {
           tabBarItemStyle: { display: 'none' },
         }}
       />
-      <Tab.Screen name="Orders" component={OrdersNavigator} options={{ title: 'Orders' }} />
+      <Tab.Screen name="Orders" component={OrdersNavigator} options={{ title: 'Order Again' }} />
+      <Tab.Screen name="Categories" component={CategoriesScreen} options={{ title: 'Categories' }} />
       <Tab.Screen name="Profile" component={ProfileNavigator} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );

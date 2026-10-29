@@ -34,7 +34,8 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp } from '@react-navigation/native';
@@ -76,17 +77,18 @@ type CategoryItem = {
   label: string;
   emoji: string;
   color: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
 };
 
 const CATEGORIES: CategoryItem[] = [
-  { key: ALL_KEY,      label: 'All',         emoji: '✨', color: '#059669' },
-  { key: 'RESTAURANT', label: 'Food',        emoji: '🍽️',  color: '#EF4444' },
-  { key: 'GROCERY',    label: 'Grocery',     emoji: '🛒', color: '#10B981' },
-  { key: 'PHARMACY',   label: 'Pharmacy',    emoji: '💊', color: '#3B82F6' },
-  { key: 'BAKERY',     label: 'Bakery',      emoji: '🥐', color: '#F97316' },
-  { key: 'ELECTRONICS',label: 'Electronics', emoji: '📱', color: '#8B5CF6' },
-  { key: 'CLOTHING',   label: 'Fashion',     emoji: '👗', color: '#EC4899' },
-  { key: 'OTHER',      label: 'More',        emoji: '🏪', color: '#6B7280' },
+  { key: ALL_KEY,      label: 'All',         emoji: '✨', color: '#059669', icon: 'apps' },
+  { key: 'RESTAURANT', label: 'Food',        emoji: '🍽️',  color: '#EF4444', icon: 'restaurant' },
+  { key: 'GROCERY',    label: 'Grocery',     emoji: '🛒', color: '#10B981', icon: 'basket' },
+  { key: 'PHARMACY',   label: 'Pharmacy',    emoji: '💊', color: '#3B82F6', icon: 'medkit' },
+  { key: 'BAKERY',     label: 'Bakery',      emoji: '🥐', color: '#F97316', icon: 'cafe' },
+  { key: 'ELECTRONICS',label: 'Electronics', emoji: '📱', color: '#8B5CF6', icon: 'headset' },
+  { key: 'CLOTHING',   label: 'Fashion',     emoji: '👗', color: '#EC4899', icon: 'shirt' },
+  { key: 'OTHER',      label: 'More',        emoji: '🏪', color: '#6B7280', icon: 'storefront' },
 ];
 
 const CATEGORY_ICONS: Record<StoreCategory, string> = {
@@ -149,7 +151,7 @@ function MosaicCard({ store, thumb, onPress }: { store: NearbyStore; thumb: { im
       <View style={mosaic.grid}>
         {[0, 1, 2, 3].map((n) => (
           <View key={n} style={mosaic.cell}>
-            {imgs[n] ? <Image source={{ uri: imgs[n] }} style={mosaic.img} resizeMode="cover" /> : <Text style={{ fontSize: 22, opacity: n === 0 ? 1 : 0.35 }}>{n === 0 ? icon : '🛍️'}</Text>}
+            {imgs[n] ? <Image source={{ uri: imgs[n] }} style={mosaic.img} resizeMode="cover" /> : <Text style={{ fontSize: 18, opacity: n === 0 ? 1 : 0.35 }}>{n === 0 ? icon : '🛍️'}</Text>}
           </View>
         ))}
         {more > 0 ? <View style={mosaic.more}><Text style={mosaic.moreText}>+{more} more</Text></View> : null}
@@ -162,14 +164,14 @@ function MosaicCard({ store, thumb, onPress }: { store: NearbyStore; thumb: { im
 }
 
 const mosaic = StyleSheet.create({
-  card: { width: '48%', backgroundColor: '#ECFDF5', borderRadius: 22, padding: 8, marginBottom: 14, borderWidth: 1, borderColor: '#D1FAE5' },
+  card: { width: '31.6%', backgroundColor: '#F1F5F3', borderRadius: 18, padding: 6, marginBottom: 14 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  cell: { width: '48.5%', aspectRatio: 1, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden' },
+  cell: { width: '48%', aspectRatio: 1, borderRadius: 10, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 4, overflow: 'hidden' },
   img: { width: '100%', height: '100%' },
-  more: { position: 'absolute', alignSelf: 'center', left: '50%', bottom: 0, marginLeft: -34, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 1, borderColor: '#D1FAE5' },
-  moreText: { fontSize: 11, fontWeight: '800', color: '#57534E' },
-  name: { fontSize: 15, fontWeight: '900', color: '#064E3B', textAlign: 'center', marginTop: 6, lineHeight: 20 },
-  meta: { fontSize: 11, color: '#57534E', textAlign: 'center', marginTop: 2, marginBottom: 4, fontWeight: '600' },
+  more: { position: 'absolute', alignSelf: 'center', left: '50%', bottom: 0, marginLeft: -30, backgroundColor: '#F8FAF9', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: '#E5E7EB' },
+  moreText: { fontSize: 10, fontWeight: '800', color: '#57534E' },
+  name: { fontSize: 13, fontWeight: '700', color: '#111827', textAlign: 'center', marginTop: 8, lineHeight: 17 },
+  meta: { fontSize: 10, color: '#6B7280', textAlign: 'center', marginTop: 2, marginBottom: 4, fontWeight: '600' },
   closed: { fontSize: 11, fontWeight: '800', color: '#B91C1C', textAlign: 'center', marginBottom: 4 },
 });
 
@@ -193,14 +195,13 @@ function CategoryRow({
         return (
           <TouchableOpacity
             key={c.key}
-            style={[catStyles.chip, isActive && { borderColor: c.color, backgroundColor: `${c.color}15` }]}
+            style={catStyles.tab}
             onPress={() => onSelect(c.key)}
             accessibilityLabel={`Filter by ${c.label}`}
           >
-            <Text style={catStyles.chipEmoji}>{c.emoji}</Text>
-            <Text style={[catStyles.chipLabel, isActive && { color: c.color, fontWeight: '700' }]}>
-              {c.label}
-            </Text>
+            <Ionicons name={c.icon} size={26} color="#fff" style={{ opacity: isActive ? 1 : 0.8 }} />
+            <Text style={[catStyles.tabLabel, isActive && catStyles.tabLabelOn]}>{c.label}</Text>
+            <View style={[catStyles.underline, isActive && catStyles.underlineOn]} />
           </TouchableOpacity>
         );
       })}
@@ -214,6 +215,7 @@ export function HomeScreen() {
   const { session } = useAuthStore();
   const { browsingLocation } = useLocationStore();
   const navigation = useNavigation<HomeNavProp>();
+  const route = useRoute<any>();
 
   const isAuthenticated = session !== null;
   const insets = useSafeAreaInsets();
@@ -221,6 +223,13 @@ export function HomeScreen() {
   const [homeState, setHomeState] = useState<HomeState>({ kind: 'LOADING' });
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>(ALL_KEY);
   const [storeSearchQuery, setStoreSearchQuery] = useState('');
+  useEffect(() => {
+    const q = route.params?.query;
+    const cat = route.params?.category;
+    if (typeof q === 'string' && q.length > 0) setStoreSearchQuery(q);
+    if (typeof cat === 'string' && cat.length > 0) setSelectedCategory(cat as CategoryFilter);
+    if (q || cat) (navigation as any).setParams({ query: undefined, category: undefined });
+  }, [route.params, navigation]);
   const [productHits, setProductHits] = useState<ProductHit[]>([]);
   const [productSearching, setProductSearching] = useState(false);
   const [thumbs, setThumbs] = useState<Record<string, { images: string[]; count: number }>>({});
@@ -356,26 +365,19 @@ export function HomeScreen() {
 
   const renderHeader = () => (
     <View>
-      {/* Category row */}
-      {homeState.kind === 'STORE_LIST' && (
-        <View style={styles.catWrap}>
-          <CategoryRow selected={selectedCategory} onSelect={setSelectedCategory} />
-        </View>
-      )}
-
       {/* Welcome banner + real offers only */}
-      <View style={styles.banner}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.bannerTitle}>Fresh from your{'\n'}neighbourhood shops</Text>
-          <Text style={styles.bannerSub}>Order now, pay cash on delivery</Text>
-        </View>
-        <Text style={{ fontSize: 64 }}>🛍️</Text>
+      <View style={styles.welcome}>
+        <Text style={styles.welcomeTitle}>WELCOME</Text>
+        <Text style={styles.welcomeSub}>Order now and enjoy great offers</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offerRow}>
-        <View style={styles.offerCard}><Text style={styles.offerIcon}>🛵</Text><View><Text style={styles.offerTitle}>FREE delivery</Text><Text style={styles.offerSub}>On orders of ₹199 and above</Text></View></View>
-        <View style={styles.offerCard}><Text style={styles.offerIcon}>💵</Text><View><Text style={styles.offerTitle}>Pay on delivery</Text><Text style={styles.offerSub}>Cash when your order arrives</Text></View></View>
-        <View style={styles.offerCard}><Text style={styles.offerIcon}>📍</Text><View><Text style={styles.offerTitle}>Live tracking</Text><Text style={styles.offerSub}>Watch your rider on the map</Text></View></View>
-      </ScrollView>
+      <View style={styles.offersTabWrap}><View style={styles.offersTab}><Text style={styles.offersTabText}>✦ OFFERS FOR YOU ✦</Text></View></View>
+      <View style={styles.offersBand}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offerRow}>
+          <View style={styles.offerCard}><Text style={styles.offerIcon}>🛵</Text><View><Text style={styles.offerTitle}>Enjoy FREE delivery</Text><Text style={styles.offerSub}>On orders of ₹199 and above</Text></View></View>
+          <View style={styles.offerCard}><Text style={styles.offerIcon}>💵</Text><View><Text style={styles.offerTitle}>Pay on delivery</Text><Text style={styles.offerSub}>Cash when your order arrives</Text></View></View>
+          <View style={styles.offerCard}><Text style={styles.offerIcon}>📍</Text><View><Text style={styles.offerTitle}>Live tracking</Text><Text style={styles.offerSub}>Watch your rider on the map</Text></View></View>
+        </ScrollView>
+      </View>
 
       {/* Product search results (real products from nearby stores) */}
       {normalizedSearchQuery.length >= 2 && productHits.length > 0 && (
@@ -412,7 +414,7 @@ export function HomeScreen() {
       {(homeState.kind === 'STORE_LIST' || homeState.kind === 'NO_STORES') && (
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>
-            {homeState.kind === 'STORE_LIST' ? 'Stores near you' : 'No stores found'}
+            {homeState.kind === 'STORE_LIST' ? 'Shops near you' : 'No stores found'}
           </Text>
           {homeState.kind === 'STORE_LIST' && (
             <Text style={styles.sectionCount}>
@@ -461,7 +463,7 @@ export function HomeScreen() {
               <Text style={styles.locationChipText} numberOfLines={1}>
                 {locationLabel}
               </Text>
-              <Text style={styles.locationChipCaret}>›</Text>
+              <Text style={styles.locationChipCaret}>▾</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -477,6 +479,11 @@ export function HomeScreen() {
           )}
         </View>
 
+        {isAuthenticated && (
+          <TouchableOpacity style={styles.profileBtn} onPress={() => (navigation as any).navigate('Profile')} accessibilityLabel="Open profile">
+            <Ionicons name="person" size={24} color="#fff" />
+          </TouchableOpacity>
+        )}
         {!isAuthenticated && (
           <TouchableOpacity
             style={styles.signInBtn}
@@ -490,7 +497,7 @@ export function HomeScreen() {
         <View style={styles.headerSearch}>
 
         <View style={searchStyles.bar}>
-          <Text style={searchStyles.icon}>⌕</Text>
+          <Ionicons name="search" size={22} color="#111827" />
           <TextInput
             value={storeSearchQuery}
             onChangeText={setStoreSearchQuery}
@@ -508,6 +515,11 @@ export function HomeScreen() {
           )}
         </View>
         </View>
+        {homeState.kind === 'STORE_LIST' ? (
+          <View style={{ marginHorizontal: -20 }}>
+            <CategoryRow selected={selectedCategory} onSelect={setSelectedCategory} />
+          </View>
+        ) : null}
       </View>
 
       {/* ── Body ── */}
@@ -539,8 +551,8 @@ export function HomeScreen() {
         <FlatList
           data={visibleStores}
           keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={{ paddingHorizontal: 16, justifyContent: 'space-between' }}
+          numColumns={3}
+          columnWrapperStyle={{ paddingHorizontal: 14, justifyContent: 'space-between', backgroundColor: '#fff' }}
           renderItem={({ item }) => (
             <MosaicCard
               store={item}
@@ -628,9 +640,9 @@ function EmptyCategory({ label, onClear }: { label: string; onClear: () => void 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  heroLabel: { fontSize: 13, fontWeight: '800', color: '#A7F3D0' },
+  heroLabel: { fontSize: 15, fontWeight: '800', color: '#A7F3D0' },
   heroRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 6 },
-  heroEta: { fontSize: 30, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  heroEta: { fontSize: 36, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
   heroChip: { marginLeft: 10, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   heroChipText: { fontSize: 12, fontWeight: '800', color: '#fff' },
   safe: { flex: 1, backgroundColor: '#F7F7F3' },
@@ -639,20 +651,26 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingTop: 12,
-    backgroundColor: '#064E3B',
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
-    paddingBottom: 18,
+    backgroundColor: '#047857',
+    paddingBottom: 0,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerSearch: { marginTop: 14 },
+  headerSearch: { marginTop: 14, marginBottom: 12 },
+  profileBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: '#022C22', alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
+  welcome: { backgroundColor: '#047857', alignItems: 'center', paddingTop: 22, paddingBottom: 30 },
+  welcomeTitle: { fontSize: 38, fontWeight: '900', color: '#ECFDF5', letterSpacing: 1 },
+  welcomeSub: { fontSize: 16, color: '#D1FAE5', marginTop: 6, fontWeight: '600' },
+  offersTabWrap: { backgroundColor: '#047857', alignItems: 'center', height: 24 },
+  offersTab: { position: 'absolute', bottom: 0, backgroundColor: '#FBBF24', borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingHorizontal: 22, paddingVertical: 6 },
+  offersTabText: { fontSize: 14, fontWeight: '900', color: '#451A03', letterSpacing: 1 },
+  offersBand: { backgroundColor: '#FBBF24' },
   banner: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 14, padding: 18, borderRadius: 24, backgroundColor: '#059669' },
   bannerTitle: { fontSize: 22, fontWeight: '900', color: '#fff', lineHeight: 28 },
   bannerSub: { fontSize: 13, color: '#D1FAE5', marginTop: 6, fontWeight: '600' },
-  offerRow: { paddingHorizontal: 16, paddingVertical: 12, gap: 10 },
-  offerCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#FFF7E6', borderRadius: 18, borderWidth: 1, borderColor: '#FDE68A', paddingVertical: 12, paddingHorizontal: 14, minWidth: 220 },
+  offerRow: { paddingHorizontal: 14, paddingVertical: 12, gap: 10 },
+  offerCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#FEF3C7', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 16, minWidth: 250 },
   offerIcon: { fontSize: 26 },
-  offerTitle: { fontSize: 14, fontWeight: '900', color: '#92400E' },
+  offerTitle: { fontSize: 15, fontWeight: '900', color: '#92400E' },
   offerSub: { fontSize: 12, color: '#B45309', marginTop: 1 },
   shopsTitle: { fontSize: 20, fontWeight: '900', color: '#064E3B', marginHorizontal: 18, marginTop: 6, marginBottom: 12 },
   headerLeft: { flex: 1, gap: 5 },
@@ -668,18 +686,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderRadius: 8,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
     alignSelf: 'flex-start',
-    maxWidth: SCREEN_WIDTH * 0.55,
+    maxWidth: SCREEN_WIDTH * 0.7,
   },
   locationChipEmpty: { backgroundColor: 'rgba(255,255,255,0.14)' },
   locationChipPin: { fontSize: 11 },
-  locationChipText: { fontSize: 12, fontWeight: '600', color: '#FFFFFF', flexShrink: 1 },
+  locationChipText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', flexShrink: 1 },
   locationChipTextEmpty: { color: '#D1FAE5' },
-  locationChipCaret: { fontSize: 14, color: '#6EE7B7', fontWeight: '700' },
+  locationChipCaret: { fontSize: 16, color: '#6EE7B7', fontWeight: '700' },
 
   signInBtn: {
     backgroundColor: '#F59E0B',
@@ -702,10 +716,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 10,
+    paddingTop: 22,
+    paddingBottom: 14,
+    backgroundColor: '#fff',
   },
-  sectionTitle: { fontSize: 17, fontWeight: '800', color: '#171717' },
+  sectionTitle: { fontSize: 22, fontWeight: '800', color: '#111827' },
   sectionCount: { fontSize: 13, color: '#9A9A94', fontWeight: '500' },
 
   // ── List ──
@@ -733,11 +748,10 @@ const searchStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#E6E6E1',
+    borderRadius: 16,
+    borderWidth: 0,
     paddingHorizontal: 16,
-    paddingVertical: 13,
+    paddingVertical: 14,
     gap: 10,
     elevation: 1,
     shadowColor: '#000',
@@ -750,22 +764,13 @@ const searchStyles = StyleSheet.create({
 });
 
 const catStyles = StyleSheet.create({
-  scrollContent: { paddingHorizontal: 20, gap: 8 },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#E6E6E1',
-    backgroundColor: '#FFFFFF',
-  },
-  chipEmoji: { fontSize: 15 },
-  chipLabel: { fontSize: 13, fontWeight: '600', color: '#6B6B67' },
+  scrollContent: { paddingHorizontal: 12, gap: 6 },
+  tab: { alignItems: 'center', paddingHorizontal: 12, paddingTop: 4 },
+  tabLabel: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.85)', marginTop: 4 },
+  tabLabelOn: { color: '#fff', fontWeight: '800' },
+  underline: { height: 3, width: '100%', borderRadius: 2, marginTop: 8, backgroundColor: 'transparent' },
+  underlineOn: { backgroundColor: '#fff' },
 });
-
 
 const skeletonStyles = StyleSheet.create({
   card: {
