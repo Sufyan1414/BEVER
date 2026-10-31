@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -156,6 +156,8 @@ export function OrderDetailScreen() {
 
         {order.specialInstructions ? <><Text style={styles.section}>Order note</Text><View style={styles.card}><Text style={styles.note}>{order.specialInstructions}</Text></View></> : null}
 
+        {order.storePhone ? <TouchableOpacity style={styles.callStore} onPress={() => { void Linking.openURL(`tel:${order.storePhone}`); }} accessibilityLabel="Call the shop"><Text style={styles.callStoreText}>📞  Call {order.storeName}</Text></TouchableOpacity> : null}
+
         {canCancel ? <TouchableOpacity style={styles.cancelButton} onPress={cancelOrder}><Text style={styles.cancelText}>Cancel order</Text></TouchableOpacity> : null}
       </ScrollView>
     </SafeAreaView>
@@ -172,6 +174,7 @@ const styles = StyleSheet.create({
   step:{flexDirection:'row',minHeight:62},stepRail:{width:30,alignItems:'center'},dot:{width:20,height:20,borderRadius:10,borderWidth:2,borderColor:'#D6D3D1',backgroundColor:'#fff',alignItems:'center',justifyContent:'center'},dotDone:{backgroundColor:'#059669',borderColor:'#059669'},dotActive:{borderColor:'#059669'},tick:{fontSize:12,fontWeight:'900',color:'#fff'},rail:{width:2,flex:1,backgroundColor:'#E7E5E4',marginVertical:3},railDone:{backgroundColor:'#059669'},stepCopy:{flex:1,paddingLeft:10,paddingBottom:12},stepTitle:{fontSize:13,fontWeight:'600',color:'#78716C'},stepTitleStrong:{color:'#1C1917',fontWeight:'800'},stepSub:{fontSize:10,color:'#A8A29E',marginTop:3,lineHeight:15},
   card:{backgroundColor:'#fff',borderWidth:1,borderColor:'#EEECE9',borderRadius:18,padding:16,marginBottom:24},itemRow:{flexDirection:'row',alignItems:'center',paddingVertical:8},itemThumb:{width:48,height:48,borderRadius:12,backgroundColor:'#F7F7F4',alignItems:'center',justifyContent:'center'},itemInitial:{fontSize:17,fontWeight:'800',color:'#059669'},itemCopy:{flex:1,paddingHorizontal:12},itemName:{fontSize:13,fontWeight:'700',color:'#1C1917'},itemUnit:{fontSize:11,color:'#78716C',marginTop:3},itemTotal:{fontSize:13,fontWeight:'800',color:'#1C1917'},
   addressLabel:{fontSize:12,fontWeight:'800',color:'#065F46'},address:{fontSize:12,color:'#57534E',lineHeight:19,marginTop:6},divider:{height:1,backgroundColor:'#F0EFED',marginVertical:14},row:{flexDirection:'row',justifyContent:'space-between',marginBottom:10},muted:{fontSize:12,color:'#78716C'},value:{fontSize:12,fontWeight:'700',color:'#1C1917'},totalLabel:{fontSize:15,fontWeight:'900',color:'#1C1917'},totalValue:{fontSize:15,fontWeight:'900',color:'#1C1917'},payment:{fontSize:11,color:'#78716C',marginTop:3},note:{fontSize:13,color:'#57534E',lineHeight:20},
+  callStore:{minHeight:50,borderRadius:14,borderWidth:1,borderColor:'#A7F3D0',backgroundColor:'#ECFDF5',alignItems:'center',justifyContent:'center',marginBottom:12},callStoreText:{fontSize:14,fontWeight:'800',color:'#065F46'},
   cancelButton:{minHeight:52,borderRadius:14,borderWidth:1,borderColor:'#FCA5A5',backgroundColor:'#FFFFFF',alignItems:'center',justifyContent:'center',marginTop:4},cancelText:{fontSize:14,fontWeight:'800',color:'#B91C1C'},
   otpCard:{backgroundColor:'#ECFDF5',borderWidth:1,borderColor:'#A7F3D0',borderRadius:18,padding:18,marginBottom:24,alignItems:'center'},otpEyebrow:{fontSize:10,fontWeight:'900',letterSpacing:1.2,color:'#047857'},otpTitle:{fontSize:30,fontWeight:'900',letterSpacing:6,color:'#065F46',marginTop:5},otpBody:{fontSize:11,color:'#047857',textAlign:'center',lineHeight:17,marginTop:5},errorTitle:{fontSize:18,fontWeight:'800',color:'#1C1917',textAlign:'center'},errorBody:{fontSize:13,color:'#78716C',textAlign:'center',lineHeight:20,marginTop:8,marginBottom:20},primary:{backgroundColor:'#059669',paddingHorizontal:26,paddingVertical:14,borderRadius:12},primaryText:{color:'#fff',fontSize:14,fontWeight:'800'}
 });

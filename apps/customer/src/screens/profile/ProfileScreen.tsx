@@ -9,13 +9,14 @@
  */
 
 import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, SafeAreaView, Alert, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, TextInput } from '../../components/AppText';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { AccountActions } from '../../components/AccountActions';
 
 type ProfileNav = NativeStackNavigationProp<ProfileStackParamList, 'ProfileMain'>;
 
@@ -92,7 +93,7 @@ export function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="dark" />
-      <View style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Account Profile</Text>
 
         {isAuthenticated ? (
@@ -145,6 +146,8 @@ export function ProfileScreen() {
                 }
               />
             </View>
+
+            <AccountActions />
 
             {/* Sign Out Button */}
             <TouchableOpacity
@@ -231,7 +234,7 @@ export function ProfileScreen() {
             </View>
           </KeyboardAvoidingView>
         </Modal>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

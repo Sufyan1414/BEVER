@@ -38,6 +38,7 @@ export interface CustomerOrderItem {
 }
 
 export interface CustomerOrderDetail extends CustomerOrderSummary {
+  storePhone: string | null;
   itemsTotal: number;
   deliveryFee: number;
   discountAmount: number;
@@ -138,7 +139,7 @@ export async function fetchMyOrders(limit = 50): Promise<CustomerOrderSummary[]>
 export async function fetchOrderDetail(orderId: string): Promise<CustomerOrderDetail> {
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id,order_number,status,payment_method,total_amount,items_total,delivery_fee,discount_amount,special_instructions,delivered_at,delivery_otp,rejection_reason,cancellation_reason,created_at,estimated_delivery_at,delivery_address_snapshot,delivery_failure_reason,stores(name)')
+    .select('id,order_number,status,payment_method,total_amount,items_total,delivery_fee,discount_amount,special_instructions,delivered_at,delivery_otp,rejection_reason,cancellation_reason,created_at,estimated_delivery_at,delivery_address_snapshot,delivery_failure_reason,stores(name,phone)')
     .eq('id', orderId)
     .maybeSingle();
 
@@ -167,6 +168,7 @@ export async function fetchOrderDetail(orderId: string): Promise<CustomerOrderDe
     itemCount: (items ?? []).reduce((sum: number, item: any) => sum + Number(item.quantity ?? 0), 0),
     createdAt: order.created_at,
     estimatedDeliveryAt: order.estimated_delivery_at ?? null,
+    storePhone: (order as any).stores?.phone ?? null,
     itemsTotal: order.items_total,
     deliveryFee: order.delivery_fee,
     discountAmount: order.discount_amount,
