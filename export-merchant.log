@@ -1,0 +1,48 @@
+Expo Autolinking module resolution enabled
+Starting Metro Bundler
+
+Android Bundled 14604ms apps/merchant/index.ts (763 modules)
+Could not parse Expo config: android.googleServicesFile: "./google-services.json"
+
+› Assets (33):
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/200ExtraLight_Italic/PlusJakartaSans_200ExtraLight_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/200ExtraLight/PlusJakartaSans_200ExtraLight.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/300Light_Italic/PlusJakartaSans_300Light_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/300Light/PlusJakartaSans_300Light.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/400Regular_Italic/PlusJakartaSans_400Regular_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/500Medium_Italic/PlusJakartaSans_500Medium_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/500Medium/PlusJakartaSans_500Medium.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/600SemiBold_Italic/PlusJakartaSans_600SemiBold_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/600SemiBold/PlusJakartaSans_600SemiBold.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/700Bold_Italic/PlusJakartaSans_700Bold_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/700Bold/PlusJakartaSans_700Bold.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/800ExtraBold_Italic/PlusJakartaSans_800ExtraBold_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/800ExtraBold/PlusJakartaSans_800ExtraBold.ttf (95KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf (130KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Entypo.ttf (66KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/EvilIcons.ttf (13KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf (56KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome.ttf (166KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf (134KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf (34KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf (203KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Brands.ttf (209KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Regular.ttf (68KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Solid.ttf (424KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Fontisto.ttf (314KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Foundation.ttf (57KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf (390KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf (1.3MB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf (357KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Octicons.ttf (69KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/SimpleLineIcons.ttf (54KB)
+../../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Zocial.ttf (26KB)
+
+› android bundles (1):
+_expo/static/js/android/index-b131053c363f8cb25af556f6acd261cb.hbc (2.6MB)
+
+› Files (1):
+metadata.json (2.2KB)
+
+Exported: /tmp/out-merchant

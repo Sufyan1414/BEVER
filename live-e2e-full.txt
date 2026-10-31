@@ -1,0 +1,23 @@
+PASS  Test merchant and rider have the right roles
+PASS  Merchant can see own store  BEVER E2E Test Store
+PASS  Merchant opens store  200
+PASS  Customer places order  {"number":"BVR-20261031-0096","total":3000}
+PASS  Merchant sees the order  [{"status":"PENDING"}]
+PASS  Rider CANNOT accept an order as merchant  ROLE_NOT_ALLOWED
+PASS  Merchant -> MERCHANT_ACCEPTED  ok
+PASS  Merchant -> PREPARING  ok
+PASS  Merchant -> READY_FOR_PICKUP  ok
+FAIL  Rider sees order in "ready for pickup"  {"code":"42883","details":null,"hint":"No function matches the given name and argument types. You might need to add explicit type casts.","message":"function extensions.st_y(geometry) does not exist"}
+PASS  Customer CANNOT claim a delivery  ROLE_NOT_ALLOWED
+PASS  Rider claims delivery  ok
+PASS  Second claim is rejected  ORDER_NOT_AVAILABLE
+PASS  Rider -> RIDER_AT_STORE  ok
+PASS  Rider -> PICKED_UP  ok
+PASS  Rider -> OUT_FOR_DELIVERY  ok
+PASS  Customer sees delivery code  OUT_FOR_DELIVERY
+PASS  Wrong delivery code is rejected  INVALID_DELIVERY_OTP
+PASS  Delivery needs cash collected for COD  COD_NOT_COLLECTED
+PASS  Rider completes delivery with the code  ok
+PASS  Customer sees DELIVERED  DELIVERED
+
+1 FAILED

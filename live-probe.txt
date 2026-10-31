@@ -1,0 +1,16 @@
+AUTH autoconfirm (email): true
+AUTH signup disabled: false
+AUTH external phone: false
+STORES visible to anon: {"status":200,"count":2,"sample":[{"id":"97fa1389-470f-4b3e-9945-962b3e346af7","name":"Demo Restaurant","category":"RESTAURANT","is_open":true,"is_verified":true,"is_active":true,"minimum_order_amount":0,"service_radius_meters":3000},{"id":"a391f05b-a068-4baf-9fbc-bc068e663613","name":"BEVER E2E Test Store","category":"GROCERY","is_open":false,"is_verified":true,"is_active":true,"minimum_order_amount":0,"service_radius_meters":5000}]}
+PRODUCTS visible to anon: {"status":200,"count":2,"withImages":1}
+PRIVATE table orders (anon must see nothing): {"status":200,"rows":0}
+PRIVATE table profiles (anon must see nothing): {"status":200,"rows":0}
+PRIVATE table order_items (anon must see nothing): {"status":200,"rows":0}
+PRIVATE table customer_addresses (anon must see nothing): {"status":200,"rows":0}
+PRIVATE table delivery_assignments (anon must see nothing): {"status":200,"rows":0}
+RPC get_nearby_stores: {"status":404,"result":{"code":"PGRST202","details":"Searched for the function public.get_nearby_stores with parameters limit_count, user_lat, user_lng or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.","hint":"Perhaps you meant to call the function public.get_nearby_stores(customer_lat, customer_lng, limit_count)","message":"Could not find the function public.get_nearby_stores(limit_count, user_lat, user_lng) in the schema cache"}}
+RPC create_customer_order: exists (status 401: permission denied for function create_customer_order)
+RPC transition_order_status: exists (status 401: permission denied for function transition_order_status)
+RPC complete_order_delivery: exists (status 401: permission denied for function complete_order_delivery)
+RPC accept_delivery_assignment: exists (status 401: permission denied for function accept_delivery_assignment)
+RPC ensure_my_profile: exists (status 403: Authentication required)

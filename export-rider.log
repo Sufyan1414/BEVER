@@ -1,0 +1,29 @@
+Expo Autolinking module resolution enabled
+Starting Metro Bundler
+
+Android Bundled 13647ms apps/rider/index.ts (670 modules)
+Could not parse Expo config: android.googleServicesFile: "./google-services.json"
+
+› Assets (14):
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/200ExtraLight_Italic/PlusJakartaSans_200ExtraLight_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/200ExtraLight/PlusJakartaSans_200ExtraLight.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/300Light_Italic/PlusJakartaSans_300Light_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/300Light/PlusJakartaSans_300Light.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/400Regular_Italic/PlusJakartaSans_400Regular_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/400Regular/PlusJakartaSans_400Regular.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/500Medium_Italic/PlusJakartaSans_500Medium_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/500Medium/PlusJakartaSans_500Medium.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/600SemiBold_Italic/PlusJakartaSans_600SemiBold_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/600SemiBold/PlusJakartaSans_600SemiBold.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/700Bold_Italic/PlusJakartaSans_700Bold_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/700Bold/PlusJakartaSans_700Bold.ttf (95KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/800ExtraBold_Italic/PlusJakartaSans_800ExtraBold_Italic.ttf (97KB)
+../../node_modules/@expo-google-fonts/plus-jakarta-sans/800ExtraBold/PlusJakartaSans_800ExtraBold.ttf (95KB)
+
+› android bundles (1):
+_expo/static/js/android/index-5e33fc32e8c9e801b26041985f3da96d.hbc (2.2MB)
+
+› Files (1):
+metadata.json (1KB)
+
+Exported: /tmp/out-rider

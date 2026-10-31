@@ -1,0 +1,15 @@
+PASS  Sign in with phone+PIN pseudo-email  ok
+PASS  ensure_my_profile  ok
+PASS  Profile created with role customer  {"role":"customer","full_name":"BEVER Test Customer","phone":"+919000000001"}
+PASS  get_nearby_stores returns stores  1 stores: Demo Restaurant
+PASS  Store has purchasable products  [{"id":"ee1b0a16-7c29-462d-a8ce-1e32b193c484","name":"Chicken Biryani","price":29900}]
+PASS  Delivery address exists
+PASS  create_customer_order (server pricing)  {"number":"BVR-20261031-0095","items":29900,"fee":0,"total":29900,"productPrice":29900}
+PASS  Server item total equals product price  {"server":29900,"product":29900}
+PASS  Customer can read own order  {"status":"PENDING","delivery_otp":"2887","payment_method":"COD","total_amount":29900}
+PASS  Customer CANNOT directly edit order status/total  {"patchStatus":204,"order":{"status":"PENDING","total_amount":29900}}
+PASS  Customer can cancel own order (cleanup)  cancelled
+PASS  Customer CANNOT promote self to admin  {"patch":403,"role":"customer"}
+PASS  Customer CANNOT edit a store  {"patch":403,"store":{"name":"Demo Restaurant","is_verified":true}}
+
+ALL PASSED
