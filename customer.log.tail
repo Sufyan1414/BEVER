@@ -1,0 +1,300 @@
+> Task :react-native-async-storage_async-storage:lintVitalAnalyzeRelease
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-async-storage_async-storage:writeReleaseLintModelMetadata
+
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[armeabi-v7a]
+C/C++: ninja: Entering directory `/home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/.cxx/RelWithDebInfo/544f3t3c/armeabi-v7a'
+C/C++: /home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/cpp/fabric/ExpoComponentDescriptorFactory.cpp:17:5: warning: 'RawPropsParser' is deprecated [-Wdeprecated-declarations]
+C/C++:    17 |     react::RawPropsParser(/*useRawPropsJsiValue=*/true)
+C/C++:       |     ^
+C/C++: /home/runner/work/BEVER/BEVER/node_modules/react-native/ReactCommon/react/renderer/core/RawPropsParser.h:31:5: note: 'RawPropsParser' has been explicitly marked deprecated here
+C/C++:    31 |   [[deprecated]] explicit RawPropsParser(bool /* ignored */) : RawPropsParser() {}
+C/C++:       |     ^
+C/C++: 1 warning generated.
+
+> Task :expo-modules-core:mergeReleaseNativeLibs
+> Task :expo-modules-core:copyReleaseJniLibsProjectOnly
+The Daemon will expire after the build after running out of JVM Metaspace.
+The project memory settings are likely not configured or are configured to an insufficient value.
+The daemon will restart for the next build, which may increase subsequent build times.
+These settings can be adjusted by setting 'org.gradle.jvmargs' in 'gradle.properties'.
+The currently configured max heap space is '2 GiB' and the configured max metaspace is '512 MiB'.
+For more information on how to set these values, please refer to https://docs.gradle.org/9.3.1/userguide/build_environment.html#sec:configuring_jvm_memory in the Gradle documentation.
+To disable this warning, set 'org.gradle.daemon.performance.disable-logging=true'.
+> Task :react-native-maps:lintVitalAnalyzeRelease
+> Task :expo-modules-core:stripReleaseDebugSymbols
+> Task :expo-modules-core:copyReleaseJniLibsProjectAndLocalJars
+> Task :expo-modules-core:extractDeepLinksForAarRelease
+> Task :expo-modules-core:writeReleaseLintModelMetadata
+> Task :react-native-maps:writeReleaseLintModelMetadata
+> Task :react-native-safe-area-context:lintVitalAnalyzeRelease
+> Task :react-native-safe-area-context:writeReleaseLintModelMetadata
+> Task :expo-modules-core:compileReleaseKotlin
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/apploader/AppLoaderProvider.kt:34:52 Unchecked cast of 'Class<*>!' to 'Class<out HeadlessAppLoader>'.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:14:8 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:22:8 'typealias ErrorManagerModule = JSLoggerModule' is deprecated. Use JSLoggerModule instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:61:13 'val hostingRuntimeContext: MainRuntime' is deprecated. Use AppContext.runtimeContext instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:271:21 'typealias ErrorManagerModule = JSLoggerModule' is deprecated. Use JSLoggerModule instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:380:21 'val DEFAULT: Int' is deprecated. UIManagerType.DEFAULT will be deleted in the next release of React Native. Use [LEGACY] instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:381:10 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/defaultmodules/NativeModulesProxyModule.kt:16:5 'fun Constants(legacyConstantsProvider: () -> Map<String, Any?>): Unit' is deprecated. Use `Constant` or `Property` instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/events/KModuleEventEmitterWrapper.kt:99:21 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/events/KModuleEventEmitterWrapper.kt:108:21 'fun getEventDispatcherForReactTag(context: ReactContext, reactTag: Int): EventDispatcher?' is deprecated. reactTag is no longer needed.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewDefinitionBuilder.kt:470:16 'val errorManager: JSLoggerModule?' is deprecated. Use AppContext.jsLogger instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewDefinitionBuilder.kt:470:30 'fun reportExceptionToLogBox(codedException: CodedException): Unit' is deprecated. Use appContext.jsLogger.error(...) instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewManagerDefinition.kt:41:16 'val errorManager: JSLoggerModule?' is deprecated. Use AppContext.jsLogger instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewManagerDefinition.kt:41:30 'fun reportExceptionToLogBox(codedException: CodedException): Unit' is deprecated. Use appContext.jsLogger.error(...) instead.
+
+> Task :expo-modules-core:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :expo-modules-core:bundleLibCompileToJarRelease
+
+> Task :expo-constants:compileReleaseKotlin
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo-constants/android/src/main/java/expo/modules/constants/ConstantsModule.kt:13:5 'fun Constants(legacyConstantsProvider: () -> Map<String, Any?>): Unit' is deprecated. Use `Constant` or `Property` instead.
+
+> Task :expo-constants:compileReleaseJavaWithJavac
+> Task :expo-constants:bundleLibCompileToJarRelease
+> Task :expo-log-box:compileReleaseKotlin
+> Task :expo-log-box:compileReleaseJavaWithJavac
+> Task :expo-log-box:bundleLibCompileToJarRelease
+> Task :react-native-screens:lintVitalAnalyzeRelease
+
+> Task :expo:compileReleaseKotlin
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo/android/src/main/java/expo/modules/ExpoModulesPackage.kt:34:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:22:8 'class ReactInstanceManager : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:102:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:102:43 'class ReactInstanceManager : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:103:21 'val reactInstanceManager: ReactInstanceManager' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo/android/src/main/java/expo/modules/fetch/ExpoFetchModule.kt:33:39 'constructor(reactContext: ReactContext): ForwardingCookieHandler' is deprecated. Use the default constructor.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo/android/src/main/java/expo/modules/fetch/NativeResponse.kt:44:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/expo/android/src/main/java/expo/modules/fetch/NativeResponse.kt:46:11 'fun deallocate(): Unit' is deprecated. Use sharedObjectDidRelease() instead.
+
+> Task :expo:compileReleaseJavaWithJavac
+> Task :expo:bundleLibRuntimeToDirRelease
+> Task :expo-modules-core:bundleLibRuntimeToDirRelease
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[armeabi-v7a][reanimated]
+> Task :expo-log-box:bundleLibRuntimeToDirRelease
+> Task :expo-constants:bundleLibRuntimeToDirRelease
+> Task :expo:bundleLibCompileToJarRelease
+> Task :expo:bundleLibRuntimeToJarRelease
+> Task :expo-modules-core:bundleLibRuntimeToJarRelease
+> Task :expo-log-box:bundleLibRuntimeToJarRelease
+> Task :expo-constants:bundleLibRuntimeToJarRelease
+> Task :expo:processReleaseJavaRes
+> Task :expo:createFullJarRelease
+> Task :expo-constants:processReleaseJavaRes
+> Task :expo-constants:createFullJarRelease
+> Task :expo-modules-core:processReleaseJavaRes
+> Task :expo-modules-core:createFullJarRelease
+> Task :expo-modules-core:generateReleaseLintModel
+> Task :expo-constants:generateReleaseLintModel
+> Task :expo-log-box:processReleaseJavaRes
+> Task :expo-log-box:createFullJarRelease
+> Task :expo-log-box:generateReleaseLintModel
+> Task :expo:generateReleaseLintModel
+> Task :expo:extractReleaseAnnotations
+> Task :expo:mergeReleaseGeneratedProguardFiles
+> Task :expo:mergeReleaseConsumerProguardFiles
+> Task :expo:mergeReleaseJavaResource
+> Task :expo:syncReleaseLibJars
+> Task :expo:bundleReleaseLocalLintAar
+> Task :expo-modules-core:extractReleaseAnnotations
+> Task :expo-modules-core:mergeReleaseGeneratedProguardFiles
+> Task :expo-modules-core:mergeReleaseConsumerProguardFiles
+> Task :expo-modules-core:mergeReleaseJavaResource
+> Task :expo-modules-core:syncReleaseLibJars
+> Task :expo-modules-core:bundleReleaseLocalLintAar
+> Task :expo-log-box:extractReleaseAnnotations
+> Task :expo-log-box:mergeReleaseGeneratedProguardFiles
+> Task :expo-log-box:mergeReleaseConsumerProguardFiles
+> Task :expo-log-box:mergeReleaseJavaResource
+> Task :expo-log-box:syncReleaseLibJars
+> Task :expo-log-box:bundleReleaseLocalLintAar
+> Task :expo-constants:extractReleaseAnnotations
+> Task :expo-constants:mergeReleaseGeneratedProguardFiles
+> Task :expo-constants:mergeReleaseConsumerProguardFiles
+> Task :expo-constants:mergeReleaseJavaResource
+> Task :expo-constants:syncReleaseLibJars
+> Task :expo-constants:bundleReleaseLocalLintAar
+> Task :expo-log-box:lintVitalAnalyzeRelease
+> Task :expo-constants:lintVitalAnalyzeRelease
+> Task :expo:lintVitalAnalyzeRelease
+> Task :react-native-screens:writeReleaseLintModelMetadata
+> Task :react-native-worklets:lintVitalAnalyzeRelease SKIPPED
+> Task :expo:generateReleaseLintVitalModel
+> Task :expo-constants:generateReleaseLintVitalModel
+> Task :expo-log-box:generateReleaseLintVitalModel
+> Task :expo-modules-core:generateReleaseLintVitalModel
+> Task :react-native-async-storage_async-storage:generateReleaseLintVitalModel
+> Task :react-native-maps:generateReleaseLintVitalModel
+> Task :react-native-safe-area-context:generateReleaseLintVitalModel
+> Task :react-native-screens:generateReleaseLintVitalModel
+> Task :react-native-worklets:generateReleaseLintVitalModel
+> Task :expo:bundleReleaseAar
+> Task :expo:mapReleaseSourceSetPaths
+> Task :expo:mergeReleaseResources
+> Task :expo:verifyReleaseResources
+> Task :expo:assembleRelease
+> Task :expo-constants:bundleReleaseAar
+> Task :expo-constants:mapReleaseSourceSetPaths
+> Task :expo-constants:mergeReleaseResources
+> Task :expo-constants:verifyReleaseResources
+> Task :expo-constants:assembleRelease
+> Task :expo-log-box:bundleReleaseAar
+> Task :expo-log-box:mapReleaseSourceSetPaths
+> Task :expo-log-box:mergeReleaseResources
+> Task :expo-log-box:verifyReleaseResources
+> Task :expo-log-box:assembleRelease
+> Task :expo-modules-core:bundleReleaseAar
+> Task :expo-modules-core:mapReleaseSourceSetPaths
+> Task :expo-modules-core:mergeReleaseResources
+> Task :expo-modules-core:verifyReleaseResources
+> Task :expo-modules-core:assembleRelease
+> Task :react-native-async-storage_async-storage:bundleReleaseAar
+> Task :react-native-async-storage_async-storage:mapReleaseSourceSetPaths
+> Task :react-native-async-storage_async-storage:mergeReleaseResources
+> Task :expo-modules-core:lintVitalAnalyzeRelease
+> Task :react-native-async-storage_async-storage:verifyReleaseResources
+> Task :react-native-async-storage_async-storage:assembleRelease
+> Task :react-native-maps:bundleReleaseAar
+> Task :react-native-maps:mapReleaseSourceSetPaths
+> Task :react-native-maps:mergeReleaseResources
+> Task :react-native-maps:verifyReleaseResources
+> Task :react-native-maps:assembleRelease
+> Task :react-native-safe-area-context:bundleReleaseAar
+> Task :react-native-safe-area-context:mapReleaseSourceSetPaths
+> Task :react-native-safe-area-context:mergeReleaseResources
+> Task :react-native-safe-area-context:verifyReleaseResources
+> Task :react-native-safe-area-context:assembleRelease
+> Task :react-native-screens:bundleReleaseAar
+> Task :react-native-screens:mapReleaseSourceSetPaths
+> Task :react-native-screens:mergeReleaseResources
+> Task :react-native-screens:verifyReleaseResources
+> Task :react-native-screens:assembleRelease
+> Task :react-native-worklets:bundleReleaseAar
+> Task :react-native-worklets:mapReleaseSourceSetPaths
+> Task :react-native-worklets:mergeReleaseResources
+> Task :react-native-worklets:verifyReleaseResources
+> Task :react-native-worklets:assembleRelease
+> Task :react-native-reanimated:externalNativeBuildRelease
+> Task :react-native-reanimated:prefabReleasePackage
+> Task :react-native-reanimated:mergeReleaseNativeLibs
+> Task :react-native-reanimated:stripReleaseDebugSymbols
+> Task :react-native-reanimated:copyReleaseJniLibsProjectAndLocalJars
+> Task :react-native-reanimated:extractDeepLinksForAarRelease
+> Task :react-native-reanimated:writeReleaseLintModelMetadata
+> Task :react-native-reanimated:copyReleaseJniLibsProjectOnly
+> Task :react-native-reanimated:mapReleaseSourceSetPaths
+> Task :react-native-reanimated:mergeReleaseResources
+> Task :react-native-reanimated:verifyReleaseResources
+
+> Task :react-native-reanimated:compileReleaseKotlin
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/NodesManager.kt:13:8 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/NodesManager.kt:58:95 'fun resolveCustomDirectEventName(eventName: String): String?' is deprecated.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/NodesManager.kt:234:29 'fun receiveEvent(surfaceId: Int, targetTag: Int, eventName: String, canCoalesceEvent: Boolean, customCoalesceKey: Int, params: WritableMap?, category: Int): Unit' is deprecated. Use the overload with eventTimestamp parameter instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/ReanimatedPackage.kt:5:8 'class ReactInstanceManager : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/ReanimatedPackage.kt:60:73 'class ReactInstanceManager : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/ReanimatedPackage.kt:61:63 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/nativeProxy/EventHandler.kt:7:8 'class UIManagerModule : ReactContextBaseJavaModule, LifecycleEventListener, UIManager' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/nativeProxy/EventHandler.kt:25:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/nativeProxy/EventHandler.kt:38:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/nativeProxy/EventHandler.kt:48:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/nativeProxy/EventHandler.kt:57:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/nativeProxy/NoopEventHandler.kt:8:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/nativeProxy/NoopEventHandler.kt:20:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/nativeProxy/NoopEventHandler.kt:29:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/nativeProxy/NoopEventHandler.kt:37:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/BEVER/BEVER/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/sensor/ReanimatedSensor.kt:28:26 'val defaultDisplay: Display!' is deprecated. Deprecated in Java.
+
+> Task :react-native-reanimated:compileReleaseJavaWithJavac
+> Task :react-native-reanimated:bundleLibCompileToJarRelease
+> Task :react-native-reanimated:bundleLibRuntimeToJarRelease
+> Task :react-native-reanimated:bundleLibRuntimeToDirRelease
+> Task :react-native-reanimated:processReleaseJavaRes
+> Task :react-native-reanimated:createFullJarRelease
+> Task :react-native-reanimated:generateReleaseLintModel
+> Task :react-native-reanimated:extractReleaseAnnotations
+> Task :react-native-reanimated:mergeReleaseGeneratedProguardFiles
+> Task :react-native-reanimated:mergeReleaseConsumerProguardFiles
+> Task :react-native-reanimated:mergeReleaseJavaResource
+> Task :react-native-reanimated:syncReleaseLibJars
+> Task :react-native-reanimated:bundleReleaseLocalLintAar
+> Task :react-native-reanimated:lintVitalAnalyzeRelease SKIPPED
+> Task :react-native-reanimated:generateReleaseLintVitalModel
+> Task :react-native-reanimated:bundleReleaseAar
+> Task :react-native-reanimated:assembleRelease
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :app:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :app:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:mergeReleaseNativeLibs
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:stripReleaseDebugSymbols
+
+> Task :app:processReleaseMainManifest
+/home/runner/work/BEVER/BEVER/apps/customer/android/app/src/main/AndroidManifest.xml Warning:
+	provider#expo.modules.filesystem.FileSystemFileProvider@android:authorities was tagged at AndroidManifest.xml:0 to replace other declarations but no other declaration present
+
+> Task :app:expoReleaseOverrideMaxSdkConflicts
+[33m---------- Expo Max Sdk Override Plugin ----------[0m
+[32m>>> No 'android:maxSdkVersion' conflicts found[0m
+[33m--------------------------------------------------[0m
+
+> Task :app:processReleaseManifest
+> Task :app:desugarReleaseFileDependencies
+> Task :app:mergeReleaseStartupProfile
+> Task :app:javaPreCompileRelease
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeExtDexRelease
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseShaders
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:extractProguardFiles
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:compileReleaseKotlin
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:optimizeReleaseResources
+> Task :app:dexBuilderRelease
+> Task :app:mergeReleaseGlobalSynthetics
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:processReleaseJavaRes
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeDexRelease
+> Task :app:compileReleaseArtProfile
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///home/runner/work/BEVER/BEVER/apps/customer/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 14m 1s
+539 actionable tasks: 539 executed

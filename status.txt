@@ -1,0 +1,7 @@
+0
+total 149124
+drwxr-xr-x  2 runner runner     4096 Oct 31 08:38 .
+drwxr-xr-x 11 runner runner     4096 Oct 31 08:10 ..
+-rw-r--r--  1 runner runner 52587143 Oct 31 08:24 bever-customer-test.apk
+-rw-r--r--  1 runner runner 50568785 Oct 31 08:31 bever-merchant-test.apk
+-rw-r--r--  1 runner runner 49526317 Oct 31 08:38 bever-rider-test.apk
