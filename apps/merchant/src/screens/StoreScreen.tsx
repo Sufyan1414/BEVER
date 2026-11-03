@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { Text, TextInput } from '../components/AppText';
 import { Button, Card, Pill } from '../components/ui';
+import { SalesCard } from '../components/SalesCard';
 import { colors } from '../theme';
 import type { Store } from '../lib/types';
 
@@ -23,6 +24,7 @@ export function StoreScreen({ store, busy, activeOrders, onToggleOpen, onSaveDet
   };
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <SalesCard storeId={store.id} />
       <Card>
         <View style={styles.row}>
           <View style={{ flex: 1, paddingRight: 12 }}>
