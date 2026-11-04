@@ -431,7 +431,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
                             <Text style={styles.gridStepText}>−</Text>
                           </TouchableOpacity>
                           <Text style={styles.gridQty}>{qty}</Text>
-                          <TouchableOpacity style={styles.gridStepBtn} onPress={() => incrementItem(product.id)} accessibilityLabel={`Increase ${product.name} quantity`}>
+                          <TouchableOpacity style={styles.gridStepBtn} onPress={() => { if (product.stock_qty != null && qty >= product.stock_qty) return; incrementItem(product.id); }} accessibilityLabel={`Increase ${product.name} quantity`}>
                             <Text style={styles.gridStepText}>+</Text>
                           </TouchableOpacity>
                         </View>
@@ -443,6 +443,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
                     {hasDiscount ? <Text style={styles.gridCompare}>{formatRupees(product.compare_at_price!)}</Text> : null}
                   </View>
                   {hasDiscount ? <Text style={styles.gridOff}>{off}% OFF on MRP</Text> : null}
+                  {product.is_available && product.stock_qty != null && product.stock_qty <= 5 ? <Text style={styles.gridLow}>Only {product.stock_qty} left</Text> : null}
                   <Text style={styles.gridName} numberOfLines={2} onPress={() => setDetailProduct(product)}>{product.name}</Text>
                   <Text style={styles.gridUnit} numberOfLines={1}>{product.unit || '1 pc'}</Text>
                   {store.estimated_delivery_minutes != null ? <Text style={styles.gridEta}>⏱ {store.estimated_delivery_minutes} mins</Text> : null}
@@ -490,6 +491,7 @@ const styles = StyleSheet.create({
   gridStepBtn: { width: 28, height: 36, alignItems: 'center', justifyContent: 'center' },
   gridStepText: { color: '#fff', fontSize: 18, fontWeight: '800' },
   gridQty: { color: '#fff', fontWeight: '900', fontSize: 14, minWidth: 18, textAlign: 'center' },
+  gridLow: { fontSize: 11, fontWeight: '800', color: '#B45309', marginTop: 2 },
   soldOutVeil: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.75)', alignItems: 'center', justifyContent: 'center' },
   soldOutText: { fontSize: 12, fontWeight: '800', color: '#78716C' },
   gridPrice: { fontSize: 18, fontWeight: '900', color: '#111827' },

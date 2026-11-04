@@ -52,22 +52,32 @@ export function RejectSheet({ visible, orderNumber, busy, onClose, onConfirm }: 
   );
 }
 
-export function PriceSheet({ visible, productName, currentPaise, busy, onClose, onSave }: {
-  visible: boolean; productName: string; currentPaise: number; busy: boolean; onClose: () => void; onSave: (paise: number) => void;
+export function PriceSheet({ visible, productName, currentPaise, currentStock, busy, onClose, onSave }: {
+  visible: boolean; productName: string; currentPaise: number; currentStock?: number | null | undefined; busy: boolean; onClose: () => void; onSave: (paise: number, stock: number | null | undefined) => void;
 }) {
   const [text, setText] = useState('');
-  useEffect(() => { if (visible) setText(String(currentPaise / 100)); }, [visible, currentPaise]);
+  const [stockText, setStockText] = useState('');
+  useEffect(() => { if (visible) { setText(String(currentPaise / 100)); setStockText(currentStock == null ? '' : String(currentStock)); } }, [visible, currentPaise, currentStock]);
   const paise = parseRupeesToPaise(text);
+  const stockSupported = currentStock !== undefined;
+  const newStock: number | null | undefined = !stockSupported ? undefined : stockText.trim() === '' ? null : Number(stockText);
+  const stockChanged = stockSupported && newStock !== currentStock;
   return (
     <Sheet visible={visible} title={`Edit price`} onClose={onClose}>
       <Text style={styles.sub}>{productName}</Text>
       <Text style={styles.label}>Selling price (₹)</Text>
       <TextInput value={text} onChangeText={(v) => setText(v.replace(/[^0-9.]/g, ''))} keyboardType="decimal-pad" style={styles.input} autoFocus maxLength={9} />
       {text.length > 0 && paise === null ? <Text style={styles.err}>Enter a price between ₹1 and ₹1,00,000.</Text> : null}
+      {stockSupported ? (
+        <>
+          <Text style={styles.label}>Stock on shelf (leave empty for unlimited)</Text>
+          <TextInput value={stockText} onChangeText={(v) => setStockText(v.replace(/\D/g, '').slice(0, 5))} keyboardType="number-pad" style={styles.input} placeholder="Unlimited" />
+        </>
+      ) : null}
       <Text style={styles.hint}>You are responsible for keeping prices accurate. Changes apply to new orders immediately.</Text>
       <View style={styles.actions}>
         <Button label="Cancel" variant="secondary" onPress={onClose} style={{ flex: 1, marginRight: 10 }} />
-        <Button label="Save price" loading={busy} disabled={paise === null || paise === currentPaise} onPress={() => { if (paise !== null) onSave(paise); }} style={{ flex: 1 }} />
+        <Button label="Save" loading={busy} disabled={paise === null || (paise === currentPaise && !stockChanged)} onPress={() => { if (paise !== null) onSave(paise, newStock); }} style={{ flex: 1 }} />
       </View>
     </Sheet>
   );

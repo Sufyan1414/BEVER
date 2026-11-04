@@ -97,6 +97,8 @@ export interface Product {
   unit: string;
   is_available: boolean;
   is_active: boolean;
+  /** Units left on the shelf; null/undefined = unlimited (needs migration 032) */
+  stock_qty?: number | null;
   sort_order: number;
   created_at: string;
   updated_at: string;

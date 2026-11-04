@@ -79,6 +79,7 @@ function normalizeRpcError(message: string): Error {
     INVALID_CART_ITEM: 'One of the cart items is invalid. Please review your cart.',
     INVALID_QUANTITY: 'One of the item quantities is invalid.',
     MINIMUM_ORDER_NOT_MET: 'The minimum order amount for this store has not been met.',
+    OUT_OF_STOCK: 'An item in your cart just ran out of stock or has fewer units left. Please review your cart.',
     PAYMENT_METHOD_NOT_SUPPORTED: 'Only Cash on Delivery is available right now.',
   };
   return new Error(messages[code] ?? (code.startsWith('PRODUCT_UNAVAILABLE') ? 'One or more items are no longer available. Please review your cart.' : message));

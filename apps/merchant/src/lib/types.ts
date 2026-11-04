@@ -37,6 +37,7 @@ export interface Product {
   is_active: boolean;
   updated_at: string;
   image_url?: string | null | undefined;
+  stock_qty?: number | null | undefined; // null = unlimited; undefined = column not installed yet
 }
 
 export interface Store {

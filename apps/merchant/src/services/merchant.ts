@@ -33,15 +33,26 @@ export async function fetchOrders(storeId: string): Promise<Order[]> {
 }
 
 export async function fetchProducts(storeId: string): Promise<Product[]> {
-  const { data, error } = await supabase
+  const base = (cols: string) => supabase
     .from('products')
-    .select('id,name,unit,price,is_available,is_active,updated_at,image_url')
+    .select(cols)
     .eq('store_id', storeId)
     .eq('is_active', true)
     .order('name', { ascending: true })
     .limit(500);
+  // stock_qty exists only after migration 032; fall back so the catalogue still loads without it.
+  const withStock = await base('id,name,unit,price,is_available,is_active,updated_at,image_url,stock_qty');
+  if (!withStock.error) return (withStock.data ?? []) as unknown as Product[];
+  const plain = await base('id,name,unit,price,is_available,is_active,updated_at,image_url');
+  if (plain.error) throw plain.error;
+  return (plain.data ?? []) as unknown as Product[];
+}
+
+export async function setProductStock(productId: string, qty: number | null): Promise<void> {
+  const patch: { stock_qty: number | null; is_available?: boolean } = { stock_qty: qty };
+  if (qty !== null) patch.is_available = qty > 0;
+  const { error } = await supabase.from('products').update(patch).eq('id', productId);
   if (error) throw error;
-  return (data ?? []) as unknown as Product[];
 }
 
 export async function transitionOrder(orderId: string, to: OrderStatus, note: string | null): Promise<void> {

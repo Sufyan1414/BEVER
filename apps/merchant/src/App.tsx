@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './services/supabase';
 import {
-  createProduct, friendlyError, setProductAvailability, setProductImage, setProductPrice, setStoreOpen, transitionOrder, updateStoreDetails,
+  createProduct, friendlyError, setProductAvailability, setProductImage, setProductPrice, setProductStock, setStoreOpen, transitionOrder, updateStoreDetails,
 } from './services/merchant';
 import { choosePhoto, uploadProductPhoto } from './services/media';
 import { useMerchantData } from './hooks/useMerchantData';
@@ -144,11 +144,12 @@ function Console({ userId }: { userId: string }) {
     }
   }, [setProducts]);
 
-  const savePrice = useCallback(async (paise: number) => {
+  const savePrice = useCallback(async (paise: number, stock: number | null | undefined) => {
     if (!priceTarget) return;
     setSheetBusy(true);
     try {
-      await setProductPrice(priceTarget.id, paise);
+      if (paise !== priceTarget.price) await setProductPrice(priceTarget.id, paise);
+      if (stock !== undefined && stock !== priceTarget.stock_qty) await setProductStock(priceTarget.id, stock);
       setPriceTarget(null);
       await reload();
     } catch (e) {
@@ -354,9 +355,10 @@ function Console({ userId }: { userId: string }) {
         visible={!!priceTarget}
         productName={priceTarget?.name ?? ''}
         currentPaise={priceTarget?.price ?? 0}
+        currentStock={priceTarget?.stock_qty}
         busy={sheetBusy}
         onClose={() => setPriceTarget(null)}
-        onSave={(p) => { void savePrice(p); }}
+        onSave={(p, st) => { void savePrice(p, st); }}
       />
       <AddProductSheet visible={addOpen} busy={sheetBusy} onClose={() => setAddOpen(false)} onSave={(v) => { void addProduct(v); }} />
     </View>

@@ -62,7 +62,7 @@ export function CatalogueScreen({ products, loading, refreshing, now, busyIds, o
                 </Pressable>
                 <View style={{ flex: 1, paddingRight: 10, marginLeft: 12 }}>
                   <Text style={styles.name} numberOfLines={2}>{p.name}</Text>
-                  <Text style={styles.unit}>{p.unit}</Text>
+                  <Text style={styles.unit}>{p.unit}{p.stock_qty != null ? ` · ${p.stock_qty} in stock` : ''}</Text>
                   <Pressable onPress={() => onEditPrice(p)} style={styles.priceBtn} accessibilityRole="button" accessibilityLabel={`Edit price of ${p.name}`}>
                     <Text style={styles.price}>{rupees(p.price)}</Text>
                     <Ionicons name="pencil" size={13} color={colors.brandDark} style={{ marginLeft: 6 }} />
