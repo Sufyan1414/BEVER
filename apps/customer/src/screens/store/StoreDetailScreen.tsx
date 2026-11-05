@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
 
   // Banner
   bannerWrap: {
-    height: 140,
+    height: 84,
     position: 'relative',
   },
   bannerImg: {
@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   bannerEmoji: {
-    fontSize: 54,
+    fontSize: 34,
   },
 
   openBadge: {
