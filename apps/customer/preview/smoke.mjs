@@ -123,6 +123,24 @@ await step2('place order', async () => { await page2.getByText('Place order', { 
 await step2('orders tab', async () => { await page2.goto('http://localhost:4174/'); await page2.waitForTimeout(1200); await page2.getByText('Order Again', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-orders'); });
 await step2('profile tab', async () => { await page2.getByText('Profile', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-profile'); });
 
+// ---- First launch: animated splash, then the location screen (no saved location) ----
+const ctx3 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+await ctx3.route('**/example.supabase.co/**', async (route) => {
+  const req = route.request();
+  if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+  if (new URL(req.url()).pathname.includes('/auth/v1/')) return json(route, { error: 'no session' }, 401);
+  return json(route, []);
+});
+const page3 = await ctx3.newPage();
+page3.on('pageerror', (e) => errors.push(`[first-launch] pageerror: ${String(e)}`));
+await page3.goto('http://localhost:4174/');
+await page3.waitForTimeout(1300);
+await page3.screenshot({ path: path.join(out, 'f-splash-1.png') });
+await page3.waitForTimeout(1200);
+await page3.screenshot({ path: path.join(out, 'f-splash-2.png') });
+await page3.waitForTimeout(1800);
+await page3.screenshot({ path: path.join(out, 'f-location.png') });
+
 fs.writeFileSync(path.join(out, 'customer-errors.txt'), errors.join('\n'));
 await browser.close();
 server.close();
