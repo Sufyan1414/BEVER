@@ -22,14 +22,16 @@ import { View, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, Keyboa
 import { Text, TextInput } from '../../components/AppText';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { LocationHero } from '../../components/LocationHero';
 import { useLocationStore, BrowsingLocation } from '../../stores/useLocationStore';
 
 // ─── Nominatim API Config ─────────────────────────────────────────────────────
 
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_HEADERS = {
-  'User-Agent': 'BEVERApp/1.0 (hyperlocal delivery; contact@bever.in)',
+  'User-Agent': 'BEVERApp/1.0 (hyperlocal delivery)',
 };
 
 interface NominatimResult {
@@ -102,6 +104,7 @@ function parseNominatimResult(item: NominatimResult): ParsedLocationResult {
 
 export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false }: Props) {
   const { browsingLocation, setBrowsingLocation } = useLocationStore();
+  const insets = useSafeAreaInsets();
 
   // ── Step State ──────────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>('SEARCH');
@@ -282,125 +285,87 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
 
   if (step === 'SEARCH') {
     return (
-      <SafeAreaView style={styles.safe}>
-        <StatusBar style="dark" />
-        <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-          {/* Header Branding */}
-          <View style={styles.brandingHeader}>
-            <Text style={styles.wordmark}>BEVER</Text>
-            <Text style={styles.wordmarkTagline}>HYPERLOCAL DELIVERY</Text>
-          </View>
+      <View style={premium.root}>
+        <StatusBar style="light" />
+        <View style={{ backgroundColor: '#022C22', paddingTop: insets.top }}>
+          <LocationHero height={250} />
+        </View>
+        <KeyboardAvoidingView style={premium.sheetWrap} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <Animated.View style={[premium.sheet, { opacity: fadeAnim }]}>
+            <Text style={premium.title}>{isChanging ? 'Change delivery area' : 'Where should we deliver?'}</Text>
+            <Text style={premium.sub}>Groceries, medicines and more from shops in your own market, at your door in minutes.</Text>
 
-          {/* Headline */}
-          <View style={styles.headlineWrap}>
-            <Text style={styles.mainHeadline}>
-              {isChanging ? 'Change delivery area' : 'Where should we deliver?'}
-            </Text>
-            <Text style={styles.subHeadline}>
-              Search your area, locality, or city to discover stores serving your doorstep.
-            </Text>
-          </View>
-
-          <TouchableOpacity style={styles.gpsPrimary} onPress={() => { void useCurrentLocation(); }} disabled={gpsBusy} accessibilityRole="button" accessibilityLabel="Use my current location">
-            {gpsBusy ? <ActivityIndicator color="#fff" /> : <Text style={styles.gpsPrimaryText}>◎  Use my current location</Text>}
-          </TouchableOpacity>
-          {gpsError ? <View style={styles.errorBox}><Text style={styles.errorText}>{gpsError}</Text></View> : null}
-          <Text style={styles.orText}>or search for your area</Text>
-
-          {/* Search Box */}
-          <View style={[styles.searchBox, isFocused && styles.searchBoxFocused]}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search area, locality, or city…"
-              placeholderTextColor="#A8A29E"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              returnKeyType="search"
-              onSubmitEditing={() => executeSearch(searchQuery)}
-              accessibilityLabel="Search delivery area"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => {
-                  setSearchQuery('');
-                  setResults([]);
-                  setSearchError(null);
-                }}
-                style={styles.clearBtn}
-                accessibilityLabel="Clear search text"
-              >
-                <Text style={styles.clearBtnText}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Search Loading Indicator */}
-          {isSearching && (
-            <View style={styles.searchingRow}>
-              <ActivityIndicator size="small" color="#059669" />
-              <Text style={styles.searchingText}>Searching areas…</Text>
-            </View>
-          )}
-
-          {/* Search Error Banner */}
-          {searchError && !isSearching && (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{searchError}</Text>
-            </View>
-          )}
-
-          {/* Results List */}
-          {results.length > 0 && !isSearching && (
-            <ScrollView
-              style={styles.resultsScroll}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
-              <Text style={styles.resultsHeaderLabel}>SELECT YOUR AREA</Text>
-              {results.map((item) => (
-                <TouchableOpacity
-                  key={item.placeId}
-                  style={styles.resultItem}
-                  onPress={() => handleSelectResult(item)}
-                  activeOpacity={0.7}
-                  accessibilityLabel={`Select ${item.areaTitle}`}
-                >
-                  <View style={styles.resultPinBg}>
-                    <Text style={styles.resultPinEmoji}>📍</Text>
+            <TouchableOpacity style={premium.cta} onPress={() => { void useCurrentLocation(); }} disabled={gpsBusy} activeOpacity={0.9} accessibilityRole="button" accessibilityLabel="Use my current location">
+              {gpsBusy ? <ActivityIndicator color="#fff" /> : (
+                <>
+                  <View style={premium.ctaIcon}><Ionicons name="locate" size={20} color="#064E3B" /></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={premium.ctaTitle}>Use my current location</Text>
+                    <Text style={premium.ctaSub}>Most accurate for a quick delivery</Text>
                   </View>
-                  <View style={styles.resultTextWrap}>
-                    <Text style={styles.resultAreaTitle} numberOfLines={1}>
-                      {item.areaTitle}
-                    </Text>
-                    {item.citySubtitle ? (
-                      <Text style={styles.resultCitySubtitle} numberOfLines={1}>
-                        {item.citySubtitle}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <Text style={styles.resultChevron}>›</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#fff" />
+                </>
+              )}
+            </TouchableOpacity>
+            {gpsError ? <View style={styles.errorBox}><Text style={styles.errorText}>{gpsError}</Text></View> : null}
+
+            <View style={premium.orRow}><View style={premium.orLine} /><Text style={premium.orText}>OR</Text><View style={premium.orLine} /></View>
+
+            <View style={[premium.search, isFocused && premium.searchFocused]}>
+              <Ionicons name="search" size={20} color={isFocused ? '#059669' : '#78716C'} />
+              <TextInput
+                style={premium.searchInput}
+                placeholder="Search area, locality or pincode"
+                placeholderTextColor="#A8A29E"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                returnKeyType="search"
+                onSubmitEditing={() => executeSearch(searchQuery)}
+                accessibilityLabel="Search delivery area"
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => { setSearchQuery(''); setResults([]); setSearchError(null); }} accessibilityLabel="Clear search text" hitSlop={10}>
+                  <Ionicons name="close-circle" size={20} color="#A8A29E" />
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-
-          {/* Initial Search Helper state */}
-          {results.length === 0 && !isSearching && !searchError && searchQuery.length < 3 && (
-            <View style={styles.searchHelperState}>
-              <View style={styles.helperIconCircle}>
-                <Text style={styles.helperIconEmoji}>📍</Text>
-              </View>
-              <Text style={styles.helperTitle}>Find your neighborhood</Text>
-              <Text style={styles.helperBody}>
-                Type at least 3 letters of your locality or city name above to view nearby coverage.
-              </Text>
+              )}
             </View>
-          )}
-        </Animated.View>
-      </SafeAreaView>
+
+            {isSearching && (
+              <View style={styles.searchingRow}>
+                <ActivityIndicator size="small" color="#059669" />
+                <Text style={styles.searchingText}>Searching areas…</Text>
+              </View>
+            )}
+            {searchError && !isSearching && (
+              <View style={styles.errorBox}><Text style={styles.errorText}>{searchError}</Text></View>
+            )}
+
+            {results.length > 0 && !isSearching ? (
+              <ScrollView style={{ flex: 1, marginTop: 8 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                {results.map((item) => (
+                  <TouchableOpacity key={item.placeId} style={premium.row} onPress={() => handleSelectResult(item)} activeOpacity={0.7} accessibilityLabel={`Select ${item.areaTitle}`}>
+                    <View style={premium.rowIcon}><Ionicons name="location-outline" size={20} color="#047857" /></View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={premium.rowTitle} numberOfLines={1}>{item.areaTitle}</Text>
+                      {item.citySubtitle ? <Text style={premium.rowSub} numberOfLines={1}>{item.citySubtitle}</Text> : null}
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#D6D3D1" />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : (
+              !isSearching && !searchError && (
+                <View style={premium.hint}>
+                  <Ionicons name="shield-checkmark-outline" size={18} color="#047857" />
+                  <Text style={premium.hintText}>We only use your location to show shops that can deliver to you.</Text>
+                </View>
+              )
+            )}
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </View>
     );
   }
 
@@ -561,6 +526,30 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
+
+const premium = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#022C22' },
+  sheetWrap: { flex: 1, marginTop: -26 },
+  sheet: { flex: 1, backgroundColor: '#FFFFFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 26 },
+  title: { fontSize: 26, fontWeight: '800', color: '#0F2A22', letterSpacing: -0.4 },
+  sub: { fontSize: 14, color: '#57534E', lineHeight: 21, marginTop: 8, marginBottom: 20 },
+  cta: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#059669', borderRadius: 18, paddingVertical: 14, paddingHorizontal: 14, shadowColor: '#059669', shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
+  ctaIcon: { width: 38, height: 38, borderRadius: 13, backgroundColor: '#A7F3D0', alignItems: 'center', justifyContent: 'center' },
+  ctaTitle: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  ctaSub: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 1 },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 18 },
+  orLine: { flex: 1, height: 1, backgroundColor: '#E7E5E4' },
+  orText: { fontSize: 11, fontWeight: '800', letterSpacing: 1.4, color: '#A8A29E' },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 54, borderRadius: 16, borderWidth: 1.5, borderColor: '#E7E5E4', backgroundColor: '#FAFAF9', paddingHorizontal: 14 },
+  searchFocused: { borderColor: '#059669', backgroundColor: '#fff' },
+  searchInput: { flex: 1, fontSize: 15, color: '#1C1917', paddingVertical: 0 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#F5F5F4' },
+  rowIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' },
+  rowTitle: { fontSize: 15, fontWeight: '700', color: '#1C1917' },
+  rowSub: { fontSize: 12, color: '#78716C', marginTop: 2 },
+  hint: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20, backgroundColor: '#F0FDF4', borderRadius: 14, padding: 14 },
+  hintText: { flex: 1, fontSize: 12, color: '#166534', lineHeight: 18 },
+});
 
 const styles = StyleSheet.create({
   gpsPrimary: { height: 54, borderRadius: 16, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },

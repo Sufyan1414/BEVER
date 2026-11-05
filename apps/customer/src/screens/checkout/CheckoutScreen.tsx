@@ -15,6 +15,7 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { AddressSheet } from '../../components/AddressSheet';
 import { fetchStoreProducts } from '../../services/store';
 import type { Product } from '../../types/store';
+import { BeverLoader } from '../../components/BeverLoader';
 import { FreeDeliveryProgress, FREE_DELIVERY_THRESHOLD_PAISE } from '../../components/FreeDeliveryProgress';
 
 const formatRupees = (paise: number) => `₹${Math.round(paise / 100)}`;
@@ -95,7 +96,7 @@ export function CheckoutScreen() {
     finally { placementInFlight.current = false; setPlacing(false); }
   };
 
-  if (loading) return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#059669" /></View></SafeAreaView>;
+  if (loading) return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><BeverLoader label="Checking delivery to your address" /></View></SafeAreaView>;
 
   return <SafeAreaView style={styles.safe} edges={['top']}>
     <StatusBar style="dark" />

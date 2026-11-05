@@ -30,16 +30,18 @@
  * once on first launch, and can change it later via the Home header.
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text } from '../components/AppText';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useLocationStore } from '../stores/useLocationStore';
 import { useCartStore } from '../stores/useCartStore';
 import { AppTabs } from './AppTabs';
 import { AuthStack } from './AuthStack';
+import { BeverLoader } from '../components/BeverLoader';
+import { BeverSplash } from '../components/BeverSplash';
 import { BrowsingLocationPickerScreen } from '../screens/location/BrowsingLocationPickerScreen';
 
 // ─── Root stack (guest browse + Auth modal) ───────────────────────────────────
@@ -58,7 +60,7 @@ function SplashScreen() {
   return (
     <View style={styles.splash}>
       <Text style={styles.splashLogo}>BEVER</Text>
-      <ActivityIndicator size="large" color="#059669" style={styles.splashSpinner} />
+      <BeverLoader label="Getting things ready" />
     </View>
   );
 }
@@ -69,6 +71,7 @@ export function AppNavigator() {
   const { isLoading, session, initialize } = useAuthStore();
   const { isLocationLoading, needsLocationSetup, loadPersistedLocation } = useLocationStore();
   const { loadPersistedCart } = useCartStore();
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     const cleanup = initialize();
@@ -90,6 +93,9 @@ export function AppNavigator() {
   }, []);
 
   // ── 1. Loading gate ──────────────────────────────────────────────────────────
+  if (!splashDone) {
+    return <BeverSplash ready={!(isLoading || isLocationLoading)} onDone={() => setSplashDone(true)} />;
+  }
   if (isLoading || isLocationLoading) {
     return <SplashScreen />;
   }

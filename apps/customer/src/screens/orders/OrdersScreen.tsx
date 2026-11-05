@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -7,6 +7,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { supabase } from '../../services/supabase';
 import { useCartStore } from '../../stores/useCartStore';
+import { BeverLoader } from '../../components/BeverLoader';
 import type { Product } from '../../types/store';
 import { fetchMyOrders, formatOrderStatus, type CustomerOrderSummary } from '../../services/order';
 
@@ -86,7 +87,7 @@ export function OrdersScreen() {
   }
 
   if (loading) {
-    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#059669" /><Text style={styles.loadingText}>Loading orders…</Text></View></SafeAreaView>;
+    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><BeverLoader label="Loading your orders" /></View></SafeAreaView>;
   }
 
   const renderList = (list: CustomerOrderSummary[]) => list.map((order) => (

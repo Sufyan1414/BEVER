@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Linking, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Linking, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +8,7 @@ import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/nativ
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OrdersStackParamList } from '../../navigation/types';
 import { TrackingPanel } from '../../components/TrackingPanel';
+import { BeverLoader } from '../../components/BeverLoader';
 import { RateOrderCard } from '../../components/RateOrderCard';
 import {
   fetchOrderDetail,
@@ -62,7 +63,7 @@ export function OrderDetailScreen() {
   }, [load, orderId]));
 
   if (loading && !order) {
-    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#059669" /></View></SafeAreaView>;
+    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><BeverLoader label="Loading your order" /></View></SafeAreaView>;
   }
 
   if (error && !order) {
