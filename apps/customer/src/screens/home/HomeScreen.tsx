@@ -252,6 +252,9 @@ export function HomeScreen() {
     return () => { alive = false; clearTimeout(t); };
   }, [storeSearchQuery, homeState]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const scrolledRef = useRef(false);
+  const listRef = useRef<FlatList<NearbyStore>>(null);
   const [showChangeLocation, setShowChangeLocation] = useState(false);
 
   const isMounted = useRef(true);
@@ -414,21 +417,7 @@ export function HomeScreen() {
     </View>
   );
 
-  return (
-    <SafeAreaView style={styles.safe} edges={[]}>
-      <StatusBar style="light" />
-
-      {/* Change Location Modal */}
-      <Modal
-        visible={showChangeLocation}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        onRequestClose={() => setShowChangeLocation(false)}
-      >
-        <BrowsingLocationPickerScreen isChanging onLocationSet={handleLocationChanged} />
-      </Modal>
-
-      {/* ── Top Header ── */}
+  const topHeader = (
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
@@ -509,6 +498,31 @@ export function HomeScreen() {
           </View>
         ) : null}
       </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.safe} edges={[]}>
+      <StatusBar style="light" />
+
+      {/* Change Location Modal */}
+      <Modal
+        visible={showChangeLocation}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowChangeLocation(false)}
+      >
+        <BrowsingLocationPickerScreen isChanging onLocationSet={handleLocationChanged} />
+      </Modal>
+
+      {homeState.kind !== 'STORE_LIST' && homeState.kind !== 'NO_STORES' ? topHeader : null}
+
+      {/* Compact sticky bar: appears once the big header has scrolled away */}
+      {scrolled && (homeState.kind === 'STORE_LIST' || homeState.kind === 'NO_STORES') ? (
+        <TouchableOpacity activeOpacity={0.9} onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })} style={[styles.miniBar, { paddingTop: insets.top + 8 }]} accessibilityLabel="Scroll to search">
+          <Ionicons name="search" size={18} color="#064E3B" />
+          <Text style={styles.miniText} numberOfLines={1}>{locationLabel ? `Search near ${locationLabel}` : 'Search stores and products'}</Text>
+        </TouchableOpacity>
+      ) : null}
 
       {/* ── Body ── */}
 
@@ -537,6 +551,9 @@ export function HomeScreen() {
       {/* Store list / empty state */}
       {(homeState.kind === 'STORE_LIST' || homeState.kind === 'NO_STORES') && (
         <FlatList
+          ref={listRef}
+          onScroll={(e) => { const hit = e.nativeEvent.contentOffset.y > 260; if (hit !== scrolledRef.current) { scrolledRef.current = hit; setScrolled(hit); } }}
+          scrollEventThrottle={32}
           data={visibleStores}
           keyExtractor={(item) => item.id}
           numColumns={3}
@@ -555,7 +572,7 @@ export function HomeScreen() {
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#059669" />
           }
-          ListHeaderComponent={renderHeader()}
+          ListHeaderComponent={<>{topHeader}{renderHeader()}</>}
           ListEmptyComponent={
             storeSearchQuery.trim().length > 0 && homeState.kind === 'STORE_LIST' ? (
               <View style={{ alignItems: 'center', paddingHorizontal: 30, paddingTop: 44, paddingBottom: 60 }}>
@@ -634,6 +651,8 @@ const styles = StyleSheet.create({
   heroChip: { marginLeft: 8, marginTop: 2, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   heroChipText: { fontSize: 12, fontWeight: '800', color: '#fff' },
   safe: { flex: 1, backgroundColor: '#F7F7F3' },
+  miniBar: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', paddingHorizontal: 18, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#E6E6E1', elevation: 4 },
+  miniText: { flex: 1, fontSize: 14, fontWeight: '700', color: '#064E3B' },
 
   // ── Header ──
   header: {

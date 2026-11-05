@@ -2,7 +2,9 @@ import React from 'react';
 import { Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from './AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import type { Product } from '../types/store';
+import { useCartStore, computeCartSummary } from '../stores/useCartStore';
 
 const rupees = (paise: number) => '₹' + Math.round(paise / 100);
 
@@ -19,7 +21,10 @@ interface Props {
 
 /** Full-screen product page: big picture, price and savings, sticky add bar. */
 export function ProductDetailSheet({ product, qty, storeName, etaMinutes, onAdd, onInc, onDec, onClose }: Props) {
+  const navigation = useNavigation<any>();
+  const cartItems = useCartStore((st) => st.items);
   if (!product) return null;
+  const cart = computeCartSummary(cartItems);
   const hasDiscount = !!product.compare_at_price && product.compare_at_price > product.price;
   const saved = hasDiscount ? product.compare_at_price! - product.price : 0;
   return (
@@ -66,6 +71,12 @@ export function ProductDetailSheet({ product, qty, storeName, etaMinutes, onAdd,
           </View>
         </ScrollView>
 
+        {cart.totalItems > 0 ? (
+          <TouchableOpacity activeOpacity={0.9} style={s.cartStrip} onPress={() => { onClose(); navigation.navigate('Cart'); }} accessibilityRole="button" accessibilityLabel="View cart">
+            <Text style={s.cartStripText}>{cart.totalItems} {cart.totalItems === 1 ? 'item' : 'items'} · {rupees(cart.subtotalPaise)}</Text>
+            <Text style={s.cartStripGo}>View cart ›</Text>
+          </TouchableOpacity>
+        ) : null}
         <SafeAreaView edges={['bottom']} style={s.bar}>
           <View style={{ flex: 1 }}>
             {product.unit ? <Text style={s.barUnit}>{product.unit}</Text> : null}
@@ -90,6 +101,9 @@ export function ProductDetailSheet({ product, qty, storeName, etaMinutes, onAdd,
 }
 
 const s = StyleSheet.create({
+  cartStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#059669', paddingHorizontal: 18, paddingVertical: 12 },
+  cartStripText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  cartStripGo: { color: '#fff', fontSize: 14, fontWeight: '900' },
   safe: { flex: 1, backgroundColor: '#F3FBF7' },
   hero: { backgroundColor: '#ECFDF5' },
   heroImg: { width: '100%', height: 340 },

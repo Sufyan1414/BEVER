@@ -5,7 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCartStore, computeCartSummary } from '../../stores/useCartStore';
-import { ensureDefaultAddressFromBrowsingLocation } from '../../services/address';
+import { ensureDefaultAddressFromBrowsingLocation, updateAddress } from '../../services/address';
+import { checkAddressServiceable, checkPointServiceable, type Serviceability } from '../../services/serviceability';
 import { useLocationStore } from '../../stores/useLocationStore';
 import { createCustomerOrder, type CheckoutPaymentMethod } from '../../services/order';
 import type { CustomerAddress } from '../../types/address';
@@ -41,6 +42,28 @@ export function CheckoutScreen() {
   const [placing, setPlacing] = useState(false);
   const placementInFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
+  const [serve, setServe] = useState<Serviceability | null>(null);
+  const [pinNote, setPinNote] = useState<string | null>(null);
+
+  // Makes sure the shop actually delivers to this address BEFORE the customer fills in anything else.
+  const verify = useCallback(async (addr: CustomerAddress | null): Promise<CustomerAddress | null> => {
+    setServe(null); setPinNote(null);
+    if (!addr || !storeId) return addr;
+    let current = addr;
+    let result = await checkAddressServiceable(storeId, current.id);
+    if (result && !result.ok && browsingLocation) {
+      const here = await checkPointServiceable(storeId, browsingLocation.lat, browsingLocation.lng);
+      if (here?.ok) {
+        try {
+          current = await updateAddress(current.id, { latitude: browsingLocation.lat, longitude: browsingLocation.lng });
+          result = await checkAddressServiceable(storeId, current.id);
+          setPinNote(`Delivery pin set to ${browsingLocation.label}.`);
+        } catch { /* keep the original result and show the banner */ }
+      }
+    }
+    setServe(result);
+    return current;
+  }, [storeId, browsingLocation]);
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -48,11 +71,11 @@ export function CheckoutScreen() {
       const materialized = browsingLocation
         ? await ensureDefaultAddressFromBrowsingLocation(browsingLocation)
         : null;
-      setAddress(materialized);
+      setAddress(await verify(materialized));
 
     } catch (e: any) { setError(e?.message ?? 'Could not load your delivery address.'); }
     finally { setLoading(false); }
-  }, [browsingLocation]);
+  }, [browsingLocation, verify]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -60,6 +83,7 @@ export function CheckoutScreen() {
     if (placementInFlight.current) return;
     if (!storeId || !items.length) { setError('Your cart is empty.'); return; }
     if (!address) { setError('Please add a delivery address first.'); return; }
+    if (serve && !serve.ok) { setError('This shop does not deliver to the selected address. Change the address or pick another shop.'); return; }
     if (!profile?.full_name?.trim()) { setError('Please enter your name so the rider knows who to hand the order to.'); return; }
     placementInFlight.current = true;
     setPlacing(true); setError(null);
@@ -80,6 +104,17 @@ export function CheckoutScreen() {
       {error ? <View style={styles.error}><Text style={styles.errorText}>{error}</Text></View> : null}
       <Text style={styles.eyebrow}>DELIVERING FROM</Text><Text style={styles.store}>{storeName ?? 'Store'}</Text>
       <Text style={styles.section}>Delivery address</Text>
+      {address && serve && !serve.ok ? (
+        <View style={{ backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FCA5A5', borderRadius: 18, padding: 14, marginBottom: 14 }}>
+          <Text style={{ fontSize: 15, fontWeight: '900', color: '#991B1B' }}>{storeName ?? 'This shop'} can't deliver here</Text>
+          <Text style={{ fontSize: 12, color: '#7F1D1D', marginTop: 4, lineHeight: 18 }}>{!serve.hasPin ? 'This address has no map pin yet.' : `You are ${((serve.distanceM ?? 0) / 1000).toFixed(1)} km away; this shop delivers within ${((serve.radiusM ?? 0) / 1000).toFixed(1)} km.`} Choose another address, or browse shops that deliver to you.</Text>
+          <View style={{ flexDirection: 'row', marginTop: 10, gap: 10 }}>
+            <TouchableOpacity onPress={() => setSheetOpen(true)} style={{ flex: 1, backgroundColor: '#059669', borderRadius: 12, paddingVertical: 11, alignItems: 'center' }}><Text style={{ color: '#fff', fontWeight: '800' }}>Change address</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Home')} style={{ flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#FCA5A5', borderRadius: 12, paddingVertical: 11, alignItems: 'center' }}><Text style={{ color: '#991B1B', fontWeight: '800' }}>Browse shops</Text></TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
+      {pinNote ? <Text style={{ fontSize: 12, color: '#047857', marginBottom: 10, fontWeight: '700' }}>📍 {pinNote}</Text> : null}
       {address && !profile?.full_name?.trim() ? <NameCard /> : null}
       {address ? <View style={styles.card}><View style={styles.addressTop}><Text style={styles.addressLabel}>{address.label}</Text><Text style={styles.default}>DEFAULT</Text></View><Text style={styles.addressMain}>{address.address_line_1}</Text>{address.address_line_2 ? <Text style={styles.addressSub}>{address.address_line_2}</Text> : null}<Text style={styles.addressSub}>{address.city}, {address.state} — {address.pincode}</Text><Text style={styles.addressSub}>Deliver to {profile?.full_name || 'you'} · {profile?.phone ?? ''}</Text><TouchableOpacity onPress={() => setSheetOpen(true)}><Text style={styles.change}>Change address</Text></TouchableOpacity></View> : <AddressQuickForm defaults={{ city: browsingLocation?.city, state: browsingLocation?.state, pincode: browsingLocation?.pincode, line1: [browsingLocation?.houseNo, browsingLocation?.building].filter(Boolean).join(', '), lat: browsingLocation?.lat, lng: browsingLocation?.lng }} receiverName={profile?.full_name ?? ''} phone={profile?.phone ?? ''} onSaved={(a) => { setAddress(a); setError(null); }} />}
       <FreeDeliveryProgress subtotalPaise={summary.subtotalPaise} />
@@ -136,8 +171,8 @@ export function CheckoutScreen() {
         <View style={styles.line} /><View style={styles.row}><Text style={styles.total}>Final total</Text><Text style={styles.totalValue}>{summary.subtotalPaise >= FREE_DELIVERY_THRESHOLD_PAISE ? formatRupees(summary.subtotalPaise) : 'Items + delivery'}</Text></View>
       </View>
     </ScrollView>
-    <View style={styles.footer}><TouchableOpacity disabled={placing || !address || !items.length} onPress={placeOrder} style={[styles.place, (placing || !address || !items.length) && styles.disabled]}>{placing ? <ActivityIndicator color="#fff" /> : <Text style={styles.placeText}>Place order</Text>}</TouchableOpacity><Text style={styles.footerNote}>Final price and delivery fee are verified when you place the order.</Text></View>
-  <AddressSheet visible={sheetOpen} selectedId={address?.id} onClose={() => setSheetOpen(false)} onSelect={(a) => { setAddress(a); setSheetOpen(false); setError(null); }} onAddNew={() => { setSheetOpen(false); setAddress(null); }} />
+    <View style={styles.footer}><TouchableOpacity disabled={placing || !address || !items.length || (!!serve && !serve.ok)} onPress={placeOrder} style={[styles.place, (placing || !address || !items.length || (!!serve && !serve.ok)) && styles.disabled]}>{placing ? <ActivityIndicator color="#fff" /> : <Text style={styles.placeText}>Place order</Text>}</TouchableOpacity><Text style={styles.footerNote}>Final price and delivery fee are verified when you place the order.</Text></View>
+  <AddressSheet visible={sheetOpen} selectedId={address?.id} onClose={() => setSheetOpen(false)} onSelect={(a) => { setSheetOpen(false); setError(null); void verify(a).then((v) => setAddress(v)); }} onAddNew={() => { setSheetOpen(false); setAddress(null); }} />
   </SafeAreaView>;
 }
 
