@@ -23,6 +23,7 @@ import { Text, TextInput } from '../../components/AppText';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BeverLoader } from '../../components/BeverLoader';
 import { useLocationStore, BrowsingLocation } from '../../stores/useLocationStore';
 
 // ─── Nominatim API Config ─────────────────────────────────────────────────────
@@ -96,6 +97,43 @@ function parseNominatimResult(item: NominatimResult): ParsedLocationResult {
     state,
     pincode,
   };
+}
+
+// ─── Drawn icons (no emoji) ───────────────────────────────────────────────────
+
+function PinIcon({ small = false }: { small?: boolean }) {
+  const d = small ? 34 : 44;
+  return (
+    <View style={{ width: d, height: d, borderRadius: d * 0.34, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ width: d * 0.4, height: d * 0.4, borderRadius: d * 0.2, borderBottomRightRadius: 0, backgroundColor: '#059669', transform: [{ rotate: '45deg' }], alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: d * 0.14, height: d * 0.14, borderRadius: d * 0.07, backgroundColor: '#fff' }} />
+      </View>
+    </View>
+  );
+}
+
+function CrosshairIcon() {
+  return (
+    <View style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#FBBF24' }} />
+      </View>
+      <View style={{ position: 'absolute', top: 0, width: 2, height: 5, backgroundColor: '#ECFDF5' }} />
+      <View style={{ position: 'absolute', bottom: 0, width: 2, height: 5, backgroundColor: '#ECFDF5' }} />
+      <View style={{ position: 'absolute', left: 0, height: 2, width: 5, backgroundColor: '#ECFDF5' }} />
+      <View style={{ position: 'absolute', right: 0, height: 2, width: 5, backgroundColor: '#ECFDF5' }} />
+    </View>
+  );
+}
+
+function SearchIcon({ active }: { active: boolean }) {
+  const c = active ? '#059669' : '#6B7280';
+  return (
+    <View style={{ width: 20, height: 20 }}>
+      <View style={{ width: 13, height: 13, borderRadius: 7, borderWidth: 2, borderColor: c }} />
+      <View style={{ position: 'absolute', right: 1, bottom: 2, width: 7, height: 2, borderRadius: 1, backgroundColor: c, transform: [{ rotate: '45deg' }] }} />
+    </View>
+  );
 }
 
 // ─── Component Implementation ─────────────────────────────────────────────────
@@ -281,126 +319,95 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
   // ────────────────────────────────────────────────────────────────────────────
 
   if (step === 'SEARCH') {
+    const showHelper = results.length === 0 && !isSearching && !searchError && searchQuery.length < 3;
     return (
-      <SafeAreaView style={styles.safe}>
-        <StatusBar style="dark" />
-        <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-          {/* Header Branding */}
-          <View style={styles.brandingHeader}>
-            <Text style={styles.wordmark}>BEVER</Text>
-            <Text style={styles.wordmarkTagline}>HYPERLOCAL DELIVERY</Text>
-          </View>
-
-          {/* Headline */}
-          <View style={styles.headlineWrap}>
-            <Text style={styles.mainHeadline}>
-              {isChanging ? 'Change delivery area' : 'Where should we deliver?'}
-            </Text>
-            <Text style={styles.subHeadline}>
-              Search your area, locality, or city to discover stores serving your doorstep.
-            </Text>
-          </View>
-
-          <TouchableOpacity style={styles.gpsPrimary} onPress={() => { void useCurrentLocation(); }} disabled={gpsBusy} accessibilityRole="button" accessibilityLabel="Use my current location">
-            {gpsBusy ? <ActivityIndicator color="#fff" /> : <Text style={styles.gpsPrimaryText}>◎  Use my current location</Text>}
-          </TouchableOpacity>
-          {gpsError ? <View style={styles.errorBox}><Text style={styles.errorText}>{gpsError}</Text></View> : null}
-          <Text style={styles.orText}>or search for your area</Text>
-
-          {/* Search Box */}
-          <View style={[styles.searchBox, isFocused && styles.searchBoxFocused]}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search area, locality, or city…"
-              placeholderTextColor="#A8A29E"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              returnKeyType="search"
-              onSubmitEditing={() => executeSearch(searchQuery)}
-              accessibilityLabel="Search delivery area"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => {
-                  setSearchQuery('');
-                  setResults([]);
-                  setSearchError(null);
-                }}
-                style={styles.clearBtn}
-                accessibilityLabel="Clear search text"
-              >
-                <Text style={styles.clearBtnText}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Search Loading Indicator */}
-          {isSearching && (
-            <View style={styles.searchingRow}>
-              <ActivityIndicator size="small" color="#059669" />
-              <Text style={styles.searchingText}>Searching areas…</Text>
-            </View>
-          )}
-
-          {/* Search Error Banner */}
-          {searchError && !isSearching && (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{searchError}</Text>
-            </View>
-          )}
-
-          {/* Results List */}
-          {results.length > 0 && !isSearching && (
-            <ScrollView
-              style={styles.resultsScroll}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
-              <Text style={styles.resultsHeaderLabel}>SELECT YOUR AREA</Text>
-              {results.map((item) => (
-                <TouchableOpacity
-                  key={item.placeId}
-                  style={styles.resultItem}
-                  onPress={() => handleSelectResult(item)}
-                  activeOpacity={0.7}
-                  accessibilityLabel={`Select ${item.areaTitle}`}
-                >
-                  <View style={styles.resultPinBg}>
-                    <Text style={styles.resultPinEmoji}>📍</Text>
-                  </View>
-                  <View style={styles.resultTextWrap}>
-                    <Text style={styles.resultAreaTitle} numberOfLines={1}>
-                      {item.areaTitle}
-                    </Text>
-                    {item.citySubtitle ? (
-                      <Text style={styles.resultCitySubtitle} numberOfLines={1}>
-                        {item.citySubtitle}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <Text style={styles.resultChevron}>›</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-
-          {/* Initial Search Helper state */}
-          {results.length === 0 && !isSearching && !searchError && searchQuery.length < 3 && (
-            <View style={styles.searchHelperState}>
-              <View style={styles.helperIconCircle}>
-                <Text style={styles.helperIconEmoji}>📍</Text>
+      <View style={styles.safe}>
+        <StatusBar style="light" />
+        <Animated.View style={[styles.flex1, { opacity: fadeAnim }]}>
+          {/* Hero */}
+          <View style={styles.hero}>
+            <View style={styles.heroOrbA} />
+            <View style={styles.heroOrbB} />
+            <SafeAreaView edges={['top']}>
+              <View style={styles.heroTop}>
+                <View style={styles.logoBadge}><Text style={styles.logoBadgeText}>B</Text></View>
+                <Text style={styles.heroWordmark}>BEVER</Text>
               </View>
-              <Text style={styles.helperTitle}>Find your neighborhood</Text>
-              <Text style={styles.helperBody}>
-                Type at least 3 letters of your locality or city name above to view nearby coverage.
-              </Text>
+              <Text style={styles.heroTitle}>{isChanging ? 'Change your\ndelivery spot' : 'Your neighbourhood,\ndelivered in minutes.'}</Text>
+              <View style={styles.heroChips}>
+                {['Local stores', 'Live tracking', 'Pay on delivery'].map((c) => (
+                  <View key={c} style={styles.heroChip}><View style={styles.heroChipDot} /><Text style={styles.heroChipText}>{c}</Text></View>
+                ))}
+              </View>
+            </SafeAreaView>
+          </View>
+
+          {/* Sheet */}
+          <View style={styles.sheet}>
+            <TouchableOpacity style={styles.gpsCard} onPress={() => { void useCurrentLocation(); }} disabled={gpsBusy} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel="Use my current location">
+              <View style={styles.gpsIconWrap}>
+                {gpsBusy ? <BeverLoader size={34} light /> : <CrosshairIcon />}
+              </View>
+              <View style={styles.flex1}>
+                <Text style={styles.gpsTitle}>{gpsBusy ? 'Finding your exact spot…' : 'Use my current location'}</Text>
+                <Text style={styles.gpsSub}>Pins your door so the rider finds you fast</Text>
+              </View>
+              <Text style={styles.gpsChevron}>›</Text>
+            </TouchableOpacity>
+            {gpsError ? <View style={styles.errorBox}><Text style={styles.errorText}>{gpsError}</Text></View> : null}
+
+            <View style={styles.orRow}><View style={styles.orLine} /><Text style={styles.orText}>OR SEARCH</Text><View style={styles.orLine} /></View>
+
+            <View style={[styles.searchBox, isFocused && styles.searchBoxFocused]}>
+              <SearchIcon active={isFocused} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Area, society or landmark"
+                placeholderTextColor="#9CA3AF"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                returnKeyType="search"
+                onSubmitEditing={() => executeSearch(searchQuery)}
+                accessibilityLabel="Search delivery area"
+              />
+              {isSearching ? <ActivityIndicator size="small" color="#059669" /> : searchQuery.length > 0 ? (
+                <TouchableOpacity onPress={() => { setSearchQuery(''); setResults([]); setSearchError(null); }} style={styles.clearBtn} accessibilityLabel="Clear search text">
+                  <Text style={styles.clearBtnText}>✕</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
-          )}
+
+            {searchError && !isSearching ? <View style={styles.errorBox}><Text style={styles.errorText}>{searchError}</Text></View> : null}
+
+            {results.length > 0 && !isSearching ? (
+              <ScrollView style={styles.resultsScroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                {results.map((item, idx) => (
+                  <TouchableOpacity key={item.placeId} style={[styles.resultItem, idx === results.length - 1 && styles.resultItemLast]} onPress={() => handleSelectResult(item)} activeOpacity={0.7} accessibilityLabel={`Select ${item.areaTitle}`}>
+                    <PinIcon small />
+                    <View style={styles.resultTextWrap}>
+                      <Text style={styles.resultAreaTitle} numberOfLines={1}>{item.areaTitle}</Text>
+                      {item.citySubtitle ? <Text style={styles.resultCitySubtitle} numberOfLines={1}>{item.citySubtitle}</Text> : null}
+                    </View>
+                    <Text style={styles.resultChevron}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : null}
+
+            {showHelper ? (
+              <View style={styles.helperRow}>
+                <PinIcon />
+                <View style={styles.flex1}>
+                  <Text style={styles.helperTitle}>We deliver from stores around you</Text>
+                  <Text style={styles.helperBody}>Type 3 or more letters of your locality to see who delivers there.</Text>
+                </View>
+              </View>
+            ) : null}
+          </View>
         </Animated.View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -434,9 +441,9 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
           >
             {/* Selected Location Banner */}
             <View style={styles.selectedLocationCard}>
-              <Text style={styles.selectedLocationIcon}>📍</Text>
+              <PinIcon />
               <View style={styles.selectedLocationTextWrap}>
-                <Text style={styles.selectedLocationLabel}>SELECTED AREA</Text>
+                <Text style={styles.selectedLocationLabel}>DELIVERING TO</Text>
                 <Text style={styles.selectedLocationTitle} numberOfLines={2}>
                   {selectedResult?.areaTitle}
                 </Text>
@@ -563,9 +570,29 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  gpsPrimary: { height: 54, borderRadius: 16, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  gpsPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '900' },
-  orText: { textAlign: 'center', color: '#78716C', fontSize: 12, fontWeight: '700', marginVertical: 8 },
+  hero: { backgroundColor: '#064E3B', paddingHorizontal: 24, paddingBottom: 56, borderBottomLeftRadius: 36, borderBottomRightRadius: 36, overflow: 'hidden' },
+  heroOrbA: { position: 'absolute', top: -90, right: -70, width: 260, height: 260, borderRadius: 130, backgroundColor: '#047857', opacity: 0.8 },
+  heroOrbB: { position: 'absolute', bottom: -80, left: -60, width: 190, height: 190, borderRadius: 95, backgroundColor: '#065F46' },
+  heroTop: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 14, marginBottom: 26 },
+  logoBadge: { width: 34, height: 34, borderRadius: 11, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' },
+  logoBadgeText: { color: '#064E3B', fontSize: 19, fontWeight: '800' },
+  heroWordmark: { color: '#ECFDF5', fontSize: 20, fontWeight: '800', letterSpacing: 3 },
+  heroTitle: { color: '#FFFFFF', fontSize: 30, lineHeight: 37, fontWeight: '800', letterSpacing: -0.6 },
+  heroChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 18 },
+  heroChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.10)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)' },
+  heroChipDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FBBF24' },
+  heroChipText: { color: '#D1FAE5', fontSize: 11.5, fontWeight: '600' },
+  sheet: { flex: 1, marginTop: -32, marginHorizontal: 16 },
+  gpsCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#059669', borderRadius: 20, padding: 14, shadowColor: '#064E3B', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 14, elevation: 8 },
+  gpsIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' },
+  gpsTitle: { color: '#FFFFFF', fontSize: 15.5, fontWeight: '800' },
+  gpsSub: { color: '#D1FAE5', fontSize: 12, marginTop: 2 },
+  gpsChevron: { color: '#D1FAE5', fontSize: 26, fontWeight: '600', paddingRight: 4 },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 16 },
+  orLine: { flex: 1, height: 1, backgroundColor: '#D1E7DD' },
+  orText: { color: '#6B7280', fontSize: 11, fontWeight: '700', letterSpacing: 1.4 },
+  helperRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6, padding: 14, borderRadius: 16, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E3F1EA' },
+  resultItemLast: { borderBottomWidth: 0 },
   safe: {
     flex: 1,
     backgroundColor: '#F3FBF7',
@@ -622,16 +649,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#E7E5E4',
+    borderColor: '#D9E8E0',
     paddingHorizontal: 16,
-    height: 56,
+    height: 54,
     gap: 12,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   searchBoxFocused: {
     borderColor: '#059669',
@@ -686,6 +713,10 @@ const styles = StyleSheet.create({
   // Results
   resultsScroll: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E3F1EA',
   },
   resultsHeaderLabel: {
     fontSize: 11,
@@ -699,11 +730,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEF5F1',
     gap: 12,
   },
   resultPinBg: {
@@ -756,16 +786,15 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   helperTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#1C1917',
-    marginBottom: 6,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#064E3B',
+    marginBottom: 2,
   },
   helperBody: {
-    fontSize: 13,
-    color: '#78716C',
-    textAlign: 'center',
-    lineHeight: 18,
+    fontSize: 12.5,
+    color: '#6B7280',
+    lineHeight: 17,
   },
 
   // ── Delivery Details Screen ──
@@ -789,9 +818,9 @@ const styles = StyleSheet.create({
   selectedLocationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#D1FAE5',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 14,
     borderWidth: 1.5,
     borderColor: '#A7F3D0',
     gap: 12,
@@ -813,7 +842,7 @@ const styles = StyleSheet.create({
   selectedLocationTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#78350F',
+    color: '#064E3B',
   },
   selectedLocationSub: {
     fontSize: 12,

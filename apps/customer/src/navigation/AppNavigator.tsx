@@ -30,11 +30,11 @@
  * once on first launch, and can change it later via the Home header.
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { Text } from '../components/AppText';
+import { View, StyleSheet } from 'react-native';
+import { BeverSplash } from '../components/BeverSplash';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useLocationStore } from '../stores/useLocationStore';
 import { useCartStore } from '../stores/useCartStore';
@@ -52,23 +52,13 @@ type RootStackParamList = {
 const Root = createNativeStackNavigator<RootStackParamList>();
 
 
-// ─── Splash ───────────────────────────────────────────────────────────────────
-
-function SplashScreen() {
-  return (
-    <View style={styles.splash}>
-      <Text style={styles.splashLogo}>BEVER</Text>
-      <ActivityIndicator size="large" color="#059669" style={styles.splashSpinner} />
-    </View>
-  );
-}
-
 // ─── Root navigator ───────────────────────────────────────────────────────────
 
 export function AppNavigator() {
   const { isLoading, session, initialize } = useAuthStore();
   const { isLocationLoading, needsLocationSetup, loadPersistedLocation } = useLocationStore();
   const { loadPersistedCart } = useCartStore();
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     const cleanup = initialize();
@@ -90,8 +80,8 @@ export function AppNavigator() {
   }, []);
 
   // ── 1. Loading gate ──────────────────────────────────────────────────────────
-  if (isLoading || isLocationLoading) {
-    return <SplashScreen />;
+  if (!splashDone) {
+    return <BeverSplash ready={!(isLoading || isLocationLoading)} onDone={() => setSplashDone(true)} />;
   }
 
   // (Name is collected at checkout, not as a blocking gate.)
@@ -134,20 +124,5 @@ const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
     backgroundColor: '#F3FBF7',
-  },
-  splash: {
-    flex: 1,
-    backgroundColor: '#F3FBF7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  splashLogo: {
-    fontSize: 42,
-    fontWeight: '800',
-    color: '#059669',
-    letterSpacing: 4,
-  },
-  splashSpinner: {
-    marginTop: 32,
   },
 });
