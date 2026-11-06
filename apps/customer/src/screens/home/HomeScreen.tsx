@@ -197,6 +197,63 @@ function CategoryRow({
   );
 }
 
+// ─── Spotlight carousel ───────────────────────────────────────────────────────
+
+function SpotlightRow({ stores, thumbs, onOpen }: { stores: NearbyStore[]; thumbs: Record<string, { images: string[]; count: number }>; onOpen: (st: NearbyStore) => void }) {
+  if (stores.length === 0) return null;
+  return (
+    <View style={spot.wrap}>
+      <View style={spot.headRow}>
+        <Text style={spot.title}>Stores in spotlight</Text>
+        <Text style={spot.sub}>Top picks near you</Text>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={spot.row}>
+        {stores.map((st) => {
+          const img = st.banner_url ?? thumbs[st.id]?.images[0] ?? null;
+          const eta = st.estimated_delivery_minutes ?? Math.round(10 + (st.distance_meters / 1000) * 4);
+          return (
+            <TouchableOpacity key={st.id} activeOpacity={0.9} onPress={() => onOpen(st)} style={spot.card} accessibilityRole="button" accessibilityLabel={`Open ${st.name}`}>
+              <View style={spot.media}>
+                {img ? <Image source={{ uri: img }} style={spot.mediaImg} resizeMode="cover" /> : <Text style={spot.mediaIcon}>{CATEGORY_ICONS[st.category] ?? '🏪'}</Text>}
+                <View style={spot.etaPill}><Text style={spot.etaText}>{eta} min</Text></View>
+              </View>
+              <View style={spot.body}>
+                <Text style={spot.name} numberOfLines={1}>{st.name}</Text>
+                <View style={spot.metaRow}>
+                  {st.total_ratings > 0 ? <View style={spot.rating}><Text style={spot.ratingText}>★ {st.average_rating.toFixed(1)}</Text></View> : <View style={spot.newPill}><Text style={spot.newText}>NEW</Text></View>}
+                  <Text style={spot.meta} numberOfLines={1}>{formatDistance(st.distance_meters)}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+const spot = StyleSheet.create({
+  wrap: { backgroundColor: '#fff', paddingTop: 18, paddingBottom: 6 },
+  headRow: { paddingHorizontal: 18, marginBottom: 12 },
+  title: { fontSize: 20, fontWeight: '800', color: '#064E3B', letterSpacing: -0.3 },
+  sub: { fontSize: 12.5, color: '#6B7280', marginTop: 2 },
+  row: { paddingHorizontal: 14, gap: 12 },
+  card: { width: 190, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E3F1EA', overflow: 'hidden', shadowColor: '#064E3B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 3, marginBottom: 6 },
+  media: { height: 104, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' },
+  mediaImg: { width: '100%', height: '100%' },
+  mediaIcon: { fontSize: 40 },
+  etaPill: { position: 'absolute', left: 10, bottom: 10, backgroundColor: '#064E3B', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  etaText: { color: '#ECFDF5', fontSize: 11, fontWeight: '800' },
+  body: { padding: 12, gap: 6 },
+  name: { fontSize: 14.5, fontWeight: '800', color: '#111827' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rating: { backgroundColor: '#059669', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  ratingText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  newPill: { backgroundColor: '#FFF7E6', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: '#FDE68A' },
+  newText: { color: '#B45309', fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
+  meta: { fontSize: 12, color: '#6B7280', fontWeight: '600', flex: 1 },
+});
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export function HomeScreen() {
@@ -401,11 +458,19 @@ export function HomeScreen() {
         <Text style={{ paddingHorizontal: 20, marginTop: 10, color: '#78716C', fontSize: 12 }}>Searching products…</Text>
       )}
 
+      {homeState.kind === 'STORE_LIST' && normalizedSearchQuery.length < 2 && selectedCategory === ALL_KEY ? (
+        <SpotlightRow
+          stores={allStores.filter((st) => st.is_open).sort((a, b) => (b.average_rating - a.average_rating) || (a.distance_meters - b.distance_meters)).slice(0, 6)}
+          thumbs={thumbs}
+          onOpen={(st) => (navigation as any).navigate('StoreDetail', { store: st })}
+        />
+      ) : null}
+
       {/* Section heading */}
       {(homeState.kind === 'STORE_LIST' || homeState.kind === 'NO_STORES') && (
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>
-            {homeState.kind === 'STORE_LIST' ? 'Shops near you' : 'No stores found'}
+            {homeState.kind === 'STORE_LIST' ? 'All shops near you' : 'No stores found'}
           </Text>
           {homeState.kind === 'STORE_LIST' && (
             <Text style={styles.sectionCount}>
@@ -573,6 +638,15 @@ export function HomeScreen() {
             <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#059669" />
           }
           ListHeaderComponent={<>{topHeader}{renderHeader()}</>}
+          ListFooterComponent={visibleStores.length > 0 ? (
+            <View style={styles.footerWrap}>
+              <Text style={styles.footerBrand}>BEVER</Text>
+              <Text style={styles.footerLine}>Fresh from the shops around the corner</Text>
+              <TouchableOpacity onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })} style={styles.footerBtn} accessibilityLabel="Back to top">
+                <Text style={styles.footerBtnText}>↑  Back to top</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
           ListEmptyComponent={
             storeSearchQuery.trim().length > 0 && homeState.kind === 'STORE_LIST' ? (
               <View style={{ alignItems: 'center', paddingHorizontal: 30, paddingTop: 44, paddingBottom: 60 }}>
@@ -597,6 +671,11 @@ export function HomeScreen() {
           }
         />
       )}
+      {scrolled && (homeState.kind === 'STORE_LIST') ? (
+        <TouchableOpacity onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })} style={styles.topPill} activeOpacity={0.9} accessibilityLabel="Back to top">
+          <Text style={styles.topPillText}>↑  Back to top</Text>
+        </TouchableOpacity>
+      ) : null}
       <CartBar />
     </SafeAreaView>
   );
@@ -645,6 +724,13 @@ function EmptyCategory({ label, onClear }: { label: string; onClear: () => void 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  footerWrap: { alignItems: 'center', paddingTop: 26, paddingBottom: 120, backgroundColor: '#fff' },
+  footerBrand: { fontSize: 34, fontWeight: '800', color: '#D1FAE5', letterSpacing: 6 },
+  footerLine: { fontSize: 12.5, color: '#6B7280', marginTop: 4 },
+  footerBtn: { marginTop: 16, borderRadius: 999, borderWidth: 1, borderColor: '#A7F3D0', backgroundColor: '#ECFDF5', paddingHorizontal: 18, paddingVertical: 9 },
+  footerBtnText: { color: '#047857', fontSize: 13, fontWeight: '800' },
+  topPill: { position: 'absolute', alignSelf: 'center', bottom: 96, backgroundColor: '#064E3B', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9, elevation: 6, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
+  topPillText: { color: '#ECFDF5', fontSize: 12.5, fontWeight: '800' },
   heroLabel: { fontSize: 15, fontWeight: '800', color: '#A7F3D0' },
   heroRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 2, marginBottom: 6 },
   heroEta: { fontSize: 28, fontWeight: '900', color: '#fff', letterSpacing: -0.5, flexShrink: 1 },
