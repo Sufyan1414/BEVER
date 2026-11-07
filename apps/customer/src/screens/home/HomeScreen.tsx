@@ -458,7 +458,7 @@ export function HomeScreen() {
         <Text style={{ paddingHorizontal: 20, marginTop: 10, color: '#78716C', fontSize: 12 }}>Searching products…</Text>
       )}
 
-      {homeState.kind === 'STORE_LIST' && normalizedSearchQuery.length < 2 && selectedCategory === ALL_KEY ? (
+      {homeState.kind === 'STORE_LIST' && allStores.length >= 3 && normalizedSearchQuery.length < 2 && selectedCategory === ALL_KEY ? (
         <SpotlightRow
           stores={allStores.filter((st) => st.is_open).sort((a, b) => (b.average_rating - a.average_rating) || (a.distance_meters - b.distance_meters)).slice(0, 6)}
           thumbs={thumbs}
