@@ -96,6 +96,9 @@ jobs:
         run: |
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then node scripts/live-e2e-full.mjs > ci-logs/live-e2e-full.txt 2>&1 || true; else echo "skipped on pull_request" > ci-logs/live-e2e-full.txt; fi
 
+      - name: Check demo image URLs
+        run: node scripts/check-demo-images.mjs > ci-logs/demo-images.txt 2>&1 || true
+
       - name: Publish logs to ci-logs branch
         if: always() && github.event_name != 'pull_request'
         run: |
