@@ -113,3 +113,42 @@ export async function searchProducts(storeIds: string[], query: string): Promise
   if (error) throw new Error(error.message);
   return (data ?? []) as ProductHit[];
 }
+
+export interface DealProduct extends Product {
+  store_id: string;
+}
+
+/** Discounted / popular products across the given stores, for home rows. */
+export async function fetchDealProducts(storeIds: string[], limit = 16): Promise<Product[]> {
+  if (storeIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .in('store_id', storeIds)
+    .eq('is_active', true)
+    .eq('is_available', true)
+    .not('compare_at_price', 'is', null)
+    .not('image_url', 'is', null)
+    .limit(60);
+  if (error) throw new Error(error.message);
+  const rows = ((data ?? []) as Product[]).filter((p) => p.compare_at_price != null && p.compare_at_price > p.price);
+  rows.sort((a, b) => (b.compare_at_price! - b.price) / b.compare_at_price! - (a.compare_at_price! - a.price) / a.compare_at_price!);
+  return rows.slice(0, limit);
+}
+
+/** Full product rows for search results. */
+export async function searchProductsFull(storeIds: string[], query: string): Promise<Product[]> {
+  const q = query.trim().replace(/[%_,()]/g, ' ').trim();
+  if (q.length < 2 || storeIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .in('store_id', storeIds)
+    .eq('is_active', true)
+    .ilike('name', `%${q}%`)
+    .order('is_available', { ascending: false })
+    .order('name', { ascending: true })
+    .limit(40);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Product[];
+}

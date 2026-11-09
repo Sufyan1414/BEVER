@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Linking, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -29,6 +29,7 @@ export function OrderDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true); else setLoading(true);
@@ -72,14 +73,25 @@ export function OrderDetailScreen() {
   if (!order) return null;
 
   const progress = getOrderProgress(order.status);
-  const canCancel = order.status === 'PENDING';
-  const cancelOrder = async () => {
+  const canCancel = order.status === 'PENDING' || order.status === 'MERCHANT_ACCEPTED';
+  const doCancel = async () => {
+    if (cancelling) return;
+    setCancelling(true);
     try {
-      await transitionCustomerOrder(order.id, 'CANCELLED', 'Customer cancelled before store confirmation.');
+      await transitionCustomerOrder(order.id, 'CANCELLED', 'Customer cancelled the order.');
       await load(true);
+      Alert.alert('Order cancelled', 'Your order has been cancelled. You have not been charged.');
     } catch (e: any) {
-      setError(e?.message ?? 'Could not cancel this order.');
+      Alert.alert('Could not cancel', e?.message ?? 'Please try again, or call the shop.');
+    } finally {
+      setCancelling(false);
     }
+  };
+  const cancelOrder = () => {
+    Alert.alert('Cancel this order?', 'The shop will be told right away. This cannot be undone.', [
+      { text: 'Keep order', style: 'cancel' },
+      { text: 'Yes, cancel', style: 'destructive', onPress: () => { void doCancel(); } },
+    ]);
   };
   const terminal = ['DELIVERED', 'REJECTED', 'CANCELLED', 'DELIVERY_FAILED', 'REFUND_PENDING', 'REFUNDED'].includes(order.status);
 
@@ -158,7 +170,7 @@ export function OrderDetailScreen() {
 
         {order.storePhone ? <TouchableOpacity style={styles.callStore} onPress={() => { void Linking.openURL(`tel:${order.storePhone}`); }} accessibilityLabel="Call the shop"><Text style={styles.callStoreText}>📞  Call {order.storeName}</Text></TouchableOpacity> : null}
 
-        {canCancel ? <TouchableOpacity style={styles.cancelButton} onPress={cancelOrder}><Text style={styles.cancelText}>Cancel order</Text></TouchableOpacity> : null}
+        {canCancel ? <TouchableOpacity style={[styles.cancelButton, cancelling && { opacity: 0.6 }]} onPress={cancelOrder} disabled={cancelling} accessibilityRole="button" accessibilityLabel="Cancel order">{cancelling ? <ActivityIndicator color="#B91C1C" /> : <Text style={styles.cancelText}>Cancel order</Text>}</TouchableOpacity> : null}
       </ScrollView>
     </SafeAreaView>
   );

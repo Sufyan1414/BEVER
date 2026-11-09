@@ -11,6 +11,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from './types';
 import { HomeScreen } from '../screens/home/HomeScreen';
+import { SearchScreen } from '../screens/search/SearchScreen';
 import { StoreDetailScreen } from '../screens/store/StoreDetailScreen';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -24,6 +25,7 @@ export function HomeNavigator() {
       }}
     >
       <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} options={{ animation: 'fade' }} />
       <Stack.Screen name="StoreDetail" component={StoreDetailScreen} />
     </Stack.Navigator>
   );

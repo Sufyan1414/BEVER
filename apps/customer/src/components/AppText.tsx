@@ -35,9 +35,9 @@ function fontOverride(style: StyleProp<TextStyle>): TextStyle {
 }
 
 export const Text = React.forwardRef<RNText, TextProps>(function Text(props, ref) {
-  return <RNText ref={ref} {...props} style={[props.style, fontOverride(props.style)]} />;
+  return <RNText ref={ref} maxFontSizeMultiplier={1.15} {...props} style={[props.style, fontOverride(props.style)]} />;
 });
 
 export const TextInput = React.forwardRef<RNTextInput, TextInputProps>(function TextInput(props, ref) {
-  return <RNTextInput ref={ref} {...props} style={[props.style, fontOverride(props.style)]} />;
+  return <RNTextInput ref={ref} maxFontSizeMultiplier={1.15} {...props} style={[props.style, fontOverride(props.style)]} />;
 });
