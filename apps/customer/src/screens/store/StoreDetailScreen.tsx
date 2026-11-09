@@ -13,9 +13,10 @@
  */
 
 import { CartBar } from '../../components/CartBar';
+import { ProductCard } from '../../components/ProductCard';
 import { ProductDetailSheet } from '../../components/ProductDetailSheet';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet, Image, Animated, Modal } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet, Image, Animated, Modal, Dimensions } from 'react-native';
 import { Text, TextInput } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -401,55 +402,18 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
         {/* Products grid */}
         {!isLoading && !error && (
           <View style={styles.grid}>
-            {visibleProducts.map((product) => {
-              const qty = getQty(product.id);
-              const hasDiscount = !!product.compare_at_price && product.compare_at_price > product.price;
-              const off = hasDiscount ? Math.round(((product.compare_at_price! - product.price) / product.compare_at_price!) * 100) : 0;
-              return (
-                <View key={product.id} style={styles.gridCard}>
-                  <View style={styles.gridMedia}>
-                    <TouchableOpacity activeOpacity={0.9} onPress={() => setDetailProduct(product)} accessibilityLabel={`View ${product.name}`} style={styles.gridImgWrap}>
-                      {product.image_url ? (
-                        <Image source={{ uri: product.image_url }} style={styles.gridImg} resizeMode="cover" />
-                      ) : (
-                        <View style={styles.gridImgFallback}>
-                          <Text style={{ fontSize: 40 }}>🛍️</Text>
-                        </View>
-                      )}
-                      {!product.is_available ? (
-                        <View style={styles.soldOutVeil}><Text style={styles.soldOutText}>Out of stock</Text></View>
-                      ) : null}
-                    </TouchableOpacity>
-                    {product.is_available ? (
-                      qty === 0 ? (
-                        <TouchableOpacity style={styles.gridAdd} onPress={() => handleAdd(product)} accessibilityLabel={`Add ${product.name} to cart`} activeOpacity={0.8}>
-                          <Text style={styles.gridAddText}>ADD</Text>
-                        </TouchableOpacity>
-                      ) : (
-                        <View style={styles.gridStepper}>
-                          <TouchableOpacity style={styles.gridStepBtn} onPress={() => decrementItem(product.id)} accessibilityLabel={`Decrease ${product.name} quantity`}>
-                            <Text style={styles.gridStepText}>−</Text>
-                          </TouchableOpacity>
-                          <Text style={styles.gridQty}>{qty}</Text>
-                          <TouchableOpacity style={styles.gridStepBtn} onPress={() => { if (product.stock_qty != null && qty >= product.stock_qty) return; incrementItem(product.id); }} accessibilityLabel={`Increase ${product.name} quantity`}>
-                            <Text style={styles.gridStepText}>+</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )
-                    ) : null}
-                  </View>
-                  <View style={styles.gridPriceRow}>
-                    <Text style={styles.gridPrice}>{formatRupees(product.price)}</Text>
-                    {hasDiscount ? <Text style={styles.gridCompare}>{formatRupees(product.compare_at_price!)}</Text> : null}
-                  </View>
-                  {hasDiscount ? <Text style={styles.gridOff}>{off}% OFF on MRP</Text> : null}
-                  {product.is_available && product.stock_qty != null && product.stock_qty <= 5 ? <Text style={styles.gridLow}>Only {product.stock_qty} left</Text> : null}
-                  <Text style={styles.gridName} numberOfLines={2} onPress={() => setDetailProduct(product)}>{product.name}</Text>
-                  <Text style={styles.gridUnit} numberOfLines={1}>{product.unit || '1 pc'}</Text>
-                  {store.estimated_delivery_minutes != null ? <Text style={styles.gridEta}>⏱ {store.estimated_delivery_minutes} mins</Text> : null}
-                </View>
-              );
-            })}
+            {visibleProducts.map((product) => (
+              <View key={product.id} style={{ marginBottom: 12 }}>
+                <ProductCard
+                  product={product}
+                  width={Math.floor((Dimensions.get('window').width - 78 - 16 - 10) / 2)}
+                  storeName={store.name}
+                  etaMinutes={store.estimated_delivery_minutes ?? null}
+                  hideStore
+                  onOpen={() => setDetailProduct(product)}
+                />
+              </View>
+            ))}
           </View>
         )}
           </View>
@@ -472,7 +436,7 @@ const styles = StyleSheet.create({
   railInitial: { fontSize: 18, fontWeight: '900', color: '#047857' },
   railLabel: { fontSize: 10.5, fontWeight: '700', color: '#57534E', marginTop: 5, textAlign: 'center' },
   railLabelOn: { color: '#064E3B', fontWeight: '900' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, justifyContent: 'space-between' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8, justifyContent: 'space-between', paddingTop: 6 },
   gridCard: { width: '48%', marginBottom: 20 },
   gridMedia: { borderRadius: 16, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#fff', marginBottom: 8, overflow: 'hidden' },
   gridStrip: { height: 46, backgroundColor: '#F3F4F6', borderBottomLeftRadius: 15, borderBottomRightRadius: 15, justifyContent: 'center', paddingLeft: 12, paddingRight: 90 },
