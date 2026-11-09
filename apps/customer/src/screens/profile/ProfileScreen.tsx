@@ -94,7 +94,7 @@ export function ProfileScreen() {
     <SafeAreaView style={styles.safe}>
       <StatusBar style="dark" />
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Account Profile</Text>
+        <Text style={styles.title}>Profile</Text>
 
         {isAuthenticated ? (
           <>
@@ -269,14 +269,18 @@ const styles = StyleSheet.create({
   avatarWrap: {
     alignItems: 'center',
     marginBottom: 20,
+    backgroundColor: '#064E3B',
+    borderRadius: 26,
+    paddingVertical: 22,
+    paddingHorizontal: 16,
   },
   avatar: {
     width: 76,
     height: 76,
     borderRadius: 38,
-    backgroundColor: '#D1FAE5',
-    borderWidth: 2.5,
-    borderColor: '#059669',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 3,
+    borderColor: '#FBBF24',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -284,19 +288,19 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#059669',
+    color: '#064E3B',
   },
   userName: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#1C1917',
+    fontWeight: '800',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   userRoleBadge: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#065F46',
-    backgroundColor: '#D1FAE5',
+    color: '#78350F',
+    backgroundColor: '#FBBF24',
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 12,
