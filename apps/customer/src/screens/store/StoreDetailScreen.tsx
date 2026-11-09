@@ -406,7 +406,7 @@ export function StoreDetailScreen({ route, navigation }: StoreDetailProps) {
               <View key={product.id} style={{ marginBottom: 12 }}>
                 <ProductCard
                   product={product}
-                  width={Math.floor((Dimensions.get('window').width - 78 - 16 - 10) / 2)}
+                  width={Math.floor((Dimensions.get('window').width - 78 - 16 - 24) / 2)}
                   storeName={store.name}
                   etaMinutes={store.estimated_delivery_minutes ?? null}
                   hideStore
