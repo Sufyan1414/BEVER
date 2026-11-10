@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 import { Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from './AppText';
 import { useCartStore } from '../stores/useCartStore';
+import { useFavouritesStore } from '../stores/useFavouritesStore';
 import type { Product } from '../types/store';
 
 const rupees = (paise: number) => `₹${Math.round(paise / 100)}`;
@@ -27,6 +28,8 @@ export function ProductCard({ product, storeName, etaMinutes, width, onOpen, hid
   const inc = useCartStore((s) => s.incrementItem);
   const dec = useCartStore((s) => s.decrementItem);
 
+  const isFav = useFavouritesStore((st) => st.ids.includes(product.id));
+  const toggleFav = useFavouritesStore((st) => st.toggle);
   const hasDiscount = !!product.compare_at_price && product.compare_at_price > product.price;
   const off = hasDiscount ? Math.round(((product.compare_at_price! - product.price) / product.compare_at_price!) * 100) : 0;
   const saved = hasDiscount ? product.compare_at_price! - product.price : 0;
@@ -52,6 +55,9 @@ export function ProductCard({ product, storeName, etaMinutes, width, onOpen, hid
           <View style={styles.ribbon}><Text style={styles.ribbonText}>{off}% OFF</Text></View>
         ) : null}
         <View style={styles.vegMark}><View style={styles.vegDot} /></View>
+        <TouchableOpacity style={styles.heart} onPress={() => toggleFav(product.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel={isFav ? 'Remove from favourites' : 'Save to favourites'}>
+          <Text style={[styles.heartText, isFav && styles.heartOn]}>{isFav ? '♥' : '♡'}</Text>
+        </TouchableOpacity>
         {!product.is_available ? <View style={styles.veil}><Text style={styles.veilText}>Out of stock</Text></View> : null}
       </TouchableOpacity>
 
@@ -96,7 +102,10 @@ const styles = StyleSheet.create({
   fallback: { fontSize: 40 },
   ribbon: { position: 'absolute', top: 0, left: 0, backgroundColor: '#F59E0B', paddingHorizontal: 8, paddingVertical: 4, borderBottomRightRadius: 12 },
   ribbonText: { color: '#fff', fontSize: 10.5, fontWeight: '800', letterSpacing: 0.3 },
-  vegMark: { position: 'absolute', top: 8, right: 8, width: 16, height: 16, borderRadius: 3, borderWidth: 1.5, borderColor: '#059669', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  vegMark: { position: 'absolute', bottom: 8, left: 8, width: 16, height: 16, borderRadius: 3, borderWidth: 1.5, borderColor: '#059669', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  heart: { position: 'absolute', top: 6, right: 6, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' },
+  heartText: { fontSize: 17, color: '#6B7280', marginTop: -1 },
+  heartOn: { color: '#E11D48' },
   vegDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#059669' },
   veil: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.75)', alignItems: 'center', justifyContent: 'center' },
   veilText: { fontSize: 12, fontWeight: '800', color: '#6B7280' },

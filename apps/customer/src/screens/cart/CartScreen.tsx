@@ -268,6 +268,12 @@ export function CartScreen() {
                 </Text>
               </View>
 
+              {summary.savingsPaise > 0 ? (
+                <View style={{ backgroundColor: '#ECFDF5', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12, marginTop: 10 }}>
+                  <Text style={{ color: '#047857', fontWeight: '800', fontSize: 13 }}>🎉 You are saving {formatRupees(summary.savingsPaise)} on this order</Text>
+                </View>
+              ) : null}
+
               <Text style={styles.feesNote}>
                 Delivery is free from ₹199. Below that, the fee is ₹20 plus ₹7 per started km, shown on your order.
               </Text>

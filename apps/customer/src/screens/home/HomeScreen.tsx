@@ -29,7 +29,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useLocationStore } from '../../stores/useLocationStore';
-import { fetchNearbyStores, fetchDealProducts } from '../../services/store';
+import { fetchNearbyStores, fetchDealProducts, fetchBuyAgain } from '../../services/store';
 import { ProductCard } from '../../components/ProductCard';
 import { supabase } from '../../services/supabase';
 import { BrowsingLocationPickerScreen } from '../location/BrowsingLocationPickerScreen';
@@ -267,6 +267,7 @@ export function HomeScreen() {
     if (q || cat || route.params?.search) (navigation as any).setParams({ query: undefined, category: undefined, search: undefined });
   }, [route.params, navigation]);
   const [deals, setDeals] = useState<Product[]>([]);
+  const [buyAgain, setBuyAgain] = useState<Product[]>([]);
   const [thumbs, setThumbs] = useState<Record<string, { images: string[]; count: number }>>({});
   useEffect(() => {
     const ids = homeState.kind === 'STORE_LIST' ? homeState.stores.map((st) => st.id) : [];
@@ -283,12 +284,14 @@ export function HomeScreen() {
       setThumbs(out);
     }, () => undefined);
     return () => { alive = false; };
-  }, [homeState]);
+  }, [homeState, isAuthenticated]);
   useEffect(() => {
     const ids = homeState.kind === 'STORE_LIST' ? homeState.stores.map((st) => st.id) : [];
     if (ids.length === 0) { setDeals([]); return; }
     let alive = true;
     fetchDealProducts(ids).then((rows) => { if (alive) setDeals(rows); }).catch(() => undefined);
+    if (isAuthenticated) fetchBuyAgain(ids).then((rows) => { if (alive) setBuyAgain(rows); }).catch(() => undefined);
+    else setBuyAgain([]);
     return () => { alive = false; };
   }, [homeState]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -410,6 +413,27 @@ export function HomeScreen() {
           </View>
         ))}
       </ScrollView>
+
+      {homeState.kind === 'STORE_LIST' && selectedCategory === ALL_KEY && buyAgain.length > 0 ? (
+        <View style={styles.dealsWrap}>
+          <View style={styles.sectionRow}>
+            <View>
+              <Text style={styles.sectionTitle}>Buy it again</Text>
+              <Text style={styles.sectionSub}>Your usual picks, one tap away</Text>
+            </View>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 6 }}>
+            {buyAgain.map((p) => {
+              const st = storeFor(p.store_id);
+              if (!st) return null;
+              return (
+                <ProductCard key={p.id} product={p} width={dealW} storeName={st.name} etaMinutes={st.estimated_delivery_minutes ?? null}
+                  onOpen={() => (navigation as any).navigate('StoreDetail', { store: st })} />
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : null}
 
       {homeState.kind === 'STORE_LIST' && selectedCategory === ALL_KEY && deals.length > 0 ? (
         <View style={styles.dealsWrap}>

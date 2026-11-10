@@ -170,6 +170,8 @@ export function OrderDetailScreen() {
 
         {order.storePhone ? <TouchableOpacity style={styles.callStore} onPress={() => { void Linking.openURL(`tel:${order.storePhone}`); }} accessibilityLabel="Call the shop"><Text style={styles.callStoreText}>📞  Call {order.storeName}</Text></TouchableOpacity> : null}
 
+        <TouchableOpacity style={styles.callStore} onPress={() => { void Linking.openURL(`mailto:support@bever.app?subject=${encodeURIComponent(`Problem with order #${order.orderNumber}`)}&body=${encodeURIComponent(`Order: #${order.orderNumber}\nShop: ${order.storeName}\n\nWhat went wrong?\n`)}`); }} accessibilityLabel="Report a problem with this order"><Text style={styles.callStoreText}>⚠️  Report a problem</Text></TouchableOpacity>
+
         {canCancel ? <TouchableOpacity style={[styles.cancelButton, cancelling && { opacity: 0.6 }]} onPress={cancelOrder} disabled={cancelling} accessibilityRole="button" accessibilityLabel="Cancel order">{cancelling ? <ActivityIndicator color="#B91C1C" /> : <Text style={styles.cancelText}>Cancel order</Text>}</TouchableOpacity> : null}
       </ScrollView>
     </SafeAreaView>

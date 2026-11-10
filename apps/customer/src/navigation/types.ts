@@ -36,6 +36,7 @@ export type ProfileSetupScreenProps = NativeStackScreenProps<AuthStackParamList,
 // ─── Profile Stack ────────────────────────────────────────────────────────────
 
 export type ProfileStackParamList = {
+  Favourites: undefined;
   ProfileMain: undefined;
   AddressList: undefined;
   AddressForm: {

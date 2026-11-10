@@ -111,6 +111,20 @@ export function ProfileScreen() {
             <View style={styles.menuCard}>
               <TouchableOpacity
                 style={styles.menuRow}
+                onPress={() => navigation.navigate('Favourites')}
+                accessibilityLabel="Open favourites"
+              >
+                <View style={styles.menuRowLeft}>
+                  <Text style={[styles.menuIcon, { color: '#E11D48' }]}>♥</Text>
+                  <View>
+                    <Text style={styles.menuText}>Favourites</Text>
+                    <Text style={styles.menuSubtext}>Products you saved</Text>
+                  </View>
+                </View>
+                <Text style={styles.menuChevron}>→</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuRow}
                 onPress={() => navigation.navigate('AddressList')}
                 accessibilityLabel="Manage saved delivery addresses"
               >

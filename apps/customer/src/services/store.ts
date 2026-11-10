@@ -152,3 +152,35 @@ export async function searchProductsFull(storeIds: string[], query: string): Pro
   if (error) throw new Error(error.message);
   return (data ?? []) as Product[];
 }
+
+/** Products by id (only ones still on sale), preserving the order of `ids`. */
+export async function fetchProductsByIds(ids: string[]): Promise<Product[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase.from('products').select('*').in('id', ids).eq('is_active', true);
+  if (error) throw new Error(error.message);
+  const byId = new Map(((data ?? []) as Product[]).map((p) => [p.id, p]));
+  return ids.map((id) => byId.get(id)).filter((p): p is Product => !!p);
+}
+
+/** Things this customer orders most, newest and most frequent first (own rows only via RLS). */
+export async function fetchBuyAgain(storeIds: string[], limit = 12): Promise<Product[]> {
+  if (storeIds.length === 0) return [];
+  const { data, error } = await supabase.from('order_items').select('product_id,quantity').order('created_at', { ascending: false }).limit(80);
+  if (error) return [];
+  const score = new Map<string, number>();
+  (data ?? []).forEach((r: any, i: number) => {
+    if (typeof r.product_id === 'string') score.set(r.product_id, (score.get(r.product_id) ?? 0) + 1 + Math.max(0, 80 - i) / 80);
+  });
+  const ids = [...score.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id).slice(0, 30);
+  if (ids.length === 0) return [];
+  const { data: prods } = await supabase.from('products').select('*').in('id', ids).in('store_id', storeIds).eq('is_active', true).eq('is_available', true);
+  const byId = new Map(((prods ?? []) as Product[]).map((p) => [p.id, p]));
+  return ids.map((id) => byId.get(id)).filter((p): p is Product => !!p).slice(0, limit);
+}
+
+export async function fetchStoreNames(ids: string[]): Promise<Record<string, string>> {
+  const uniq = [...new Set(ids)];
+  if (uniq.length === 0) return {};
+  const { data } = await supabase.from('stores').select('id,name').in('id', uniq);
+  return Object.fromEntries(((data ?? []) as Array<{ id: string; name: string }>).map((r) => [r.id, r.name]));
+}

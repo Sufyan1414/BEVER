@@ -6,7 +6,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 
 const SUPPORT_EMAIL = 'support@bever.app';
 
-type Sheet = null | 'pin' | 'help' | 'about';
+type Sheet = 'pin' | 'help' | 'about' | 'terms' | 'privacy' | 'refunds' | null;
 
 export function AccountActions() {
   const { signOut } = useAuthStore();
@@ -58,6 +58,9 @@ export function AccountActions() {
     { icon: '🔑', title: 'Change PIN', sub: 'Update your 6-digit sign-in PIN', onPress: () => setSheet('pin') },
     { icon: '💬', title: 'Help & support', sub: 'Orders, delivery and payments', onPress: () => setSheet('help') },
     { icon: 'ℹ️', title: 'About BEVER', sub: 'How BEVER works', onPress: () => setSheet('about') },
+    { icon: '📄', title: 'Terms of use', sub: 'Rules for using BEVER', onPress: () => setSheet('terms') },
+    { icon: '🔒', title: 'Privacy policy', sub: 'What we collect and why', onPress: () => setSheet('privacy') },
+    { icon: '↩️', title: 'Cancellation & refunds', sub: 'When you can cancel', onPress: () => setSheet('refunds') },
   ];
 
   return (
@@ -93,7 +96,7 @@ export function AccountActions() {
             {sheet === 'help' ? (
               <>
                 <Text style={styles.cardTitle}>Help & support</Text>
-                <Text style={styles.body}>• Order not accepted? Shops have 15 minutes; after that the order is cancelled automatically.{'\n'}• Rider late? Open the order and tap Track to see the rider live, or call the shop.{'\n'}• Wrong or missing item? Call the shop from your order page right after delivery.{'\n'}• Payment is cash on delivery. Pay the rider only after you share your 4-digit code.</Text>
+                <Text style={styles.body}>• Order not accepted? Shops have 15 minutes; after that the order is cancelled automatically.{'\n'}• Rider late? Open the order and tap Track to see the rider live, or call the shop.{'\n'}• Wrong or missing item? Open the order and tap “Report a problem”, or call the shop right after delivery.{'\n'}• Payment is cash on delivery. Pay the rider only after you share your 4-digit code.</Text>
                 <TouchableOpacity style={styles.primary} onPress={() => { void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=BEVER%20support`); }}>
                   <Text style={styles.primaryText}>Email support</Text>
                 </TouchableOpacity>
@@ -103,6 +106,24 @@ export function AccountActions() {
               <>
                 <Text style={styles.cardTitle}>About BEVER</Text>
                 <Text style={styles.body}>BEVER connects you with shops in your own market and brings what you order to your door, usually in minutes. Shops confirm your order, a nearby rider picks it up, and you pay cash on delivery. Prices and delivery fees are confirmed by the server when you place an order. Free delivery above ₹199.</Text>
+              </>
+            ) : null}
+            {sheet === 'terms' ? (
+              <>
+                <Text style={styles.cardTitle}>Terms of use</Text>
+                <Text style={styles.body}>• BEVER connects you with independent shops and riders in your market. Each shop is responsible for the items it sells.{'\n'}• Give accurate delivery details. Orders you do not receive because the address, pin or phone was wrong may not be refundable.{'\n'}• Payment is cash on delivery. Pay the rider only after you share your delivery code.{'\n'}• Prices and delivery fees are confirmed by BEVER when you place the order.{'\n'}• We may cancel orders that a shop cannot fulfil.{'\n\n'}This is a summary for the field trial; the final terms will be published before public launch.</Text>
+              </>
+            ) : null}
+            {sheet === 'privacy' ? (
+              <>
+                <Text style={styles.cardTitle}>Privacy policy</Text>
+                <Text style={styles.body}>• We store your name, phone number, saved addresses and order history to run the service.{'\n'}• Your location is used only to find shops that deliver to you and to guide the rider to your door.{'\n'}• The shop and rider handling your order see your name, phone number and address for that order only.{'\n'}• We do not sell your data. You can delete your account and personal data any time from Profile.{'\n\n'}This is a summary for the field trial; the final policy will be published before public launch.</Text>
+              </>
+            ) : null}
+            {sheet === 'refunds' ? (
+              <>
+                <Text style={styles.cardTitle}>Cancellation & refunds</Text>
+                <Text style={styles.body}>• You can cancel from the order page until the shop starts preparing your order.{'\n'}• Orders the shop does not answer within 15 minutes are cancelled automatically.{'\n'}• You pay only on delivery, so there is nothing to refund if you cancel in time.{'\n'}• Wrong, damaged or missing items: use “Report a problem” on the order, or call the shop, right after delivery.</Text>
               </>
             ) : null}
             <TouchableOpacity style={styles.secondary} onPress={close}><Text style={styles.secondaryText}>Close</Text></TouchableOpacity>

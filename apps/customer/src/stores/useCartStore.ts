@@ -26,12 +26,15 @@ export interface CartItem {
   productImageUrl: string | null;
   unit: string;
   unitPricePaise: number;
+  /** MRP snapshot for savings display; absent in older persisted carts. */
+  mrpPaise?: number;
   quantity: number;
 }
 
 export interface CartSummary {
   totalItems: number;
   subtotalPaise: number;
+  savingsPaise: number;
 }
 
 interface PersistedCart {
@@ -76,8 +79,9 @@ export function computeCartSummary(items: CartItem[]): CartSummary {
     (acc, item) => ({
       totalItems: acc.totalItems + item.quantity,
       subtotalPaise: acc.subtotalPaise + item.unitPricePaise * item.quantity,
+      savingsPaise: acc.savingsPaise + (item.mrpPaise && item.mrpPaise > item.unitPricePaise ? (item.mrpPaise - item.unitPricePaise) * item.quantity : 0),
     }),
-    { totalItems: 0, subtotalPaise: 0 },
+    { totalItems: 0, subtotalPaise: 0, savingsPaise: 0 },
   );
 }
 
@@ -171,6 +175,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       productImageUrl: product.image_url,
       unit: product.unit,
       unitPricePaise: product.price,
+      ...(product.compare_at_price ? { mrpPaise: product.compare_at_price } : {}),
       quantity: 1,
     };
     const updated = [...items, newItem];
@@ -189,6 +194,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       productImageUrl: product.image_url,
       unit: product.unit,
       unitPricePaise: product.price,
+      ...(product.compare_at_price ? { mrpPaise: product.compare_at_price } : {}),
       quantity: 1,
     };
     set({ storeId: store.id, storeName: store.name, items: [newItem] });

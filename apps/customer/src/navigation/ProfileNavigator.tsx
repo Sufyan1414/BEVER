@@ -12,6 +12,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from './types';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { FavouritesScreen } from '../screens/favourites/FavouritesScreen';
 import { AddressListScreen } from '../screens/address/AddressListScreen';
 import { AddressFormScreen } from '../screens/address/AddressFormScreen';
 import { AddressLocationPickerScreen } from '../screens/address/AddressLocationPickerScreen';
@@ -28,6 +29,7 @@ export function ProfileNavigator() {
       }}
     >
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="Favourites" component={FavouritesScreen} />
       <Stack.Screen name="AddressList" component={AddressListScreen} />
       <Stack.Screen name="AddressForm" component={AddressFormScreen} />
       <Stack.Screen name="AddressLocationPicker" component={AddressLocationPickerScreen} />
