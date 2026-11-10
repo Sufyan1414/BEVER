@@ -262,8 +262,9 @@ export function HomeScreen() {
     const q = route.params?.query;
     const cat = route.params?.category;
     if (typeof q === 'string' && q.length > 0) setPendingQuery(q);
+    else if (route.params?.search === true) setPendingQuery('');
     if (typeof cat === 'string' && cat.length > 0) setSelectedCategory(cat as CategoryFilter);
-    if (q || cat) (navigation as any).setParams({ query: undefined, category: undefined });
+    if (q || cat || route.params?.search) (navigation as any).setParams({ query: undefined, category: undefined, search: undefined });
   }, [route.params, navigation]);
   const [deals, setDeals] = useState<Product[]>([]);
   const [thumbs, setThumbs] = useState<Record<string, { images: string[]; count: number }>>({});
@@ -377,8 +378,8 @@ export function HomeScreen() {
     (navigation as any).navigate('Search', { stores: allStores, query });
   }, [navigation, allStores]);
   useEffect(() => {
-    if (pendingQuery && homeState.kind === 'STORE_LIST') {
-      openSearch(pendingQuery);
+    if (pendingQuery !== null && homeState.kind === 'STORE_LIST') {
+      openSearch(pendingQuery || undefined);
       setPendingQuery(null);
     }
   }, [pendingQuery, homeState.kind, openSearch]);

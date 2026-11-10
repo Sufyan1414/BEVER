@@ -55,15 +55,17 @@ export function CategoriesScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar style="dark" />
       <View style={styles.top}>
-        <TouchableOpacity activeOpacity={0.9} style={styles.search} onPress={() => navigation.navigate('Home')} accessibilityLabel="Search products">
-          <Ionicons name="search" size={22} color="#111827" />
-          <Text style={styles.searchText}>Search for atta, dal, milk and more</Text>
+        <Text style={styles.heading}>Categories</Text>
+        <Text style={styles.headingSub}>Find anything from shops around you</Text>
+        <TouchableOpacity activeOpacity={0.9} style={styles.search} onPress={() => navigation.navigate('Home', { screen: 'HomeMain', params: { search: true } })} accessibilityLabel="Search products">
+          <Ionicons name="search" size={20} color="#047857" />
+          <Text style={styles.searchText}>Search atta, dal, milk and more</Text>
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {SECTIONS.map((section) => (
           <View key={section.title} style={styles.section}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.sectionHead}><View style={styles.sectionBar} /><Text style={styles.sectionTitle}>{section.title}</Text></View>
             <View style={styles.grid}>
               {section.tiles.map((t) => (
                 <TouchableOpacity key={t.label} style={styles.tileWrap} activeOpacity={0.85} onPress={() => open(t.query)} accessibilityLabel={t.label}>
@@ -82,16 +84,20 @@ export function CategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
-  top: { backgroundColor: '#ECFDF5', paddingHorizontal: 14, paddingVertical: 10 },
-  search: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#D1FAE5', paddingHorizontal: 14, height: 50, gap: 10 },
-  searchText: { color: '#9A9A94', fontSize: 14 },
+  safe: { flex: 1, backgroundColor: '#F3FBF7' },
+  top: { backgroundColor: '#064E3B', paddingHorizontal: 18, paddingTop: 14, paddingBottom: 18, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 },
+  heading: { fontSize: 24, fontWeight: '800', color: '#fff' },
+  headingSub: { fontSize: 12.5, color: '#A7F3D0', marginTop: 2, marginBottom: 14 },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  sectionBar: { width: 4, height: 18, borderRadius: 2, backgroundColor: '#F59E0B' },
+  search: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 14, height: 48, gap: 10 },
+  searchText: { color: '#6B7280', fontSize: 14 },
   content: { paddingHorizontal: 14, paddingBottom: 40 },
   section: { marginTop: 18 },
-  sectionTitle: { fontSize: 20, fontWeight: '900', color: '#1C1917', marginBottom: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#064E3B' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 },
   tileWrap: { width: '25%', paddingHorizontal: 5, marginBottom: 14, alignItems: 'center' },
-  tile: { width: '100%', aspectRatio: 1, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  tile: { width: '100%', aspectRatio: 1, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(6,78,59,0.08)', alignItems: 'center', justifyContent: 'center' },
   emoji: { fontSize: 34 },
-  label: { fontSize: 12, fontWeight: '600', color: '#1C1917', textAlign: 'center', marginTop: 6, lineHeight: 15 },
+  label: { fontSize: 11.5, fontWeight: '700', color: '#064E3B', textAlign: 'center', marginTop: 6, lineHeight: 15 },
 });
