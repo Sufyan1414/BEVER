@@ -123,7 +123,7 @@ await page2.goto('http://localhost:4174/');
 await page2.waitForTimeout(3000);
 await shot2('s-home');
 await step2('checkout', async () => { await page2.getByText('View cart').first().click({ timeout: 8000 }); await page2.waitForTimeout(800); await page2.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot2('s-checkout'); });
-await step2('place order', async () => { await page2.getByText('Place order', { exact: true }).first().click({ timeout: 5000 }); await shot2('s-order-detail'); });
+await step2('place order', async () => { await page2.getByText(/^Place order/).first().click({ timeout: 5000 }); await shot2('s-order-detail'); });
 await step2('orders tab', async () => { await page2.goto('http://localhost:4174/'); await page2.waitForTimeout(3600); await page2.getByText('Order Again', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-orders'); });
 await step2('profile tab', async () => { await page2.getByText('Profile', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-profile'); });
 
