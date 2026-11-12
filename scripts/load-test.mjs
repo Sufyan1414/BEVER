@@ -30,7 +30,7 @@ const jitter = (a, b) => a + Math.random() * (b - a);
 
 async function user(i) {
   await sleep((i / USERS) * RAMP_MS);
-  const stores = await timed('nearby', () => fetch(`${URL_}/rest/v1/rpc/get_nearby_stores`, { method: 'POST', headers: H, body: JSON.stringify({ user_lat: 19.8762 + jitter(-0.01, 0.01), user_lng: 75.3433 + jitter(-0.01, 0.01), limit_count: 20 }) }));
+  const stores = await timed('nearby', () => fetch(`${URL_}/rest/v1/rpc/get_nearby_stores`, { method: 'POST', headers: H, body: JSON.stringify({ customer_lat: 19.8762 + jitter(-0.01, 0.01), customer_lng: 75.3433 + jitter(-0.01, 0.01), limit_count: 20 }) }));
   await sleep(jitter(300, 1500));
   const sid = Array.isArray(stores) && stores.length ? stores[Math.floor(Math.random() * stores.length)].id : null;
   if (sid) await timed('products', () => fetch(`${URL_}/rest/v1/products?select=*&store_id=eq.${sid}&is_active=eq.true&limit=60`, { headers: H }));
