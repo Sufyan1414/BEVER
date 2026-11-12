@@ -7,9 +7,10 @@
 import React from 'react';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { useAppFonts } from './src/fonts';
+import { ErrorBoundary } from './src/lib/ErrorBoundary';
 
 export default function App() {
   const fontsReady = useAppFonts();
   if (!fontsReady) return null;
-  return <AppNavigator />;
+  return <ErrorBoundary><AppNavigator /></ErrorBoundary>;
 }

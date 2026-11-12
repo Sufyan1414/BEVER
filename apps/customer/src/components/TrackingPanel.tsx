@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { activeInterval } from '../lib/activeInterval';
 import { Linking, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from './AppText';
 import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
@@ -45,8 +46,7 @@ export function TrackingPanel({ orderId, status }: { orderId: string; status: st
   useEffect(() => {
     if (!active) return;
     void pull();
-    const id = setInterval(() => { void pull(); }, 8000);
-    return () => clearInterval(id);
+    return activeInterval(() => { void pull(); }, 8000);
   }, [active, pull]);
 
   const rider: Pt | null = toPt(t?.rider_lat, t?.rider_lng);

@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { activeInterval } from '../../lib/activeInterval';
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,18 +37,21 @@ export function OrdersScreen() {
     finally { setLoading(false); setRefreshing(false); }
   }, [session]);
 
-  useFocusEffect(useCallback(() => {
-    load();
-    if (!session) return undefined;
-    // Realtime is best-effort; the database stays the source of truth, so also refresh on a timer.
+  const focused = useIsFocused();
+  useFocusEffect(useCallback(() => { void load(); }, [load]));
+
+  // Live updates only while this tab is visible AND something is still in progress:
+  // customers with no active order hold no realtime connection at all.
+  const hasActive = orders.some((o) => !['DELIVERED', 'REJECTED', 'CANCELLED', 'DELIVERY_FAILED', 'PAYMENT_FAILED', 'REFUNDED', 'REFUND_PENDING'].includes(o.status));
+  useEffect(() => {
+    if (!session || !focused || !hasActive) return undefined;
     const channel = supabase
       .channel(`customer-orders-${session.user.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `customer_id=eq.${session.user.id}` }, () => load(true))
       .subscribe();
-    const timer = setInterval(() => load(true), 30000);
-    return () => { clearInterval(timer); void supabase.removeChannel(channel); };
-  }, [load, session]));
-
+    const stopTimer = activeInterval(() => load(true), 45000);
+    return () => { stopTimer(); void supabase.removeChannel(channel); };
+  }, [load, session, focused, hasActive]);
 
   const reorder = async (order: CustomerOrderSummary) => {
     try {

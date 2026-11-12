@@ -1,4 +1,5 @@
 import React,{useCallback,useEffect,useState} from 'react';
+import { activeInterval } from './lib/activeInterval';
 import { ActivityIndicator, Linking, Vibration, Platform, RefreshControl, ScrollView, StatusBar as RNStatusBar, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { Text, TextInput } from './AppText';
 import {StatusBar} from 'expo-status-bar';
@@ -28,7 +29,7 @@ export default function App(){
  useEffect(()=>{const ids=new Set<string>(available.map((d:any)=>String(d.order_id??d.id)));if(seenAvail.current===null){seenAvail.current=ids;return}let fresh=false;ids.forEach(i=>{if(!seenAvail.current!.has(i))fresh=true});seenAvail.current=ids;if(fresh)Vibration.vibrate([0,300,150,300])},[available]);
  const[earnToday,setEarnToday]=useState(0);
  const loadAvailable=useCallback(async()=>{if(role!=='ok')return;try{const{data}=await supabase.rpc('list_available_deliveries');setAvailable(Array.isArray(data)?data:[])}catch{setAvailable([])}},[role]);
- useEffect(()=>{loadAvailable();const t=setInterval(loadAvailable,15000);return()=>clearInterval(t)},[loadAvailable]);
+ useEffect(()=>{loadAvailable();return activeInterval(loadAvailable,15000)},[loadAvailable]);
  const claim=async(orderId:string)=>{setBusy(true);setNotice(null);try{const{error}=await supabase.rpc('claim_delivery',{p_order_id:orderId});if(error)throw error;await loadAvailable();await load(true);setTab('mine')}catch(e:any){const m=String(e?.message??'');setNotice(m.includes('ORDER_ALREADY_CLAIMED')||m.includes('ORDER_NOT_AVAILABLE')?'Another rider already took this order.':m.includes('ROLE_NOT_ALLOWED')?'Your rider account is not active yet.':'Could not take this delivery. Try again.');await loadAvailable()}finally{setBusy(false)}};
 
  useEffect(()=>{
@@ -36,10 +37,9 @@ export default function App(){
   const channel=supabase
    .channel(`rider-${session.user.id}`)
    .on('postgres_changes',{event:'*',schema:'public',table:'delivery_assignments',filter:`rider_id=eq.${session.user.id}`},()=>load(true))
-   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders'},()=>load(true))
    .subscribe();
-  const timer=setInterval(()=>load(true),30000);
-  return()=>{clearInterval(timer);supabase.removeChannel(channel)};
+  const stopTimer=activeInterval(()=>load(true),20000);
+  return()=>{stopTimer();supabase.removeChannel(channel)};
  },[session?.user?.id,load]);
  const transition=async(to:Status)=>{if(!selected)return;setBusy(true);setNotice(null);try{const{error}=await supabase.rpc('transition_order_status',{p_order_id:selected.order_id,p_to_status:to,p_note:to==='DELIVERY_FAILED'?'Delivery could not be completed by rider.':null});if(error)throw error;await load(true);const fresh=assignments.find(a=>a.id===selected.id);if(fresh)setSelected({...selected,orders:{...selected.orders,status:to}})}catch(e:any){setNotice(e?.message??'Could not update delivery status.')}finally{setBusy(false)}};
  const acceptDelivery=async()=>{if(!selected)return;setBusy(true);setNotice(null);try{const{data,error}=await supabase.rpc('accept_delivery_assignment',{p_order_id:selected.order_id});if(error)throw error;setSelected({...selected,...data});await load(true)}catch(e:any){setNotice(e?.message??'Could not accept delivery.')}finally{setBusy(false)}};

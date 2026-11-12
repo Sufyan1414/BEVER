@@ -96,6 +96,13 @@ jobs:
         run: |
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then node scripts/live-e2e-full.mjs > ci-logs/live-e2e-full.txt 2>&1 || true; else echo "skipped on pull_request" > ci-logs/live-e2e-full.txt; fi
 
+      - name: Load test (500 virtual customers, read-only)
+        continue-on-error: true
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://atuaafowdoijojdmtgcr.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0dWFhZm93ZG9pam9qZG10Z2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5MjIxOTEsImV4cCI6MjEwNjQ5ODE5MX0.hEwDJgb3ZKcBYrZ_iBRcB1YrgOV1JAYYjI1F4QriQJs
+        run: node scripts/load-test.mjs > ci-logs/load-test.txt 2>&1 || true
+
       - name: Check demo image URLs
         run: node scripts/check-demo-images.mjs > ci-logs/demo-images.txt 2>&1 || true
 

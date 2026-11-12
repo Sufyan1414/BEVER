@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { activeInterval } from '../lib/activeInterval';
 import { supabase } from '../services/supabase';
 import { fetchMerchantStore, fetchOrders, fetchProducts, friendlyError } from '../services/merchant';
 import type { Order, Product, Store } from '../lib/types';
@@ -69,9 +70,9 @@ export function useMerchantData({ userId, onNewOrders }: Options) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products', filter: `store_id=eq.${storeId}` }, () => { void load(); })
       .subscribe();
     // Realtime is best-effort; the database is the source of truth, so also refresh on a timer.
-    const timer = setInterval(() => { void load(); }, 30000);
+    const stopTimer = activeInterval(() => { void load(); }, 30000);
     return () => {
-      clearInterval(timer);
+      stopTimer();
       void supabase.removeChannel(channel);
     };
   }, [storeId, load]);

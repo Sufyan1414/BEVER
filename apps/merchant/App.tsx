@@ -1,3 +1,10 @@
 import App from './src/App';
+import { ErrorBoundary } from './src/lib/ErrorBoundary';
 
-export default App;
+export default function Root() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}

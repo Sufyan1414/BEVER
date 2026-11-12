@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { activeInterval } from '../../lib/activeInterval';
 import { ActivityIndicator, Alert, Linking, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -44,23 +45,19 @@ export function OrderDetailScreen() {
     }
   }, [orderId]);
 
-  useFocusEffect(useCallback(() => {
-    load();
+  useFocusEffect(useCallback(() => { void load(); }, [load]));
+
+  const isFinal = !!order && ['DELIVERED', 'REJECTED', 'CANCELLED', 'DELIVERY_FAILED', 'PAYMENT_FAILED', 'REFUNDED', 'REFUND_PENDING'].includes(order.status);
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    if (!isFocused || isFinal) return undefined;
     const channel = supabase
       .channel(`customer-order-${orderId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'orders',
-        filter: `id=eq.${orderId}`,
-      }, () => load(true))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` }, () => load(true))
       .subscribe();
-    const timer = setInterval(() => load(true), 30000);
-    return () => {
-      clearInterval(timer);
-      supabase.removeChannel(channel);
-    };
-  }, [load, orderId]));
+    const stopTimer = activeInterval(() => load(true), 45000);
+    return () => { stopTimer(); void supabase.removeChannel(channel); };
+  }, [load, orderId, isFocused, isFinal]);
 
   if (loading && !order) {
     return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#059669" /></View></SafeAreaView>;

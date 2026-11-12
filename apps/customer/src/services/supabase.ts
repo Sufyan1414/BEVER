@@ -23,6 +23,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { resilientFetch } from '../lib/resilientFetch';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const rawUrl = process.env['EXPO_PUBLIC_SUPABASE_URL'];
@@ -46,6 +47,7 @@ if (__DEV__ && !isConfigured) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: { fetch: resilientFetch },
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
