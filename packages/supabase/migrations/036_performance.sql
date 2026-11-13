@@ -16,7 +16,6 @@ create index if not exists idx_orders_active_by_status on public.orders (status,
 create index if not exists idx_order_items_created on public.order_items (created_at desc);
 create index if not exists idx_order_items_product on public.order_items (product_id);
 
-create index if not exists idx_delivery_assignments_order_status on public.delivery_assignments (order_id, status);
 create index if not exists idx_rider_locations_rider on public.rider_locations (rider_id);
 
 -- 2. RLS: evaluate auth.uid() once per query instead of once per row ----------
