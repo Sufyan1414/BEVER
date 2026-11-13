@@ -69,7 +69,7 @@ await step('cart', async () => { await page.goto('http://localhost:4174/'); awai
 await step('orders tab', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(3600); await page.getByText('Order Again', { exact: true }).last().click({ timeout: 8000 }); await shot('c-orders-guest'); });
 await step('categories tab', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(3600); await page.getByText('Categories', { exact: true }).last().click({ timeout: 8000 }); await shot('c-categories'); });
 await step('profile tab', async () => { await page.getByText('Profile', { exact: true }).last().click({ timeout: 8000 }); await shot('c-profile-guest'); });
-await step('checkout->login', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(3600); await page.getByText('View cart').first().click({ timeout: 8000 }); await page.waitForTimeout(800); await page.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot('c-login'); });
+await step('checkout->login', async () => { await page.goto('http://localhost:4174/'); await page.waitForTimeout(3600); await page.getByText('View cart').first().click({ timeout: 8000 }); await page.waitForTimeout(800); await page.getByText('Checkout', { exact: true }).first().click({ timeout: 5000 }); await shot('c-login'); });
 
 
 // ---- Signed-in flow: checkout -> order tracking (all backend responses are SAMPLE data) ----
@@ -122,7 +122,7 @@ const step2 = async (name, fn) => { try { await fn(); } catch (e) { errors.push(
 await page2.goto('http://localhost:4174/');
 await page2.waitForTimeout(3000);
 await shot2('s-home');
-await step2('checkout', async () => { await page2.getByText('View cart').first().click({ timeout: 8000 }); await page2.waitForTimeout(800); await page2.getByText('Continue to Checkout').first().click({ timeout: 5000 }); await shot2('s-checkout'); });
+await step2('checkout', async () => { await page2.getByText('View cart').first().click({ timeout: 8000 }); await page2.waitForTimeout(800); await page2.getByText('Checkout', { exact: true }).first().click({ timeout: 5000 }); await shot2('s-checkout'); });
 await step2('place order', async () => { await page2.getByText(/^Place order/).first().click({ timeout: 5000 }); await shot2('s-order-detail'); });
 await step2('orders tab', async () => { await page2.goto('http://localhost:4174/'); await page2.waitForTimeout(3600); await page2.getByText('Order Again', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-orders'); });
 await step2('profile tab', async () => { await page2.getByText('Profile', { exact: true }).last().click({ timeout: 8000 }); await shot2('s-profile'); });

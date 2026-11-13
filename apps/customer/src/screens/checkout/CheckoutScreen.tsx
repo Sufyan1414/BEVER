@@ -6,7 +6,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCartStore, computeCartSummary, selectBaskets, basketKind } from '../../stores/useCartStore';
-import { C, CATEGORY_STYLE } from '../../theme';
 import { ensureDefaultAddressFromBrowsingLocation, updateAddress } from '../../services/address';
 import { checkAddressServiceable, checkPointServiceable, type Serviceability } from '../../services/serviceability';
 import { useLocationStore } from '../../stores/useLocationStore';

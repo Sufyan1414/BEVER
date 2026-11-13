@@ -130,7 +130,7 @@ const shop = StyleSheet.create({
   count: { fontSize: 10.5, color: C.faint, fontWeight: '600' },
 });
 
-function SectionHead({ title, sub, action, onAction }: { title: string; sub?: string; action?: string; onAction?: () => void }) {
+function SectionHead({ title, sub, action, onAction }: { title: string; sub?: string | undefined; action?: string | undefined; onAction?: (() => void) | undefined }) {
   return (
     <View style={styles.sectionRow}>
       <View style={{ flex: 1 }}>
