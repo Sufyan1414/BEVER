@@ -108,7 +108,7 @@ export function CheckoutScreen() {
       const goOrder = () => navigation.navigate('Orders', { screen: 'OrderDetail', params: { orderId: result.orderId } });
       if (otherBaskets.length > 0) {
         const next = otherBaskets[0]!;
-        Alert.alert('Order placed ✓', `Your ${basketKind(basket?.category).toLowerCase()} order is on its way to the shop. You still have ${otherBaskets.length === 1 ? 'a basket' : `${otherBaskets.length} baskets`} waiting (${next.storeName}).`, [
+        Alert.alert('Order placed ✓', `Your order from ${storeName ?? 'the shop'} is on its way to the shop. You still have ${otherBaskets.length === 1 ? 'a basket' : `${otherBaskets.length} baskets`} waiting (${next.storeName}).`, [
           { text: 'View my order', onPress: goOrder },
           { text: 'Check out next', onPress: () => { useCartStore.getState().setCheckoutStore(next.storeId); navigation.navigate('Cart'); } },
         ]);
@@ -124,7 +124,7 @@ export function CheckoutScreen() {
 
   return <SafeAreaView style={styles.safe} edges={['top']}>
     <StatusBar style="dark" />
-    <View style={styles.header}><TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityLabel="Back"><Text style={styles.back}>‹</Text></TouchableOpacity><View style={{ alignItems: 'center' }}><Text style={styles.title}>Checkout</Text><Text style={styles.headerSub}>{summary.totalItems} item{summary.totalItems === 1 ? '' : 's'} · {basketKind(basket?.category)} basket</Text></View><View style={{ width: 38 }} /></View>
+    <View style={styles.header}><TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityLabel="Back"><Text style={styles.back}>‹</Text></TouchableOpacity><View style={{ alignItems: 'center' }}><Text style={styles.title}>Checkout</Text><Text style={styles.headerSub}>{summary.totalItems} item{summary.totalItems === 1 ? '' : 's'} · {basket?.category ? `${basketKind(basket.category)} basket` : 'One basket'}</Text></View><View style={{ width: 38 }} /></View>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {error ? <View style={styles.error}><Text style={styles.errorText}>{error}</Text></View> : null}
             <Text style={styles.section}>Delivery address</Text>
