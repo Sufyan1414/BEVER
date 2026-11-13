@@ -76,7 +76,7 @@ export function AddressQuickForm({ defaults, receiverName, phone, onSaved }: Pro
       <Text style={s.label}>Your name *</Text>
       <TextInput value={name} onChangeText={setName} style={s.input} placeholder="Full name" placeholderTextColor="#A8A29E" autoCapitalize="words" accessibilityLabel="Your name" />
       <TouchableOpacity style={s.gpsBtn} onPress={() => { void useGps(); }} disabled={gps === 'busy'} accessibilityRole="button">
-        {gps === 'busy' ? <ActivityIndicator color="#047857" /> : <Text style={s.gpsText}>{gps === 'done' || pt ? '✓ Exact location pinned · tap to update' : '◎  Use my current location'}</Text>}
+        {gps === 'busy' ? <ActivityIndicator color="#26262A" /> : <Text style={s.gpsText}>{gps === 'done' || pt ? '✓ Exact location pinned · tap to update' : '◎  Use my current location'}</Text>}
       </TouchableOpacity>
       <View style={s.tags}>
         {(['Home', 'Work', 'Other'] as const).map((t) => (
@@ -111,20 +111,20 @@ export function AddressQuickForm({ defaults, receiverName, phone, onSaved }: Pro
 }
 
 const s = StyleSheet.create({
-  gpsBtn: { borderWidth: 1, borderColor: '#A7F3D0', backgroundColor: '#ECFDF5', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginBottom: 12 },
-  gpsText: { color: '#047857', fontWeight: '800', fontSize: 13 },
-  card: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#A7F3D0', borderRadius: 20, padding: 18, marginBottom: 18 },
-  head: { fontSize: 17, fontWeight: '900', color: '#064E3B' },
+  gpsBtn: { borderWidth: 1, borderColor: '#E6E6E1', backgroundColor: '#F5F5F2', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginBottom: 12 },
+  gpsText: { color: '#26262A', fontWeight: '800', fontSize: 13 },
+  card: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#E6E6E1', borderRadius: 20, padding: 18, marginBottom: 18 },
+  head: { fontSize: 17, fontWeight: '900', color: '#0B0B0C' },
   help: { fontSize: 12, color: '#78716C', marginTop: 3, marginBottom: 12 },
   tags: { flexDirection: 'row', gap: 8, marginBottom: 4 },
   tag: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: '#E7E5E4', backgroundColor: '#fff' },
-  tagOn: { backgroundColor: '#059669', borderColor: '#059669' },
+  tagOn: { backgroundColor: '#0B0B0C', borderColor: '#0B0B0C' },
   tagText: { fontSize: 13, fontWeight: '800', color: '#44403C' },
   tagTextOn: { color: '#fff' },
   label: { fontSize: 12, fontWeight: '800', color: '#44403C', marginTop: 12, marginBottom: 6 },
   input: { height: 50, borderRadius: 14, borderWidth: 1, borderColor: '#E7E5E4', backgroundColor: '#FAFAF9', paddingHorizontal: 14, fontSize: 15, color: '#1C1917' },
   row: { flexDirection: 'row' },
   err: { marginTop: 12, padding: 10, borderRadius: 10, backgroundColor: '#FEE2E2', color: '#991B1B', fontSize: 13 },
-  btn: { marginTop: 16, backgroundColor: '#059669', borderRadius: 16, minHeight: 52, alignItems: 'center', justifyContent: 'center' },
+  btn: { marginTop: 16, backgroundColor: '#0B0B0C', borderRadius: 16, minHeight: 52, alignItems: 'center', justifyContent: 'center' },
   btnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

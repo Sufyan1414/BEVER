@@ -326,19 +326,12 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
         <Animated.View style={[styles.flex1, { opacity: fadeAnim }]}>
           {/* Hero */}
           <View style={styles.hero}>
-            <View style={styles.heroOrbA} />
-            <View style={styles.heroOrbB} />
             <SafeAreaView edges={['top']}>
               <View style={styles.heroTop}>
-                <View style={styles.logoBadge}><Text style={styles.logoBadgeText}>B</Text></View>
                 <Text style={styles.heroWordmark}>BEVER</Text>
               </View>
               <Text style={styles.heroTitle}>{isChanging ? 'Change your\ndelivery spot' : 'Your neighbourhood,\ndelivered in minutes.'}</Text>
-              <View style={styles.heroChips}>
-                {['Local stores', 'Live tracking', 'Pay on delivery'].map((c) => (
-                  <View key={c} style={styles.heroChip}><View style={styles.heroChipDot} /><Text style={styles.heroChipText}>{c}</Text></View>
-                ))}
-              </View>
+              <Text style={styles.heroSub}>{isChanging ? 'Shops and delivery time update for the new spot.' : 'Pick where to deliver. We show only the shops that actually reach your door.'}</Text>
             </SafeAreaView>
           </View>
 
@@ -397,11 +390,23 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
             ) : null}
 
             {showHelper ? (
-              <View style={styles.helperRow}>
-                <PinIcon />
-                <View style={styles.flex1}>
-                  <Text style={styles.helperTitle}>We deliver from stores around you</Text>
-                  <Text style={styles.helperBody}>Type 3 or more letters of your locality to see who delivers there.</Text>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoHead}>HOW DELIVERY WORKS</Text>
+                {[
+                  ['1', 'Shops that reach you', 'Each shop sets its own delivery radius, so you only see what can arrive.'],
+                  ['2', 'One shop, one rider', 'Groceries and electronics are separate baskets and arrive separately.'],
+                  ['3', 'Pay at your door', 'Cash on delivery. No card or UPI needed.'],
+                ].map(([n, t, d]) => (
+                  <View key={n} style={styles.infoRow}>
+                    <View style={styles.infoNum}><Text style={styles.infoNumText}>{n}</Text></View>
+                    <View style={styles.flex1}>
+                      <Text style={styles.helperTitle}>{t}</Text>
+                      <Text style={styles.helperBody}>{d}</Text>
+                    </View>
+                  </View>
+                ))}
+                <View style={styles.feeBox}>
+                  <Text style={styles.feeText}>Delivery ₹20 + ₹7 per km · Free above ₹199</Text>
                 </View>
               </View>
             ) : null}
@@ -570,7 +575,7 @@ export function BrowsingLocationPickerScreen({ onLocationSet, isChanging = false
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  hero: { backgroundColor: '#064E3B', paddingHorizontal: 24, paddingBottom: 56, borderBottomLeftRadius: 36, borderBottomRightRadius: 36, overflow: 'hidden' },
+  hero: { backgroundColor: '#0B0B0C', paddingHorizontal: 24, paddingBottom: 56, borderBottomLeftRadius: 36, borderBottomRightRadius: 36, overflow: 'hidden' },
   heroOrbA: { position: 'absolute', top: -90, right: -70, width: 260, height: 260, borderRadius: 130, backgroundColor: '#047857', opacity: 0.8 },
   heroOrbB: { position: 'absolute', bottom: -80, left: -60, width: 190, height: 190, borderRadius: 95, backgroundColor: '#065F46' },
   heroTop: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 14, marginBottom: 26 },
@@ -578,6 +583,14 @@ const styles = StyleSheet.create({
   logoBadgeText: { color: '#064E3B', fontSize: 19, fontWeight: '800' },
   heroWordmark: { color: '#ECFDF5', fontSize: 20, fontWeight: '800', letterSpacing: 3 },
   heroTitle: { color: '#FFFFFF', fontSize: 30, lineHeight: 37, fontWeight: '800', letterSpacing: -0.6 },
+  heroSub: { color: '#B8B8B2', fontSize: 14, lineHeight: 20, marginTop: 12, maxWidth: 300 },
+  infoCard: { backgroundColor: '#FFFFFF', borderRadius: 20, borderWidth: 1, borderColor: '#E6E6E1', padding: 16, gap: 14 },
+  infoHead: { fontSize: 10.5, fontWeight: '800', letterSpacing: 1.4, color: '#A3A39C' },
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  infoNum: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#0B0B0C', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  infoNumText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  feeBox: { backgroundColor: '#FFF4DB', borderRadius: 12, paddingVertical: 9, paddingHorizontal: 12 },
+  feeText: { fontSize: 12.5, fontWeight: '800', color: '#B45309' },
   heroChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 18 },
   heroChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.10)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)' },
   heroChipDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FBBF24' },

@@ -118,7 +118,7 @@ export function AddressFormScreen({ route, navigation }: AddressFormProps) {
             accessibilityLabel="Save address"
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#059669" size="small" />
+              <ActivityIndicator color="#0B0B0C" size="small" />
             ) : (
               <Text style={styles.saveHeaderButtonText}>Save</Text>
             )}
@@ -300,8 +300,8 @@ export function AddressFormScreen({ route, navigation }: AddressFormProps) {
             <Switch
               value={isDefault}
               onValueChange={setIsDefault}
-              trackColor={{ false: '#E7E5E4', true: '#A7F3D0' }}
-              thumbColor={isDefault ? '#059669' : '#F5F5F4'}
+              trackColor={{ false: '#E7E5E4', true: '#E6E6E1' }}
+              thumbColor={isDefault ? '#0B0B0C' : '#F5F5F4'}
             />
           </View>
 
@@ -329,7 +329,7 @@ export function AddressFormScreen({ route, navigation }: AddressFormProps) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F3FBF7',
+    backgroundColor: '#FFFFFF',
   },
   keyboardContainer: {
     flex: 1,
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   saveHeaderButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#059669',
+    color: '#0B0B0C',
   },
   formContent: {
     padding: 24,
@@ -403,8 +403,8 @@ const styles = StyleSheet.create({
     borderColor: '#E7E5E4',
   },
   pillSelected: {
-    backgroundColor: '#D1FAE5',
-    borderColor: '#059669',
+    backgroundColor: '#E6E6E1',
+    borderColor: '#0B0B0C',
   },
   pillText: {
     fontSize: 14,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     color: '#78716C',
   },
   pillTextSelected: {
-    color: '#065F46',
+    color: '#26262A',
     fontWeight: '700',
   },
   inputGroup: {
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   locationButton: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#E6E6E1',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   locationButtonText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#065F46',
+    color: '#26262A',
   },
   switchRow: {
     flexDirection: 'row',
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
     color: '#78716C',
   },
   savePrimaryButton: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0B0B0C',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',

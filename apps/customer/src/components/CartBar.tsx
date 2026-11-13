@@ -1,60 +1,43 @@
 import React from 'react';
-import { Platform, StyleSheet, TouchableOpacity, View, type ViewStyle } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from './AppText';
 import { useNavigation } from '@react-navigation/native';
-import { BlurView } from 'expo-blur';
-import { useCartStore, computeCartSummary } from '../stores/useCartStore';
+import { useCartStore, computeCartSummary, selectBaskets } from '../stores/useCartStore';
+import { C, rupees } from '../theme';
 
-/**
- * Floating "glass" cart bar. Shows only when the cart has items.
- * Frosted look: translucent white, light border, soft mint shadow, and a real
- * backdrop blur where the platform supports it (web). Native uses the translucent layer.
- */
+/** Floating cart bar. Shows only when the cart has items; counts baskets when there are several. */
 export function CartBar() {
   const navigation = useNavigation<any>();
-  const { items, storeName } = useCartStore();
+  const items = useCartStore((s) => s.items);
+  const stores = useCartStore((s) => s.stores);
   if (!items.length) return null;
   const s = computeCartSummary(items);
-  const rupees = `₹${Math.round(s.subtotalPaise / 100)}`;
+  const baskets = selectBaskets(items, stores);
   const count = `${s.totalItems} ${s.totalItems === 1 ? 'item' : 'items'}`;
+  const sub = baskets.length > 1 ? `${baskets.length} baskets · ${count}` : `${baskets[0]?.storeName ?? 'Shop'} · ${count}`;
   return (
     <View pointerEvents="box-none" style={styles.wrap}>
-      <TouchableOpacity
-        activeOpacity={0.9}
-        style={[styles.bar, glass]}
-        onPress={() => navigation.navigate('Cart')}
-        accessibilityRole="button"
-        accessibilityLabel={`View cart, ${count}, ${rupees}`}
-      >
-        <BlurView intensity={45} tint="light" style={styles.fill} {...({ experimentalBlurMethod: 'dimezisBlurView' } as object)} />
-        <View style={styles.badge}><Text style={styles.badgeText}>{s.totalItems}</Text></View>
+      <TouchableOpacity activeOpacity={0.9} style={styles.bar} onPress={() => navigation.navigate('Cart')} accessibilityRole="button" accessibilityLabel={`View cart, ${sub}, ${rupees(s.subtotalPaise)}`}>
+        <View style={styles.badge}><Text style={styles.badgeText}>{baskets.length > 1 ? baskets.length : s.totalItems}</Text></View>
         <View style={styles.mid}>
           <Text style={styles.title}>View cart</Text>
-          <Text style={styles.sub} numberOfLines={1}>{storeName ?? count} · {rupees}</Text>
+          <Text style={styles.sub} numberOfLines={1}>{sub}</Text>
         </View>
-        <View style={styles.go}><Text style={styles.goText}>›</Text></View>
+        <Text style={styles.total}>{rupees(s.subtotalPaise)}</Text>
+        <Text style={styles.go}>›</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-const glass = (Platform.OS === 'web'
-  ? ({ backdropFilter: 'blur(16px) saturate(160%)', WebkitBackdropFilter: 'blur(16px) saturate(160%)' } as unknown as ViewStyle)
-  : {}) satisfies ViewStyle;
-
 const styles = StyleSheet.create({
-  fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   wrap: { position: 'absolute', left: 16, right: 16, bottom: 14 },
-  bar: {
-    flexDirection: 'row', alignItems: 'center', padding: 8, paddingRight: 10, borderRadius: 22,
-    backgroundColor: 'rgba(236,253,245,0.55)', overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.85)',
-    shadowColor: '#047857', shadowOpacity: 0.28, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 8,
-  },
-  badge: { width: 44, height: 44, borderRadius: 16, backgroundColor: '#064E3B', alignItems: 'center', justifyContent: 'center' },
-  badgeText: { color: '#FFFFFF', fontSize: 17, fontWeight: '900' },
+  bar: { flexDirection: 'row', alignItems: 'center', padding: 8, paddingRight: 16, borderRadius: 22, backgroundColor: C.ink, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
+  badge: { width: 44, height: 44, borderRadius: 16, backgroundColor: C.mint, alignItems: 'center', justifyContent: 'center' },
+  badgeText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
   mid: { flex: 1, marginLeft: 12 },
-  title: { fontSize: 16, fontWeight: '900', color: '#064E3B' },
-  sub: { fontSize: 12, color: '#047857', marginTop: 1, fontWeight: '600' },
-  go: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center' },
-  goText: { fontSize: 24, color: '#FFFFFF', lineHeight: 28, fontWeight: '800' },
+  title: { fontSize: 15.5, fontWeight: '800', color: '#fff' },
+  sub: { fontSize: 12, color: '#B8B8B2', marginTop: 1, fontWeight: '600' },
+  total: { fontSize: 16, fontWeight: '800', color: '#fff', marginRight: 6 },
+  go: { fontSize: 26, color: '#fff', lineHeight: 28, fontWeight: '700' },
 });

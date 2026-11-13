@@ -58,7 +58,7 @@ export function CategoriesScreen() {
         <Text style={styles.heading}>Categories</Text>
         <Text style={styles.headingSub}>Find anything from shops around you</Text>
         <TouchableOpacity activeOpacity={0.9} style={styles.search} onPress={() => navigation.navigate('Home', { screen: 'HomeMain', params: { search: true } })} accessibilityLabel="Search products">
-          <Ionicons name="search" size={20} color="#047857" />
+          <Ionicons name="search" size={20} color="#26262A" />
           <Text style={styles.searchText}>Search atta, dal, milk and more</Text>
         </TouchableOpacity>
       </View>
@@ -84,20 +84,20 @@ export function CategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F3FBF7' },
-  top: { backgroundColor: '#064E3B', paddingHorizontal: 18, paddingTop: 14, paddingBottom: 18, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 },
+  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  top: { backgroundColor: '#0B0B0C', paddingHorizontal: 18, paddingTop: 14, paddingBottom: 18, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 },
   heading: { fontSize: 24, fontWeight: '800', color: '#fff' },
-  headingSub: { fontSize: 12.5, color: '#A7F3D0', marginTop: 2, marginBottom: 14 },
+  headingSub: { fontSize: 12.5, color: '#E6E6E1', marginTop: 2, marginBottom: 14 },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionBar: { width: 4, height: 18, borderRadius: 2, backgroundColor: '#F59E0B' },
   search: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 14, height: 48, gap: 10 },
   searchText: { color: '#6B7280', fontSize: 14 },
   content: { paddingHorizontal: 14, paddingBottom: 40 },
   section: { marginTop: 18 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#064E3B' },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#0B0B0C' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 },
   tileWrap: { width: '25%', paddingHorizontal: 5, marginBottom: 14, alignItems: 'center' },
   tile: { width: '100%', aspectRatio: 1, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(6,78,59,0.08)', alignItems: 'center', justifyContent: 'center' },
   emoji: { fontSize: 34 },
-  label: { fontSize: 11.5, fontWeight: '700', color: '#064E3B', textAlign: 'center', marginTop: 6, lineHeight: 15 },
+  label: { fontSize: 11.5, fontWeight: '700', color: '#0B0B0C', textAlign: 'center', marginTop: 6, lineHeight: 15 },
 });

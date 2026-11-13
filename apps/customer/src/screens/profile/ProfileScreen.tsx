@@ -267,7 +267,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F3FBF7',
+    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   avatarWrap: {
     alignItems: 'center',
     marginBottom: 20,
-    backgroundColor: '#064E3B',
+    backgroundColor: '#0B0B0C',
     borderRadius: 26,
     paddingVertical: 22,
     paddingHorizontal: 16,
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     width: 76,
     height: 76,
     borderRadius: 38,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#F5F5F2',
     borderWidth: 3,
     borderColor: '#FBBF24',
     alignItems: 'center',
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#064E3B',
+    color: '#0B0B0C',
   },
   userName: {
     fontSize: 20,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   menuChevron: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#059669',
+    color: '#0B0B0C',
   },
   infoCard: {
     backgroundColor: '#FFFFFF',
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#059669',
+    color: '#0B0B0C',
   },
   infoRow: {
     flexDirection: 'row',
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   signInButton: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0B0B0C',
     borderRadius: 12,
     paddingHorizontal: 32,
     paddingVertical: 14,
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
     color: '#78716C',
   },
   modalSaveButton: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0B0B0C',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,

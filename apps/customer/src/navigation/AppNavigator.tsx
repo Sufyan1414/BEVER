@@ -125,6 +125,6 @@ export function AppNavigator() {
 const styles = StyleSheet.create({
   fullScreen: {
     flex: 1,
-    backgroundColor: '#F3FBF7',
+    backgroundColor: '#FFFFFF',
   },
 });

@@ -147,7 +147,7 @@ export function ProfileSetupScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F3FBF7',
+    backgroundColor: '#FFFFFF',
   },
   keyboardContainer: {
     flex: 1,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   wordmark: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#059669',
+    color: '#0B0B0C',
     letterSpacing: 3,
   },
   content: {
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   submitButton: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0B0B0C',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',

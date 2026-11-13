@@ -222,7 +222,7 @@ export function SignupScreen({ navigation }: SignupScreenProps) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F3FBF7',
+    backgroundColor: '#FFFFFF',
   },
   keyboardContainer: {
     flex: 1,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   wordmark: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#059669',
+    color: '#0B0B0C',
     letterSpacing: 3,
   },
   tagline: {
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   submitButton: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0B0B0C',
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: 'center',
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     color: '#78716C',
   },
   switchHighlight: {
-    color: '#059669',
+    color: '#0B0B0C',
     fontWeight: '700',
   },
   footer: {

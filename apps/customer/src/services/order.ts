@@ -255,3 +255,20 @@ export async function transitionCustomerOrder(
     throw new Error(messages[code] ?? error.message);
   }
 }
+
+/** Cancel an order the customer owns (allowed until the shop starts preparing). */
+export async function cancelMyOrder(orderId: string, reason?: string | null): Promise<void> {
+  const { error } = await supabase.rpc('cancel_my_order', { p_order_id: orderId, p_reason: reason?.trim() || null });
+  if (!error) return;
+  const msg = error.message ?? '';
+  // Database not upgraded yet (migration 037): fall back to the older path.
+  if (error.code === 'PGRST202' || /could not find the function/i.test(msg)) {
+    await transitionCustomerOrder(orderId, 'CANCELLED', reason);
+    return;
+  }
+  const code = msg.split(':')[0] ?? '';
+  if (code === 'TOO_LATE') throw new Error('The shop has already started preparing this order, so it can no longer be cancelled. You can call the shop.');
+  if (code === 'ORDER_NOT_FOUND') throw new Error('This order could not be found.');
+  if (code === 'AUTH_REQUIRED') throw new Error('Please sign in again.');
+  throw new Error('Something went wrong while cancelling. Please try again.');
+}

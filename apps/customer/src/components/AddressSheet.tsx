@@ -44,7 +44,7 @@ export function AddressSheet({ visible, selectedId, onClose, onSelect, onAddNew 
           <Text style={s.plus}>＋</Text><Text style={s.addText}>Add new address</Text><Text style={s.chev}>›</Text>
         </TouchableOpacity>
         <Text style={s.sub}>Your saved addresses</Text>
-        {loading ? <ActivityIndicator color="#059669" style={{ marginVertical: 24 }} /> : null}
+        {loading ? <ActivityIndicator color="#0B0B0C" style={{ marginVertical: 24 }} /> : null}
         {err ? <Text style={s.err}>{err}</Text> : null}
         <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
           {list.map((a) => (
@@ -54,7 +54,7 @@ export function AddressSheet({ visible, selectedId, onClose, onSelect, onAddNew 
                 <Text style={s.label}>{a.label}</Text>
                 <Text style={s.line} numberOfLines={2}>{[a.address_line_1, a.address_line_2, a.city, a.pincode].filter(Boolean).join(', ')}</Text>
               </View>
-              {busyId === a.id ? <ActivityIndicator color="#059669" /> : a.id === selectedId ? <Text style={s.tick}>✓</Text> : null}
+              {busyId === a.id ? <ActivityIndicator color="#0B0B0C" /> : a.id === selectedId ? <Text style={s.tick}>✓</Text> : null}
             </TouchableOpacity>
           ))}
           {!loading && list.length === 0 && !err ? <Text style={s.empty}>No saved addresses yet.</Text> : null}
@@ -66,21 +66,21 @@ export function AddressSheet({ visible, selectedId, onClose, onSelect, onAddNew 
 
 const s = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(6,78,59,0.45)' },
-  sheet: { backgroundColor: '#F3FBF7', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 18, paddingBottom: 32 },
-  grab: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: '#A7F3D0', marginBottom: 14 },
-  title: { fontSize: 20, fontWeight: '900', color: '#064E3B', marginBottom: 14 },
-  addRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#D1FAE5' },
-  plus: { fontSize: 20, color: '#059669', fontWeight: '900', marginRight: 12 },
-  addText: { flex: 1, fontSize: 15, fontWeight: '800', color: '#059669' },
+  sheet: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 18, paddingBottom: 32 },
+  grab: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: '#E6E6E1', marginBottom: 14 },
+  title: { fontSize: 20, fontWeight: '900', color: '#0B0B0C', marginBottom: 14 },
+  addRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#E6E6E1' },
+  plus: { fontSize: 20, color: '#0B0B0C', fontWeight: '900', marginRight: 12 },
+  addText: { flex: 1, fontSize: 15, fontWeight: '800', color: '#0B0B0C' },
   chev: { fontSize: 24, color: '#A8A29E' },
   sub: { fontSize: 13, color: '#78716C', fontWeight: '700', marginTop: 18, marginBottom: 10 },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#E7E5E4' },
-  cardOn: { borderColor: '#059669', borderWidth: 2 },
-  badge: { width: 46, height: 46, borderRadius: 14, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  cardOn: { borderColor: '#0B0B0C', borderWidth: 2 },
+  badge: { width: 46, height: 46, borderRadius: 14, backgroundColor: '#F5F5F2', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   badgeText: { fontSize: 22 },
-  label: { fontSize: 15, fontWeight: '900', color: '#064E3B' },
+  label: { fontSize: 15, fontWeight: '900', color: '#0B0B0C' },
   line: { fontSize: 12, color: '#57534E', marginTop: 3, lineHeight: 17 },
-  tick: { fontSize: 20, color: '#059669', fontWeight: '900', marginLeft: 8 },
+  tick: { fontSize: 20, color: '#0B0B0C', fontWeight: '900', marginLeft: 8 },
   empty: { textAlign: 'center', color: '#78716C', paddingVertical: 18 },
   err: { color: '#B91C1C', fontSize: 12, marginBottom: 8 },
 });

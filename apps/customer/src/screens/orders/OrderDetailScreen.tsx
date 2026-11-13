@@ -14,7 +14,7 @@ import {
   fetchOrderDetail,
   formatOrderStatus,
   getOrderProgress,
-  transitionCustomerOrder,
+  cancelMyOrder,
   type CustomerOrderDetail,
 } from '../../services/order';
 
@@ -60,7 +60,7 @@ export function OrderDetailScreen() {
   }, [load, orderId, isFocused, isFinal]);
 
   if (loading && !order) {
-    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#059669" /></View></SafeAreaView>;
+    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#0B0B0C" /></View></SafeAreaView>;
   }
 
   if (error && !order) {
@@ -75,7 +75,7 @@ export function OrderDetailScreen() {
     if (cancelling) return;
     setCancelling(true);
     try {
-      await transitionCustomerOrder(order.id, 'CANCELLED', 'Customer cancelled the order.');
+      await cancelMyOrder(order.id, 'Customer cancelled the order.');
       await load(true);
       Alert.alert('Order cancelled', 'Your order has been cancelled. You have not been charged.');
     } catch (e: any) {
@@ -176,16 +176,16 @@ export function OrderDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe:{flex:1,backgroundColor:'#F3FBF7'},center:{flex:1,alignItems:'center',justifyContent:'center',padding:24},
-  header:{height:66,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:18,borderBottomWidth:1,borderBottomColor:'#E7E5E4',backgroundColor:'#F3FBF7'},
+  safe:{flex:1,backgroundColor:'#FFFFFF'},center:{flex:1,alignItems:'center',justifyContent:'center',padding:24},
+  header:{height:66,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:18,borderBottomWidth:1,borderBottomColor:'#E7E5E4',backgroundColor:'#FFFFFF'},
   back:{fontSize:38,color:'#1C1917',lineHeight:40},headerCopy:{flex:1,paddingHorizontal:12},title:{fontSize:18,fontWeight:'800',color:'#1C1917'},store:{fontSize:11,color:'#78716C',marginTop:2},
-  content:{padding:20,paddingBottom:48},statusCard:{backgroundColor:'#FFF7E6',borderWidth:1,borderColor:'#FDE68A',borderRadius:20,padding:18,marginBottom:24},statusCardTerminal:{backgroundColor:'#F5F5F4',borderColor:'#E7E5E4'},statusCardDone:{backgroundColor:'#ECFDF5',borderColor:'#A7F3D0'},
+  content:{padding:20,paddingBottom:48},statusCard:{backgroundColor:'#FFF7E6',borderWidth:1,borderColor:'#FDE68A',borderRadius:20,padding:18,marginBottom:24},statusCardTerminal:{backgroundColor:'#F5F5F4',borderColor:'#E7E5E4'},statusCardDone:{backgroundColor:'#F5F5F2',borderColor:'#E6E6E1'},
   statusEyebrow:{fontSize:10,fontWeight:'800',letterSpacing:1.2,color:'#A16207'},statusTitle:{fontSize:24,fontWeight:'900',color:'#1C1917',marginTop:5},statusSub:{fontSize:12,color:'#78716C',lineHeight:18,marginTop:5},
   section:{fontSize:16,fontWeight:'900',color:'#1C1917',marginBottom:10,marginTop:2},timeline:{backgroundColor:'#fff',borderWidth:1,borderColor:'#EEECE9',borderRadius:18,padding:16,marginBottom:24},
-  step:{flexDirection:'row',minHeight:62},stepRail:{width:30,alignItems:'center'},dot:{width:20,height:20,borderRadius:10,borderWidth:2,borderColor:'#D6D3D1',backgroundColor:'#fff',alignItems:'center',justifyContent:'center'},dotDone:{backgroundColor:'#059669',borderColor:'#059669'},dotActive:{borderColor:'#059669'},tick:{fontSize:12,fontWeight:'900',color:'#fff'},rail:{width:2,flex:1,backgroundColor:'#E7E5E4',marginVertical:3},railDone:{backgroundColor:'#059669'},stepCopy:{flex:1,paddingLeft:10,paddingBottom:12},stepTitle:{fontSize:13,fontWeight:'600',color:'#78716C'},stepTitleStrong:{color:'#1C1917',fontWeight:'800'},stepSub:{fontSize:10,color:'#A8A29E',marginTop:3,lineHeight:15},
-  card:{backgroundColor:'#fff',borderWidth:1,borderColor:'#EEECE9',borderRadius:18,padding:16,marginBottom:24},itemRow:{flexDirection:'row',alignItems:'center',paddingVertical:8},itemThumb:{width:48,height:48,borderRadius:12,backgroundColor:'#F7F7F4',alignItems:'center',justifyContent:'center'},itemInitial:{fontSize:17,fontWeight:'800',color:'#059669'},itemCopy:{flex:1,paddingHorizontal:12},itemName:{fontSize:13,fontWeight:'700',color:'#1C1917'},itemUnit:{fontSize:11,color:'#78716C',marginTop:3},itemTotal:{fontSize:13,fontWeight:'800',color:'#1C1917'},
-  addressLabel:{fontSize:12,fontWeight:'800',color:'#065F46'},address:{fontSize:12,color:'#57534E',lineHeight:19,marginTop:6},divider:{height:1,backgroundColor:'#F0EFED',marginVertical:14},row:{flexDirection:'row',justifyContent:'space-between',marginBottom:10},muted:{fontSize:12,color:'#78716C'},value:{fontSize:12,fontWeight:'700',color:'#1C1917'},totalLabel:{fontSize:15,fontWeight:'900',color:'#1C1917'},totalValue:{fontSize:15,fontWeight:'900',color:'#1C1917'},payment:{fontSize:11,color:'#78716C',marginTop:3},note:{fontSize:13,color:'#57534E',lineHeight:20},
-  callStore:{minHeight:50,borderRadius:14,borderWidth:1,borderColor:'#A7F3D0',backgroundColor:'#ECFDF5',alignItems:'center',justifyContent:'center',marginBottom:12},callStoreText:{fontSize:14,fontWeight:'800',color:'#065F46'},
+  step:{flexDirection:'row',minHeight:62},stepRail:{width:30,alignItems:'center'},dot:{width:20,height:20,borderRadius:10,borderWidth:2,borderColor:'#D6D3D1',backgroundColor:'#fff',alignItems:'center',justifyContent:'center'},dotDone:{backgroundColor:'#0B0B0C',borderColor:'#0B0B0C'},dotActive:{borderColor:'#0B0B0C'},tick:{fontSize:12,fontWeight:'900',color:'#fff'},rail:{width:2,flex:1,backgroundColor:'#E7E5E4',marginVertical:3},railDone:{backgroundColor:'#0B0B0C'},stepCopy:{flex:1,paddingLeft:10,paddingBottom:12},stepTitle:{fontSize:13,fontWeight:'600',color:'#78716C'},stepTitleStrong:{color:'#1C1917',fontWeight:'800'},stepSub:{fontSize:10,color:'#A8A29E',marginTop:3,lineHeight:15},
+  card:{backgroundColor:'#fff',borderWidth:1,borderColor:'#EEECE9',borderRadius:18,padding:16,marginBottom:24},itemRow:{flexDirection:'row',alignItems:'center',paddingVertical:8},itemThumb:{width:48,height:48,borderRadius:12,backgroundColor:'#F7F7F4',alignItems:'center',justifyContent:'center'},itemInitial:{fontSize:17,fontWeight:'800',color:'#0B0B0C'},itemCopy:{flex:1,paddingHorizontal:12},itemName:{fontSize:13,fontWeight:'700',color:'#1C1917'},itemUnit:{fontSize:11,color:'#78716C',marginTop:3},itemTotal:{fontSize:13,fontWeight:'800',color:'#1C1917'},
+  addressLabel:{fontSize:12,fontWeight:'800',color:'#26262A'},address:{fontSize:12,color:'#57534E',lineHeight:19,marginTop:6},divider:{height:1,backgroundColor:'#F0EFED',marginVertical:14},row:{flexDirection:'row',justifyContent:'space-between',marginBottom:10},muted:{fontSize:12,color:'#78716C'},value:{fontSize:12,fontWeight:'700',color:'#1C1917'},totalLabel:{fontSize:15,fontWeight:'900',color:'#1C1917'},totalValue:{fontSize:15,fontWeight:'900',color:'#1C1917'},payment:{fontSize:11,color:'#78716C',marginTop:3},note:{fontSize:13,color:'#57534E',lineHeight:20},
+  callStore:{minHeight:50,borderRadius:14,borderWidth:1,borderColor:'#E6E6E1',backgroundColor:'#F5F5F2',alignItems:'center',justifyContent:'center',marginBottom:12},callStoreText:{fontSize:14,fontWeight:'800',color:'#26262A'},
   cancelButton:{minHeight:52,borderRadius:14,borderWidth:1,borderColor:'#FCA5A5',backgroundColor:'#FFFFFF',alignItems:'center',justifyContent:'center',marginTop:4},cancelText:{fontSize:14,fontWeight:'800',color:'#B91C1C'},
-  otpCard:{backgroundColor:'#ECFDF5',borderWidth:1,borderColor:'#A7F3D0',borderRadius:18,padding:18,marginBottom:24,alignItems:'center'},otpEyebrow:{fontSize:10,fontWeight:'900',letterSpacing:1.2,color:'#047857'},otpTitle:{fontSize:30,fontWeight:'900',letterSpacing:6,color:'#065F46',marginTop:5},otpBody:{fontSize:11,color:'#047857',textAlign:'center',lineHeight:17,marginTop:5},errorTitle:{fontSize:18,fontWeight:'800',color:'#1C1917',textAlign:'center'},errorBody:{fontSize:13,color:'#78716C',textAlign:'center',lineHeight:20,marginTop:8,marginBottom:20},primary:{backgroundColor:'#059669',paddingHorizontal:26,paddingVertical:14,borderRadius:12},primaryText:{color:'#fff',fontSize:14,fontWeight:'800'}
+  otpCard:{backgroundColor:'#F5F5F2',borderWidth:1,borderColor:'#E6E6E1',borderRadius:18,padding:18,marginBottom:24,alignItems:'center'},otpEyebrow:{fontSize:10,fontWeight:'900',letterSpacing:1.2,color:'#26262A'},otpTitle:{fontSize:30,fontWeight:'900',letterSpacing:6,color:'#26262A',marginTop:5},otpBody:{fontSize:11,color:'#26262A',textAlign:'center',lineHeight:17,marginTop:5},errorTitle:{fontSize:18,fontWeight:'800',color:'#1C1917',textAlign:'center'},errorBody:{fontSize:13,color:'#78716C',textAlign:'center',lineHeight:20,marginTop:8,marginBottom:20},primary:{backgroundColor:'#0B0B0C',paddingHorizontal:26,paddingVertical:14,borderRadius:12},primaryText:{color:'#fff',fontSize:14,fontWeight:'800'}
 });

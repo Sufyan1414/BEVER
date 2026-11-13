@@ -138,7 +138,7 @@ export function AddressListScreen({ navigation }: AddressListProps) {
               style={styles.setDefaultButton}
             >
               {isBusy ? (
-                <ActivityIndicator size="small" color="#059669" />
+                <ActivityIndicator size="small" color="#0B0B0C" />
               ) : (
                 <Text style={styles.setDefaultText}>Set as Default</Text>
               )}
@@ -204,7 +204,7 @@ export function AddressListScreen({ navigation }: AddressListProps) {
       {/* Content Body */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#059669" />
+          <ActivityIndicator size="large" color="#0B0B0C" />
         </View>
       ) : (
         <FlatList
@@ -216,7 +216,7 @@ export function AddressListScreen({ navigation }: AddressListProps) {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              tintColor="#059669"
+              tintColor="#0B0B0C"
             />
           }
           ListHeaderComponent={
@@ -251,7 +251,7 @@ export function AddressListScreen({ navigation }: AddressListProps) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F3FBF7',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#059669',
+    color: '#0B0B0C',
   },
   headerTitle: {
     fontSize: 18,
@@ -280,13 +280,13 @@ const styles = StyleSheet.create({
   addButtonHeader: {
     paddingVertical: 6,
     paddingHorizontal: 12,
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#E6E6E1',
     borderRadius: 8,
   },
   addButtonHeaderText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#065F46',
+    color: '#26262A',
   },
   loadingContainer: {
     flex: 1,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   cardDefault: {
-    borderColor: '#059669',
+    borderColor: '#0B0B0C',
     borderWidth: 1.5,
     backgroundColor: '#FFFFFF',
   },
@@ -352,23 +352,23 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   locationPinnedBadge: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#E6E6E1',
   },
   locationMissingBadge: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#E6E6E1',
   },
   locationBadgeText: {
     fontSize: 11,
     fontWeight: '700',
   },
   locationPinnedText: {
-    color: '#065F46',
+    color: '#26262A',
   },
   locationMissingText: {
-    color: '#065F46',
+    color: '#26262A',
   },
   defaultPill: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#E6E6E1',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   defaultPillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#065F46',
+    color: '#26262A',
   },
   setDefaultButton: {
     paddingVertical: 4,
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   setDefaultText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#059669',
+    color: '#0B0B0C',
   },
   addressLine1: {
     fontSize: 16,
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   editActionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#059669',
+    color: '#0B0B0C',
   },
   deleteActionButton: {
     paddingVertical: 4,
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   addPrimaryButton: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0B0B0C',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,

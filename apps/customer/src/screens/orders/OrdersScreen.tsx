@@ -16,7 +16,7 @@ const CLOSED = ['DELIVERED', 'REJECTED', 'CANCELLED', 'PAYMENT_FAILED', 'DELIVER
 const rupees = (paise: number) => `₹${Math.round(paise / 100)}`;
 
 const statusTone = (status: string) =>
-  status === 'DELIVERED' ? { color: '#047857', backgroundColor: '#ECFDF5' }
+  status === 'DELIVERED' ? { color: '#26262A', backgroundColor: '#F5F5F2' }
   : ['REJECTED', 'CANCELLED', 'DELIVERY_FAILED'].includes(status) ? { color: '#B91C1C', backgroundColor: '#FEE2E2' }
   : { color: '#B45309', backgroundColor: '#FFF7E6' };
 
@@ -66,8 +66,7 @@ export function OrdersScreen() {
       const first = list[0];
       if (!first) return;
       const store = { id: first.store_id, name: order.storeName };
-      const cart = useCartStore.getState();
-      cart.clearCart();
+      // Re-ordering adds to (or creates) this shop's basket; other baskets are left untouched.
       let added = 0;
       for (const prod of list) {
         const qty = wanted.find((w) => w.product_id === prod.id)?.quantity ?? 1;
@@ -90,7 +89,7 @@ export function OrdersScreen() {
   }
 
   if (loading) {
-    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#059669" /><Text style={styles.loadingText}>Loading orders…</Text></View></SafeAreaView>;
+    return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#0B0B0C" /><Text style={styles.loadingText}>Loading orders…</Text></View></SafeAreaView>;
   }
 
   const renderList = (list: CustomerOrderSummary[]) => list.map((order) => (
@@ -122,8 +121,8 @@ export function OrdersScreen() {
 }
 
 const styles=StyleSheet.create({
-  avatar:{width:42,height:42,borderRadius:13,backgroundColor:'#ECFDF5',alignItems:'center',justifyContent:'center',marginRight:12},avatarText:{fontSize:18,fontWeight:'800',color:'#047857'},
-  again:{marginTop:12,minHeight:42,borderRadius:12,backgroundColor:'#059669',alignItems:'center',justifyContent:'center'},againText:{color:'#fff',fontSize:13,fontWeight:'800'},
+  avatar:{width:42,height:42,borderRadius:13,backgroundColor:'#F5F5F2',alignItems:'center',justifyContent:'center',marginRight:12},avatarText:{fontSize:18,fontWeight:'800',color:'#26262A'},
+  again:{marginTop:12,minHeight:42,borderRadius:12,backgroundColor:'#0B0B0C',alignItems:'center',justifyContent:'center'},againText:{color:'#fff',fontSize:13,fontWeight:'800'},
   groupTitle:{fontSize:12,fontWeight:'900',letterSpacing:0.8,color:'#78716C',textTransform:'uppercase',marginBottom:10,marginTop:6},
-  safe:{flex:1,backgroundColor:'#F3FBF7'},header:{paddingHorizontal:20,paddingTop:16,paddingBottom:22,backgroundColor:'#064E3B',borderBottomLeftRadius:26,borderBottomRightRadius:26,marginBottom:14},title:{fontSize:25,fontWeight:'800',color:'#FFFFFF'},subtitle:{fontSize:12.5,color:'#A7F3D0',marginTop:3},content:{padding:20,paddingTop:4,paddingBottom:40},card:{backgroundColor:'#fff',borderWidth:1,borderColor:'#EEECE9',borderRadius:18,padding:16,marginBottom:12},cardTop:{flexDirection:'row',alignItems:'flex-start'},store:{fontSize:15,fontWeight:'800',color:'#1C1917'},meta:{fontSize:11,color:'#A8A29E',marginTop:4},amount:{fontSize:15,fontWeight:'900',color:'#1C1917'},divider:{height:1,backgroundColor:'#F0EFED',marginVertical:13},cardBottom:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},status:{fontSize:12,fontWeight:'800',color:'#B45309',alignSelf:'flex-start',paddingHorizontal:10,paddingVertical:4,borderRadius:999,overflow:'hidden'},items:{fontSize:11.5,color:'#6B7280',marginTop:6},arrow:{width:32,height:32,borderRadius:16,backgroundColor:'#F7F7F4',alignItems:'center',justifyContent:'center'},arrowText:{fontSize:23,color:'#57534E',marginTop:-3},center:{flex:1,alignItems:'center',justifyContent:'center',padding:30},icon:{fontSize:48,marginBottom:15},heading:{fontSize:19,fontWeight:'800',color:'#1C1917',textAlign:'center'},body:{fontSize:13,color:'#78716C',lineHeight:20,textAlign:'center',maxWidth:280,marginTop:7,marginBottom:20},primary:{backgroundColor:'#059669',borderRadius:12,paddingHorizontal:28,paddingVertical:14},primaryText:{color:'#fff',fontSize:14,fontWeight:'800'},loadingText:{fontSize:12,color:'#78716C',marginTop:10},error:{marginHorizontal:20,marginBottom:10,backgroundColor:'#FEE2E2',borderWidth:1,borderColor:'#FCA5A5',borderRadius:12,padding:12,flexDirection:'row',justifyContent:'space-between'},errorText:{flex:1,fontSize:12,color:'#991B1B'},retry:{fontSize:12,fontWeight:'800',color:'#991B1B',marginLeft:10}
+  safe:{flex:1,backgroundColor:'#FFFFFF'},header:{paddingHorizontal:20,paddingTop:16,paddingBottom:22,backgroundColor:'#0B0B0C',borderBottomLeftRadius:26,borderBottomRightRadius:26,marginBottom:14},title:{fontSize:25,fontWeight:'800',color:'#FFFFFF'},subtitle:{fontSize:12.5,color:'#E6E6E1',marginTop:3},content:{padding:20,paddingTop:4,paddingBottom:40},card:{backgroundColor:'#fff',borderWidth:1,borderColor:'#EEECE9',borderRadius:18,padding:16,marginBottom:12},cardTop:{flexDirection:'row',alignItems:'flex-start'},store:{fontSize:15,fontWeight:'800',color:'#1C1917'},meta:{fontSize:11,color:'#A8A29E',marginTop:4},amount:{fontSize:15,fontWeight:'900',color:'#1C1917'},divider:{height:1,backgroundColor:'#F0EFED',marginVertical:13},cardBottom:{flexDirection:'row',alignItems:'center',justifyContent:'space-between'},status:{fontSize:12,fontWeight:'800',color:'#B45309',alignSelf:'flex-start',paddingHorizontal:10,paddingVertical:4,borderRadius:999,overflow:'hidden'},items:{fontSize:11.5,color:'#6B7280',marginTop:6},arrow:{width:32,height:32,borderRadius:16,backgroundColor:'#F7F7F4',alignItems:'center',justifyContent:'center'},arrowText:{fontSize:23,color:'#57534E',marginTop:-3},center:{flex:1,alignItems:'center',justifyContent:'center',padding:30},icon:{fontSize:48,marginBottom:15},heading:{fontSize:19,fontWeight:'800',color:'#1C1917',textAlign:'center'},body:{fontSize:13,color:'#78716C',lineHeight:20,textAlign:'center',maxWidth:280,marginTop:7,marginBottom:20},primary:{backgroundColor:'#0B0B0C',borderRadius:12,paddingHorizontal:28,paddingVertical:14},primaryText:{color:'#fff',fontSize:14,fontWeight:'800'},loadingText:{fontSize:12,color:'#78716C',marginTop:10},error:{marginHorizontal:20,marginBottom:10,backgroundColor:'#FEE2E2',borderWidth:1,borderColor:'#FCA5A5',borderRadius:12,padding:12,flexDirection:'row',justifyContent:'space-between'},errorText:{flex:1,fontSize:12,color:'#991B1B'},retry:{fontSize:12,fontWeight:'800',color:'#991B1B',marginLeft:10}
 });

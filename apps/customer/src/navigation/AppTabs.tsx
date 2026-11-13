@@ -20,7 +20,7 @@ import { useCartStore } from '../stores/useCartStore';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
-const AMBER = '#059669';
+const AMBER = '#0B0B0C';
 const SURFACE = '#F7F7F3';
 const MUTED = '#9A9A94';
 

@@ -15,7 +15,7 @@ import type { NearbyStore } from '../types/store';
 export type HomeStackParamList = {
   HomeMain: { query?: string; category?: string } | undefined;
   Search: { stores: NearbyStore[]; query?: string };
-  StoreDetail: { store: NearbyStore };
+  StoreDetail: { store: NearbyStore; focusProductId?: string };
 };
 
 export type HomeMainProps = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;

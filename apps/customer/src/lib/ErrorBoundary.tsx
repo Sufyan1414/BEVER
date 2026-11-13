@@ -23,9 +23,9 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
 }
 
 const s = StyleSheet.create({
-  wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: '#F3FBF7' },
-  title: { fontSize: 20, fontWeight: '800', color: '#064E3B' },
+  wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: '#FFFFFF' },
+  title: { fontSize: 20, fontWeight: '800', color: '#0B0B0C' },
   body: { fontSize: 14, color: '#6B7280', textAlign: 'center', marginTop: 8, lineHeight: 20 },
-  btn: { marginTop: 22, backgroundColor: '#059669', borderRadius: 14, paddingHorizontal: 28, paddingVertical: 13 },
+  btn: { marginTop: 22, backgroundColor: '#0B0B0C', borderRadius: 14, paddingHorizontal: 28, paddingVertical: 13 },
   btnText: { color: '#fff', fontWeight: '800', fontSize: 15 },
 });

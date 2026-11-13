@@ -1,675 +1,177 @@
 /**
- * BEVER Customer App — Cart Screen
+ * BEVER Customer App — Cart (multi-basket)
  *
- * Displays the customer's active shopping cart powered by useCartStore.
- *
- * Features:
- *   - Shows store header, line items with quantity steppers, subtotal.
- *   - Empty-cart state with navigation back to Home.
- *   - Clear-cart action with confirmation dialog.
- *   - Real "Continue to Checkout" CTA.
- *   - Guests are asked to authenticate only when they proceed to checkout;
- *     their checkout intent is preserved and they land directly on Checkout
- *     after authentication/profile completion.
- *   - Prices displayed in rupees (paise ÷ 100, no decimals for whole values).
- *   - No fake data, no hardcoded products, prices, or fees.
+ * One BASKET per shop. A grocery basket and an electronics basket are separate orders,
+ * delivered by separate riders, each checked out on its own.
  */
-
 import React, { useState } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet, Image, Modal } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { useCartStore, computeCartSummary } from '../../stores/useCartStore';
-import type { CartItem } from '../../stores/useCartStore';
+import { useCartStore, computeCartSummary, selectBaskets, basketKind, type Basket } from '../../stores/useCartStore';
 import { FreeDeliveryProgress } from '../../components/FreeDeliveryProgress';
+import { C, CATEGORY_STYLE, rupees } from '../../theme';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatRupees(paise: number): string {
-  return `₹${Math.round(paise / 100)}`;
-}
-
-// ─── Clear-cart confirmation dialog ──────────────────────────────────────────
-
-function ClearCartDialog({
-  visible,
-  onCancel,
-  onConfirm,
-}: {
-  visible: boolean;
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
+function BasketCard({ basket, onCheckout, onClear }: { basket: Basket; onCheckout: () => void; onClear: () => void }) {
+  const inc = useCartStore((s) => s.incrementItem);
+  const dec = useCartStore((s) => s.decrementItem);
+  const remove = useCartStore((s) => s.removeItem);
+  const sum = computeCartSummary(basket.items);
+  const cs = CATEGORY_STYLE[basket.category ?? 'OTHER'] ?? CATEGORY_STYLE.OTHER!;
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={dialogStyles.overlay}>
-        <View style={dialogStyles.card}>
-          <Text style={dialogStyles.icon}>🗑️</Text>
-          <Text style={dialogStyles.title}>Clear your cart?</Text>
-          <Text style={dialogStyles.body}>
-            All items in your cart will be removed. This cannot be undone.
-          </Text>
-          <TouchableOpacity style={dialogStyles.confirmBtn} onPress={onConfirm}>
-            <Text style={dialogStyles.confirmBtnText}>Yes, clear cart</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={dialogStyles.cancelBtn} onPress={onCancel}>
-            <Text style={dialogStyles.cancelBtnText}>Keep my cart</Text>
-          </TouchableOpacity>
+    <View style={s.basket}>
+      <View style={s.basketHead}>
+        <View style={[s.kindIcon, { backgroundColor: cs.bg }]}><Text style={{ fontSize: 20 }}>{cs.icon}</Text></View>
+        <View style={{ flex: 1 }}>
+          <Text style={s.kind}>{basketKind(basket.category).toUpperCase()}</Text>
+          <Text style={s.shopName} numberOfLines={1}>{basket.storeName}</Text>
         </View>
-      </View>
-    </Modal>
-  );
-}
-
-// ─── Cart Line Item ───────────────────────────────────────────────────────────
-
-function CartLineItem({
-  item,
-  onIncrement,
-  onDecrement,
-  onRemove,
-}: {
-  item: CartItem;
-  onIncrement: () => void;
-  onDecrement: () => void;
-  onRemove: () => void;
-}) {
-  const lineTotal = item.unitPricePaise * item.quantity;
-
-  return (
-    <View style={itemStyles.row}>
-      {/* Product image */}
-      {item.productImageUrl ? (
-        <Image
-          source={{ uri: item.productImageUrl }}
-          style={itemStyles.img}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={itemStyles.imgFallback}>
-          <Text style={itemStyles.imgEmoji}>🛍️</Text>
-        </View>
-      )}
-
-      {/* Product details */}
-      <View style={itemStyles.info}>
-        <Text style={itemStyles.name} numberOfLines={2}>
-          {item.productName}
-        </Text>
-        {item.unit ? (
-          <Text style={itemStyles.unit}>{item.unit}</Text>
-        ) : null}
-        <Text style={itemStyles.unitPrice}>{formatRupees(item.unitPricePaise)} each</Text>
+        <TouchableOpacity onPress={onClear} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel={`Clear ${basket.storeName} basket`}><Text style={s.clear}>Clear</Text></TouchableOpacity>
       </View>
 
-      {/* Right column: stepper + line total */}
-      <View style={itemStyles.right}>
-        <Text style={itemStyles.lineTotal}>{formatRupees(lineTotal)}</Text>
-
-        <View style={itemStyles.stepper}>
-          <TouchableOpacity
-            style={itemStyles.stepperBtn}
-            onPress={item.quantity === 1 ? onRemove : onDecrement}
-            accessibilityLabel={
-              item.quantity === 1 ? `Remove ${item.productName}` : `Decrease ${item.productName}`
-            }
-          >
-            <Text style={itemStyles.stepperBtnText}>{item.quantity === 1 ? '🗑' : '−'}</Text>
-          </TouchableOpacity>
-
-          <Text style={itemStyles.stepperQty}>{item.quantity}</Text>
-
-          <TouchableOpacity
-            style={itemStyles.stepperBtn}
-            onPress={onIncrement}
-            accessibilityLabel={`Increase ${item.productName}`}
-          >
-            <Text style={itemStyles.stepperBtnText}>+</Text>
-          </TouchableOpacity>
+      {basket.items.map((it) => (
+        <View key={it.productId} style={s.line}>
+          {it.productImageUrl ? <Image source={{ uri: it.productImageUrl }} style={s.thumb} resizeMode="contain" /> : <View style={[s.thumb, s.thumbFallback]}><Text style={{ fontSize: 22 }}>🛍️</Text></View>}
+          <View style={{ flex: 1 }}>
+            <Text style={s.itemName} numberOfLines={2}>{it.productName}</Text>
+            <Text style={s.itemUnit}>{it.unit}</Text>
+            <TouchableOpacity onPress={() => remove(it.productId)} accessibilityLabel={`Remove ${it.productName}`}><Text style={s.remove}>Remove</Text></TouchableOpacity>
+          </View>
+          <View style={{ alignItems: 'flex-end', gap: 6 }}>
+            <View style={s.stepper}>
+              <TouchableOpacity style={s.stepBtn} onPress={() => dec(it.productId)} accessibilityLabel={`Decrease ${it.productName}`}><Text style={s.stepText}>−</Text></TouchableOpacity>
+              <Text style={s.qty}>{it.quantity}</Text>
+              <TouchableOpacity style={s.stepBtn} onPress={() => inc(it.productId)} accessibilityLabel={`Increase ${it.productName}`}><Text style={s.stepText}>+</Text></TouchableOpacity>
+            </View>
+            <Text style={s.lineTotal}>{rupees(it.unitPricePaise * it.quantity)}</Text>
+          </View>
         </View>
+      ))}
+
+      <FreeDeliveryProgress subtotalPaise={sum.subtotalPaise} style={{ marginTop: 10 }} />
+      {sum.savingsPaise > 0 ? <Text style={s.saving}>You save {rupees(sum.savingsPaise)} on this basket</Text> : null}
+
+      <View style={s.foot}>
+        <View>
+          <Text style={s.footLabel}>{sum.totalItems} {sum.totalItems === 1 ? 'item' : 'items'}</Text>
+          <Text style={s.footTotal}>{rupees(sum.subtotalPaise)}</Text>
+        </View>
+        <TouchableOpacity style={s.checkout} onPress={onCheckout} activeOpacity={0.9} accessibilityRole="button" accessibilityLabel={`Checkout ${basket.storeName} basket`}>
+          <Text style={s.checkoutText}>Checkout</Text>
+          <Text style={s.checkoutArrow}>→</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-// ─── Empty Cart ───────────────────────────────────────────────────────────────
-
-function EmptyCart({ onGoHome }: { onGoHome: () => void }) {
-  return (
-    <View style={emptyStyles.wrap}>
-      <Text style={emptyStyles.icon}>🛒</Text>
-      <Text style={emptyStyles.title}>Your cart is empty</Text>
-      <Text style={emptyStyles.body}>
-        Browse nearby stores and add items to get started.
-      </Text>
-      <TouchableOpacity style={emptyStyles.btn} onPress={onGoHome}>
-        <Text style={emptyStyles.btnText}>Browse Stores</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-// ─── Cart Screen ─────────────────────────────────────────────────────────────
 
 export function CartScreen() {
   const navigation = useNavigation<any>();
   const { session } = useAuthStore();
-  const {
-    storeName,
-    items,
-    incrementItem,
-    decrementItem,
-    removeItem,
-    clearCart,
-    requestCheckout,
-  } = useCartStore();
-  const summary = computeCartSummary(items);
+  const items = useCartStore((st) => st.items);
+  const stores = useCartStore((st) => st.stores);
+  const clearBasket = useCartStore((st) => st.clearBasket);
+  const clearCart = useCartStore((st) => st.clearCart);
+  const setCheckoutStore = useCartStore((st) => st.setCheckoutStore);
+  const requestCheckout = useCartStore((st) => st.requestCheckout);
+  const baskets = selectBaskets(items, stores);
+  const [open, setOpen] = useState(true);
 
-  const [showClearDialog, setShowClearDialog] = useState(false);
-
-  const handleGoHome = () => {
-    navigation.navigate('Home');
-  };
-
-  const handleClearConfirm = () => {
-    clearCart();
-    setShowClearDialog(false);
-  };
-
-  const handleCheckout = () => {
-    if (!session) {
-      requestCheckout();
-      navigation.navigate('Auth');
-      return;
-    }
+  const checkout = (storeId: string) => {
+    setCheckoutStore(storeId);
+    if (!session) { requestCheckout(); navigation.navigate('Auth'); return; }
     navigation.navigate('Checkout');
   };
-
-  const isEmpty = items.length === 0;
+  const confirmClear = (b: Basket) => Alert.alert(`Clear ${b.storeName} basket?`, 'Items in this basket will be removed. Your other baskets stay as they are.', [
+    { text: 'Keep', style: 'cancel' },
+    { text: 'Clear', style: 'destructive', onPress: () => clearBasket(b.storeId) },
+  ]);
+  const confirmClearAll = () => Alert.alert('Empty your whole cart?', `This removes all ${baskets.length} baskets.`, [
+    { text: 'Keep', style: 'cancel' },
+    { text: 'Empty cart', style: 'destructive', onPress: () => clearCart() },
+  ]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={s.safe} edges={['top']}>
       <StatusBar style="dark" />
-
-      {/* Clear-cart confirmation */}
-      <ClearCartDialog
-        visible={showClearDialog}
-        onCancel={() => setShowClearDialog(false)}
-        onConfirm={handleClearConfirm}
-      />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Cart</Text>
-        {!isEmpty && (
-          <TouchableOpacity
-            style={styles.clearBtn}
-            onPress={() => setShowClearDialog(true)}
-            accessibilityLabel="Clear cart"
-          >
-            <Text style={styles.clearBtnText}>Clear</Text>
-          </TouchableOpacity>
-        )}
+      <View style={s.header}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={s.round} accessibilityLabel="Back" accessibilityRole="button"><Text style={s.roundText}>‹</Text></TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={s.title}>Your cart</Text>
+          {baskets.length > 0 ? <Text style={s.sub}>{baskets.length} {baskets.length === 1 ? 'basket' : 'baskets'} · {computeCartSummary(items).totalItems} items</Text> : null}
+        </View>
+        {baskets.length > 1 ? <TouchableOpacity onPress={confirmClearAll}><Text style={s.clear}>Empty all</Text></TouchableOpacity> : null}
       </View>
 
-      {isEmpty ? (
-        <EmptyCart onGoHome={handleGoHome} />
+      {baskets.length === 0 ? (
+        <View style={s.empty}>
+          <View style={s.emptyIcon}><Text style={{ fontSize: 44 }}>🛒</Text></View>
+          <Text style={s.emptyTitle}>Your cart is empty</Text>
+          <Text style={s.emptyBody}>Add something from any shop near you. Groceries, electronics, medicines — each shop gets its own basket.</Text>
+          <TouchableOpacity style={s.cta} onPress={() => navigation.navigate('Home')}><Text style={s.ctaText}>Start shopping</Text></TouchableOpacity>
+        </View>
       ) : (
-        <>
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Store name header */}
-            {storeName && (
-              <View style={styles.storeHeader}>
-                <Text style={styles.storeLabel}>From</Text>
-                <Text style={styles.storeName}>{storeName}</Text>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+          {baskets.length > 1 && open ? (
+            <View style={s.note}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.noteTitle}>{baskets.length} baskets, {baskets.length} deliveries</Text>
+                <Text style={s.noteBody}>Different shops send their own rider, so each basket is checked out separately. Pick any one to continue — the others wait here.</Text>
               </View>
-            )}
-
-            {/* Line items */}
-            <View style={styles.itemsCard}>
-              {items.map((item, index) => (
-                <React.Fragment key={item.productId}>
-                  <CartLineItem
-                    item={item}
-                    onIncrement={() => incrementItem(item.productId)}
-                    onDecrement={() => decrementItem(item.productId)}
-                    onRemove={() => removeItem(item.productId)}
-                  />
-                  {index < items.length - 1 && <View style={styles.divider} />}
-                </React.Fragment>
-              ))}
+              <TouchableOpacity onPress={() => setOpen(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityLabel="Dismiss"><Text style={{ fontSize: 16, color: C.sky }}>✕</Text></TouchableOpacity>
             </View>
-
-            <FreeDeliveryProgress subtotalPaise={summary.subtotalPaise} style={{ marginHorizontal: 20 }} />
-
-            {/* Subtotal */}
-            <View style={styles.summaryCard}>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>
-                  Items ({summary.totalItems})
-                </Text>
-                <Text style={styles.summaryValue}>
-                  {formatRupees(summary.subtotalPaise)}
-                </Text>
-              </View>
-
-              <View style={styles.divider} />
-
-              <View style={styles.summaryRow}>
-                <Text style={styles.totalLabel}>Item Total</Text>
-                <Text style={styles.totalValue}>
-                  {formatRupees(summary.subtotalPaise)}
-                </Text>
-              </View>
-
-              {summary.savingsPaise > 0 ? (
-                <View style={{ backgroundColor: '#ECFDF5', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12, marginTop: 10 }}>
-                  <Text style={{ color: '#047857', fontWeight: '800', fontSize: 13 }}>🎉 You are saving {formatRupees(summary.savingsPaise)} on this order</Text>
-                </View>
-              ) : null}
-
-              <Text style={styles.feesNote}>
-                Delivery is free from ₹199. Below that, the fee is ₹20 plus ₹7 per started km, shown on your order.
-              </Text>
-            </View>
-          </ScrollView>
-
-          {/* Sticky CTA */}
-          <View style={styles.ctaWrap}>
-            <TouchableOpacity
-              style={styles.ctaBtn}
-              onPress={handleCheckout}
-              accessibilityLabel="Continue to Checkout"
-            >
-              <View style={styles.ctaInner}>
-                <View style={styles.ctaBadge}>
-                  <Text style={styles.ctaBadgeText}>{summary.totalItems}</Text>
-                </View>
-                <Text style={styles.ctaText}>Continue to Checkout</Text>
-                <Text style={styles.ctaPrice}>{formatRupees(summary.subtotalPaise)}</Text>
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.ctaNote}>
-              {session
-                ? 'Final price and delivery fee are verified at order placement.'
-                : 'Secure sign-in is required before placing your order.'}
-            </Text>
-          </View>
-        </>
+          ) : null}
+          {baskets.map((b) => <BasketCard key={b.storeId} basket={b} onCheckout={() => checkout(b.storeId)} onClear={() => confirmClear(b)} />)}
+          <TouchableOpacity style={s.more} onPress={() => navigation.navigate('Home')} accessibilityRole="button"><Text style={s.moreText}>+ Add from another shop</Text></TouchableOpacity>
+        </ScrollView>
       )}
     </SafeAreaView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: '#F3FBF7',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#064E3B',
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
-    marginBottom: 6,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  clearBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  clearBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#ECFDF5',
-  },
-
-  scrollContent: {
-    paddingBottom: 24,
-  },
-
-  // Store header
-  storeHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 8,
-  },
-  storeLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#9A9A94',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 2,
-  },
-  storeName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#171717',
-  },
-
-  // Items card
-  itemsCard: {
-    marginHorizontal: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#E4E4DE',
-    overflow: 'hidden',
-    marginBottom: 16,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: '#EFEFEB',
-    marginHorizontal: 16,
-  },
-
-  // Summary card
-  summaryCard: {
-    marginHorizontal: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#E4E4DE',
-    padding: 18,
-    gap: 12,
-    marginBottom: 8,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#6B6B67',
-    fontWeight: '500',
-  },
-  summaryValue: {
-    fontSize: 14,
-    color: '#171717',
-    fontWeight: '600',
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#171717',
-  },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#171717',
-  },
-  feesNote: {
-    fontSize: 11,
-    color: '#9A9A94',
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-
-  // Sticky CTA
-  ctaWrap: {
-    backgroundColor: '#F7F7F3',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E6E6E1',
-    gap: 8,
-  },
-  ctaBtn: {
-    backgroundColor: '#059669',
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  ctaInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 16,
-    gap: 10,
-  },
-  ctaBadge: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    minWidth: 26,
-    alignItems: 'center',
-  },
-  ctaBadgeText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  ctaText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
-  },
-  ctaPrice: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  ctaNote: {
-    fontSize: 11,
-    color: '#9A9A94',
-    textAlign: 'center',
-  },
-});
-
-const itemStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 12,
-    alignItems: 'center',
-  },
-  img: {
-    width: 60,
-    height: 60,
-    borderRadius: 10,
-    flexShrink: 0,
-  },
-  imgFallback: {
-    width: 60,
-    height: 60,
-    borderRadius: 10,
-    backgroundColor: '#EFEFEB',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  imgEmoji: { fontSize: 24 },
-  info: {
-    flex: 1,
-    gap: 3,
-  },
-  name: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#171717',
-    lineHeight: 20,
-  },
-  unit: {
-    fontSize: 11,
-    color: '#9A9A94',
-    fontWeight: '500',
-  },
-  unitPrice: {
-    fontSize: 12,
-    color: '#6B6B67',
-    fontWeight: '500',
-  },
-  right: {
-    alignItems: 'flex-end',
-    gap: 8,
-    flexShrink: 0,
-  },
-  lineTotal: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#171717',
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: '#059669',
-    overflow: 'hidden',
-  },
-  stepperBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperBtnText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#059669',
-    lineHeight: 19,
-  },
-  stepperQty: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#171717',
-    minWidth: 22,
-    textAlign: 'center',
-  },
-});
-
-const emptyStyles = StyleSheet.create({
-  wrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 36,
-    paddingBottom: 80,
-    gap: 12,
-  },
-  icon: { fontSize: 64, marginBottom: 4 },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#171717',
-    textAlign: 'center',
-  },
-  body: {
-    fontSize: 14,
-    color: '#6B6B67',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  btn: {
-    backgroundColor: '#059669',
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    marginTop: 8,
-  },
-  btnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-});
-
-const dialogStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(28,25,23,0.55)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 28,
-    width: '100%',
-    alignItems: 'center',
-    gap: 12,
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-  },
-  icon: { fontSize: 40 },
-  title: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#171717',
-    textAlign: 'center',
-  },
-  body: {
-    fontSize: 14,
-    color: '#6B6B67',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  confirmBtn: {
-    backgroundColor: '#EF4444',
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  confirmBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  cancelBtn: {
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    width: '100%',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#E6E6E1',
-  },
-  cancelBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#6B6B67',
-  },
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: C.canvas },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.paper, borderBottomWidth: 1, borderBottomColor: C.line },
+  round: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.canvas, alignItems: 'center', justifyContent: 'center' },
+  roundText: { fontSize: 28, color: C.ink, marginTop: -4, fontWeight: '600' },
+  title: { fontSize: 20, fontWeight: '800', color: C.ink, letterSpacing: -0.3 },
+  sub: { fontSize: 12, color: C.muted, marginTop: 1, fontWeight: '600' },
+  clear: { fontSize: 13, fontWeight: '800', color: C.coral },
+  note: { flexDirection: 'row', gap: 10, backgroundColor: C.skySoft, borderRadius: 18, padding: 14, marginBottom: 14 },
+  noteTitle: { fontSize: 14, fontWeight: '800', color: '#1D4ED8' },
+  noteBody: { fontSize: 12.5, color: '#1E40AF', marginTop: 3, lineHeight: 18 },
+  basket: { backgroundColor: C.paper, borderRadius: 24, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: C.line },
+  basketHead: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 },
+  kindIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  kind: { fontSize: 10.5, fontWeight: '800', letterSpacing: 1.2, color: C.muted },
+  shopName: { fontSize: 16, fontWeight: '800', color: C.ink, marginTop: 1 },
+  line: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: C.canvas },
+  thumb: { width: 60, height: 60, borderRadius: 14, backgroundColor: C.canvas },
+  thumbFallback: { alignItems: 'center', justifyContent: 'center' },
+  itemName: { fontSize: 14, fontWeight: '700', color: C.ink, lineHeight: 18 },
+  itemUnit: { fontSize: 12, color: C.muted, marginTop: 2 },
+  remove: { fontSize: 11.5, fontWeight: '700', color: C.faint, marginTop: 4 },
+  stepper: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.ink, borderRadius: 10, height: 34 },
+  stepBtn: { width: 32, height: 34, alignItems: 'center', justifyContent: 'center' },
+  stepText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  qty: { color: '#fff', fontWeight: '800', minWidth: 18, textAlign: 'center' },
+  lineTotal: { fontSize: 14, fontWeight: '800', color: C.ink },
+  saving: { fontSize: 12.5, fontWeight: '800', color: C.mint, marginTop: 10 },
+  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: C.canvas },
+  footLabel: { fontSize: 12, color: C.muted, fontWeight: '600' },
+  footTotal: { fontSize: 22, fontWeight: '800', color: C.ink, letterSpacing: -0.4 },
+  checkout: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.ink, borderRadius: 16, paddingHorizontal: 22, height: 52 },
+  checkoutText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  checkoutArrow: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  more: { alignItems: 'center', paddingVertical: 14, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.faint },
+  moreText: { fontSize: 14, fontWeight: '800', color: C.ink2 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36 },
+  emptyIcon: { width: 96, height: 96, borderRadius: 32, backgroundColor: C.paper, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.line },
+  emptyTitle: { fontSize: 20, fontWeight: '800', color: C.ink, marginTop: 18 },
+  emptyBody: { fontSize: 13.5, color: C.muted, textAlign: 'center', lineHeight: 20, marginTop: 6 },
+  cta: { marginTop: 22, backgroundColor: C.ink, borderRadius: 16, paddingHorizontal: 30, height: 52, alignItems: 'center', justifyContent: 'center' },
+  ctaText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

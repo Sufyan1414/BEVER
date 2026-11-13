@@ -89,7 +89,7 @@ export function TrackingPanel({ orderId, status }: { orderId: string; status: st
           rotateEnabled={false} pitchEnabled={false} toolbarEnabled={false}
         >
           <UrlTile urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png" maximumZ={19} tileSize={256} doubleTileSize />
-          {route ? <Polyline coordinates={route.coords} strokeColor="#059669" strokeWidth={5} /> : null}
+          {route ? <Polyline coordinates={route.coords} strokeColor="#0B0B0C" strokeWidth={5} /> : null}
           {store ? <Marker coordinate={store} title={t.store_name}><View style={s.pinStore}><Text style={{ fontSize: 18 }}>🏪</Text></View></Marker> : null}
           {drop ? <Marker coordinate={drop} title="Your location"><View style={s.pinDrop}><Text style={{ fontSize: 18 }}>📍</Text></View></Marker> : null}
           {rider ? <Marker coordinate={rider} title="Your rider"><View style={s.pinRider}><Text style={{ fontSize: 20 }}>🛵</Text></View></Marker> : null}
@@ -114,20 +114,20 @@ export function TrackingPanel({ orderId, status }: { orderId: string; status: st
 
 const s = StyleSheet.create({
   wrap: { marginBottom: 14 },
-  banner: { backgroundColor: '#064E3B', borderRadius: 20, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
-  bannerSmall: { color: '#A7F3D0', fontSize: 13, fontWeight: '700' },
+  banner: { backgroundColor: '#0B0B0C', borderRadius: 20, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
+  bannerSmall: { color: '#E6E6E1', fontSize: 13, fontWeight: '700' },
   bannerBig: { color: '#fff', fontSize: 24, fontWeight: '900', marginTop: 2 },
-  mapBox: { height: 260, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: '#D1FAE5', backgroundColor: '#ECFDF5' },
+  mapBox: { height: 260, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: '#E6E6E1', backgroundColor: '#F5F5F2' },
   map: { flex: 1 },
   waiting: { position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: 'rgba(255,255,255,0.94)', borderRadius: 12, padding: 10, alignItems: 'center' },
-  waitingText: { fontSize: 12, color: '#047857', fontWeight: '700' },
-  pinStore: { backgroundColor: '#fff', borderRadius: 18, padding: 4, borderWidth: 2, borderColor: '#059669' },
+  waitingText: { fontSize: 12, color: '#26262A', fontWeight: '700' },
+  pinStore: { backgroundColor: '#fff', borderRadius: 18, padding: 4, borderWidth: 2, borderColor: '#0B0B0C' },
   pinDrop: { backgroundColor: '#fff', borderRadius: 18, padding: 4, borderWidth: 2, borderColor: '#F59E0B' },
-  pinRider: { backgroundColor: '#fff', borderRadius: 22, padding: 5, borderWidth: 2, borderColor: '#064E3B' },
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 20, padding: 14, marginTop: 10, borderWidth: 1, borderColor: '#D1FAE5' },
-  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  name: { fontSize: 15, fontWeight: '900', color: '#064E3B' },
-  msg: { backgroundColor: '#ECFDF5', borderRadius: 10, padding: 8, marginTop: 6 },
-  msgText: { fontSize: 12, color: '#047857', lineHeight: 17 },
-  call: { width: 46, height: 46, borderRadius: 23, borderWidth: 1, borderColor: '#A7F3D0', backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginLeft: 10 },
+  pinRider: { backgroundColor: '#fff', borderRadius: 22, padding: 5, borderWidth: 2, borderColor: '#0B0B0C' },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 20, padding: 14, marginTop: 10, borderWidth: 1, borderColor: '#E6E6E1' },
+  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#F5F5F2', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  name: { fontSize: 15, fontWeight: '900', color: '#0B0B0C' },
+  msg: { backgroundColor: '#F5F5F2', borderRadius: 10, padding: 8, marginTop: 6 },
+  msgText: { fontSize: 12, color: '#26262A', lineHeight: 17 },
+  call: { width: 46, height: 46, borderRadius: 23, borderWidth: 1, borderColor: '#E6E6E1', backgroundColor: '#F5F5F2', alignItems: 'center', justifyContent: 'center', marginLeft: 10 },
 });

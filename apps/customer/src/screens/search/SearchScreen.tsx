@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { CartBar } from '../../components/CartBar';
 import { ProductCard } from '../../components/ProductCard';
+import { ProductDetailSheet } from '../../components/ProductDetailSheet';
 import { searchProductsFull } from '../../services/store';
 import { STORE_CATEGORY_LABELS, type NearbyStore, type Product } from '../../types/store';
 
@@ -28,6 +29,7 @@ export function SearchScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [busy, setBusy] = useState(false);
   const [onlyOpen, setOnlyOpen] = useState(false);
+  const [sheet, setSheet] = useState<{ product: Product; store: NearbyStore } | null>(null);
 
   const storeById = useMemo(() => new Map(stores.map((s) => [s.id, s])), [stores]);
   const q = query.trim();
@@ -75,7 +77,7 @@ export function SearchScreen() {
           <Text style={styles.blockTitle}>Shops</Text>
           {matchedStores.slice(0, 4).map((s) => (
             <TouchableOpacity key={s.id} style={styles.shopRow} onPress={() => { remember(q); navigation.navigate('StoreDetail', { store: s }); }} activeOpacity={0.85}>
-              <View style={styles.shopIcon}><Ionicons name="storefront-outline" size={20} color="#047857" /></View>
+              <View style={styles.shopIcon}><Ionicons name="storefront-outline" size={20} color="#26262A" /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.shopName} numberOfLines={1}>{s.name}</Text>
                 <Text style={styles.shopMeta} numberOfLines={1}>{STORE_CATEGORY_LABELS[s.category]} · {s.estimated_delivery_minutes ?? 15} min{s.is_open ? '' : ' · Closed'}</Text>
@@ -100,9 +102,9 @@ export function SearchScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar style="dark" />
       <View style={styles.top}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.back} accessibilityLabel="Back"><Ionicons name="arrow-back" size={22} color="#064E3B" /></TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.back} accessibilityLabel="Back"><Ionicons name="arrow-back" size={22} color="#0B0B0C" /></TouchableOpacity>
         <View style={styles.bar}>
-          <Ionicons name="search" size={18} color="#047857" />
+          <Ionicons name="search" size={18} color="#26262A" />
           <TextInput
             value={query}
             onChangeText={setQuery}
@@ -139,14 +141,14 @@ export function SearchScreen() {
           <View style={styles.chips}>
             {TRENDING.map((t) => (
               <TouchableOpacity key={t} style={[styles.chip, styles.chipHot]} onPress={() => setQuery(t)}>
-                <Text style={[styles.chipText, { color: '#047857' }]}>{t}</Text>
+                <Text style={[styles.chipText, { color: '#26262A' }]}>{t}</Text>
               </TouchableOpacity>
             ))}
           </View>
           <Text style={[styles.blockTitle, { marginTop: 24 }]}>Browse shops</Text>
           {stores.slice(0, 6).map((s) => (
             <TouchableOpacity key={s.id} style={styles.shopRow} onPress={() => navigation.navigate('StoreDetail', { store: s })} activeOpacity={0.85}>
-              <View style={styles.shopIcon}><Ionicons name="storefront-outline" size={20} color="#047857" /></View>
+              <View style={styles.shopIcon}><Ionicons name="storefront-outline" size={20} color="#26262A" /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.shopName} numberOfLines={1}>{s.name}</Text>
                 <Text style={styles.shopMeta}>{STORE_CATEGORY_LABELS[s.category]} · {s.estimated_delivery_minutes ?? 15} min</Text>
@@ -171,47 +173,54 @@ export function SearchScreen() {
                 product={item}
                 width={CARD_W}
                 storeName={st?.name ?? 'Nearby shop'}
+                storeCategory={st?.category}
                 etaMinutes={st?.estimated_delivery_minutes ?? null}
-                onOpen={() => { if (st) { remember(q); navigation.navigate('StoreDetail', { store: st }); } }}
+                onOpen={() => { if (st) { remember(q); setSheet({ product: item, store: st }); } }}
               />
             );
           }}
           ListEmptyComponent={busy ? <Text style={styles.empty}>Searching nearby shops…</Text> : matchedStores.length === 0 ? (
             <View style={{ alignItems: 'center', padding: 36 }}>
-              <Ionicons name="search-outline" size={42} color="#A7F3D0" />
+              <Ionicons name="search-outline" size={42} color="#E6E6E1" />
               <Text style={styles.emptyTitle}>Nothing found for “{q}”</Text>
               <Text style={styles.empty}>Try a shorter word or check the spelling. Shops near you may not stock it yet.</Text>
             </View>
           ) : null}
         />
       )}
+      <ProductDetailSheet
+        product={sheet?.product ?? null}
+        store={sheet ? { id: sheet.store.id, name: sheet.store.name, category: sheet.store.category, etaMinutes: sheet.store.estimated_delivery_minutes } : null}
+        onClose={() => setSheet(null)}
+        onViewShop={sheet ? () => { const cur = sheet; setSheet(null); navigation.navigate('StoreDetail', { store: cur.store, focusProductId: cur.product.id }); } : undefined}
+      />
       <CartBar />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F3FBF7' },
-  top: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E3F1EA' },
-  back: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFDF5' },
-  bar: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, height: 44, borderRadius: 14, paddingHorizontal: 12, backgroundColor: '#F3FBF7', borderWidth: 1.5, borderColor: '#A7F3D0' },
+  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E6E6E1' },
+  back: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5F5F2' },
+  bar: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, height: 44, borderRadius: 14, paddingHorizontal: 12, backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#E6E6E1' },
   input: { flex: 1, fontSize: 14.5, color: '#111827', paddingVertical: 0 },
   block: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
-  blockTitle: { fontSize: 15, fontWeight: '800', color: '#064E3B', marginBottom: 10 },
+  blockTitle: { fontSize: 15, fontWeight: '800', color: '#0B0B0C', marginBottom: 10 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  link: { color: '#047857', fontWeight: '700', fontSize: 12.5 },
+  link: { color: '#26262A', fontWeight: '700', fontSize: 12.5 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E3F1EA' },
-  chipHot: { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E6E6E1' },
+  chipHot: { backgroundColor: '#F5F5F2', borderColor: '#E6E6E1' },
   chipText: { fontSize: 13, fontWeight: '600', color: '#374151' },
-  shopRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 16, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: '#E3F1EA' },
-  shopIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' },
+  shopRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 16, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: '#E6E6E1' },
+  shopIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#F5F5F2', alignItems: 'center', justifyContent: 'center' },
   shopName: { fontSize: 14, fontWeight: '800', color: '#111827' },
   shopMeta: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  filter: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: '#A7F3D0', backgroundColor: '#fff' },
-  filterOn: { backgroundColor: '#059669', borderColor: '#059669' },
-  filterText: { fontSize: 12, fontWeight: '700', color: '#047857' },
+  filter: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: '#E6E6E1', backgroundColor: '#fff' },
+  filterOn: { backgroundColor: '#0B0B0C', borderColor: '#0B0B0C' },
+  filterText: { fontSize: 12, fontWeight: '700', color: '#26262A' },
   filterTextOn: { color: '#fff' },
-  emptyTitle: { fontSize: 16, fontWeight: '800', color: '#064E3B', marginTop: 10 },
+  emptyTitle: { fontSize: 16, fontWeight: '800', color: '#0B0B0C', marginTop: 10 },
   empty: { textAlign: 'center', color: '#6B7280', fontSize: 13, lineHeight: 19, marginTop: 8, paddingHorizontal: 20 },
 });

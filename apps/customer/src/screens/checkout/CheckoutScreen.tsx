@@ -1,10 +1,12 @@
 import React, { useCallback, useRef, useState } from 'react';
+import { Alert } from 'react-native';
 import { View, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { Text, TextInput } from '../../components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useCartStore, computeCartSummary } from '../../stores/useCartStore';
+import { useCartStore, computeCartSummary, selectBaskets, basketKind } from '../../stores/useCartStore';
+import { C, CATEGORY_STYLE } from '../../theme';
 import { ensureDefaultAddressFromBrowsingLocation, updateAddress } from '../../services/address';
 import { checkAddressServiceable, checkPointServiceable, type Serviceability } from '../../services/serviceability';
 import { useLocationStore } from '../../stores/useLocationStore';
@@ -21,7 +23,20 @@ const formatRupees = (paise: number) => `₹${Math.round(paise / 100)}`;
 
 export function CheckoutScreen() {
   const navigation = useNavigation<any>();
-  const { storeId, storeName, items, clearCart, addItem, incrementItem, decrementItem } = useCartStore();
+  const allItems = useCartStore((st) => st.items);
+  const stores = useCartStore((st) => st.stores);
+  const checkoutStoreId = useCartStore((st) => st.checkoutStoreId);
+  const clearBasket = useCartStore((st) => st.clearBasket);
+  const addItem = useCartStore((st) => st.addItem);
+  const incrementItem = useCartStore((st) => st.incrementItem);
+  const decrementItem = useCartStore((st) => st.decrementItem);
+  const baskets = selectBaskets(allItems, stores);
+  // This screen checks out ONE basket (one shop = one order = one rider).
+  const basket = baskets.find((b) => b.storeId === checkoutStoreId) ?? baskets[0];
+  const storeId = basket?.storeId ?? null;
+  const storeName = basket?.storeName ?? null;
+  const items = basket?.items ?? [];
+  const otherBaskets = baskets.filter((b) => b.storeId !== storeId);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [suggest, setSuggest] = useState<Product[]>([]);
   React.useEffect(() => {
@@ -90,17 +105,27 @@ export function CheckoutScreen() {
     setPlacing(true); setError(null);
     try {
       const result = await createCustomerOrder({ storeId, addressId: address.id, items, paymentMethod, specialInstructions: [`If an item is unavailable: ${outOfStock === 'call' ? 'call me' : outOfStock === 'remove' ? 'remove it' : 'replace with a similar item'}.`, instructions.trim()].filter(Boolean).join(' ') });
-      clearCart();
-      navigation.navigate('Orders', { screen: 'OrderDetail', params: { orderId: result.orderId } });
+      clearBasket(storeId);
+      const goOrder = () => navigation.navigate('Orders', { screen: 'OrderDetail', params: { orderId: result.orderId } });
+      if (otherBaskets.length > 0) {
+        const next = otherBaskets[0]!;
+        Alert.alert('Order placed ✓', `Your ${basketKind(basket?.category).toLowerCase()} order is on its way to the shop. You still have ${otherBaskets.length === 1 ? 'a basket' : `${otherBaskets.length} baskets`} waiting (${next.storeName}).`, [
+          { text: 'View my order', onPress: goOrder },
+          { text: 'Check out next', onPress: () => { useCartStore.getState().setCheckoutStore(next.storeId); navigation.navigate('Cart'); } },
+        ]);
+      } else {
+        goOrder();
+      }
     } catch (e: any) { setError(e?.message ?? 'Could not place your order.'); }
     finally { placementInFlight.current = false; setPlacing(false); }
   };
 
-  if (loading) return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#059669" /></View></SafeAreaView>;
+  if (!basket && !loading) return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><Text style={{ fontSize: 40 }}>🛒</Text><Text style={[styles.section, { marginTop: 10 }]}>Nothing to check out</Text><TouchableOpacity onPress={() => navigation.navigate('Home')} style={[styles.place, { paddingHorizontal: 28, marginTop: 10 }]}><Text style={styles.placeText}>Back to shops</Text></TouchableOpacity></View></SafeAreaView>;
+  if (loading) return <SafeAreaView style={styles.safe}><StatusBar style="dark" /><View style={styles.center}><ActivityIndicator size="large" color="#0B0B0C" /></View></SafeAreaView>;
 
   return <SafeAreaView style={styles.safe} edges={['top']}>
     <StatusBar style="dark" />
-    <View style={styles.header}><TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityLabel="Back"><Text style={styles.back}>‹</Text></TouchableOpacity><View style={{ alignItems: 'center' }}><Text style={styles.title}>Checkout</Text><Text style={styles.headerSub}>{summary.totalItems} item{summary.totalItems === 1 ? '' : 's'} · {storeName ?? 'Store'}</Text></View><View style={{ width: 38 }} /></View>
+    <View style={styles.header}><TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityLabel="Back"><Text style={styles.back}>‹</Text></TouchableOpacity><View style={{ alignItems: 'center' }}><Text style={styles.title}>Checkout</Text><Text style={styles.headerSub}>{summary.totalItems} item{summary.totalItems === 1 ? '' : 's'} · {basketKind(basket?.category)} basket</Text></View><View style={{ width: 38 }} /></View>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {error ? <View style={styles.error}><Text style={styles.errorText}>{error}</Text></View> : null}
             <Text style={styles.section}>Delivery address</Text>
@@ -109,18 +134,18 @@ export function CheckoutScreen() {
           <Text style={{ fontSize: 15, fontWeight: '900', color: '#991B1B' }}>{storeName ?? 'This shop'} can't deliver here</Text>
           <Text style={{ fontSize: 12, color: '#7F1D1D', marginTop: 4, lineHeight: 18 }}>{!serve.hasPin ? 'This address has no map pin yet.' : `You are ${((serve.distanceM ?? 0) / 1000).toFixed(1)} km away; this shop delivers within ${((serve.radiusM ?? 0) / 1000).toFixed(1)} km.`} Choose another address, or browse shops that deliver to you.</Text>
           <View style={{ flexDirection: 'row', marginTop: 10, gap: 10 }}>
-            <TouchableOpacity onPress={() => setSheetOpen(true)} style={{ flex: 1, backgroundColor: '#059669', borderRadius: 12, paddingVertical: 11, alignItems: 'center' }}><Text style={{ color: '#fff', fontWeight: '800' }}>Change address</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => setSheetOpen(true)} style={{ flex: 1, backgroundColor: '#0B0B0C', borderRadius: 12, paddingVertical: 11, alignItems: 'center' }}><Text style={{ color: '#fff', fontWeight: '800' }}>Change address</Text></TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Home')} style={{ flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#FCA5A5', borderRadius: 12, paddingVertical: 11, alignItems: 'center' }}><Text style={{ color: '#991B1B', fontWeight: '800' }}>Browse shops</Text></TouchableOpacity>
           </View>
         </View>
       ) : null}
-      {pinNote ? <Text style={{ fontSize: 12, color: '#047857', marginBottom: 10, fontWeight: '700' }}>📍 {pinNote}</Text> : null}
+      {pinNote ? <Text style={{ fontSize: 12, color: '#059669', marginBottom: 10, fontWeight: '700' }}>📍 {pinNote}</Text> : null}
       {address && !profile?.full_name?.trim() ? <NameCard /> : null}
       {address ? <View style={styles.card}><View style={styles.addressTop}><Text style={styles.addressLabel}>{address.label}</Text><Text style={styles.default}>DEFAULT</Text></View><Text style={styles.addressMain}>{address.address_line_1}</Text>{address.address_line_2 ? <Text style={styles.addressSub}>{address.address_line_2}</Text> : null}<Text style={styles.addressSub}>{address.city}, {address.state} — {address.pincode}</Text><Text style={styles.addressSub}>Deliver to {profile?.full_name || 'you'} · {profile?.phone ?? ''}</Text><TouchableOpacity onPress={() => setSheetOpen(true)}><Text style={styles.change}>Change address</Text></TouchableOpacity></View> : <AddressQuickForm defaults={{ city: browsingLocation?.city, state: browsingLocation?.state, pincode: browsingLocation?.pincode, line1: [browsingLocation?.houseNo, browsingLocation?.building].filter(Boolean).join(', '), lat: browsingLocation?.lat, lng: browsingLocation?.lng }} receiverName={profile?.full_name ?? ''} phone={profile?.phone ?? ''} onSaved={(a) => { setAddress(a); setError(null); }} />}
       <FreeDeliveryProgress subtotalPaise={summary.subtotalPaise} />
       <View style={[styles.card, { flexDirection: 'row', alignItems: 'center' }]}>
-        <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}><Text style={{ fontSize: 22 }}>⏱</Text></View>
-        <View style={{ flex: 1 }}><Text style={{ fontSize: 17, fontWeight: '900', color: '#064E3B' }}>Delivering from {storeName}</Text><Text style={{ fontSize: 12, color: '#78716C', marginTop: 2 }}>Shipment of {summary.totalItems} item{summary.totalItems === 1 ? '' : 's'}</Text></View>
+        <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: '#F5F5F2', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}><Text style={{ fontSize: 22 }}>⏱</Text></View>
+        <View style={{ flex: 1 }}><Text style={{ fontSize: 17, fontWeight: '900', color: '#0B0B0C' }}>Delivering from {storeName}</Text><Text style={{ fontSize: 12, color: '#78716C', marginTop: 2 }}>{summary.totalItems} item{summary.totalItems === 1 ? '' : 's'} · its own rider, its own delivery</Text></View>
       </View>
       <Text style={styles.section}>Review your items</Text>
       <View style={styles.card}>
@@ -128,13 +153,13 @@ export function CheckoutScreen() {
           <View key={item.productId}>
             {index > 0 ? <View style={styles.line} /> : null}
             <View style={styles.itemRow}>
-              {item.productImageUrl ? <Image source={{ uri: item.productImageUrl }} style={{ width: 62, height: 62, borderRadius: 14, marginRight: 12, backgroundColor: '#ECFDF5' }} /> : <View style={{ width: 62, height: 62, borderRadius: 14, marginRight: 12, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 26 }}>🛍️</Text></View>}
+              {item.productImageUrl ? <Image source={{ uri: item.productImageUrl }} style={{ width: 62, height: 62, borderRadius: 14, marginRight: 12, backgroundColor: '#F5F5F2' }} /> : <View style={{ width: 62, height: 62, borderRadius: 14, marginRight: 12, backgroundColor: '#F5F5F2', alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 26 }}>🛍️</Text></View>}
               <View style={styles.itemInfo}>
                 <Text style={styles.itemName} numberOfLines={2}>{item.productName}</Text>
                 {item.unit ? <Text style={styles.itemUnit}>{item.unit}</Text> : null}
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#059669', borderRadius: 10, height: 34 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0B0B0C', borderRadius: 10, height: 34 }}>
                   <TouchableOpacity onPress={() => decrementItem(item.productId)} style={{ width: 32, height: 34, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={`Decrease ${item.productName}`}><Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>−</Text></TouchableOpacity>
                   <Text style={{ color: '#fff', fontWeight: '900', minWidth: 18, textAlign: 'center' }}>{item.quantity}</Text>
                   <TouchableOpacity onPress={() => incrementItem(item.productId)} style={{ width: 32, height: 34, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={`Increase ${item.productName}`}><Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>+</Text></TouchableOpacity>
@@ -150,11 +175,11 @@ export function CheckoutScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 10 }}>
           {suggestions.map((p) => (
             <View key={p.id} style={{ width: 128, marginRight: 12 }}>
-              <View style={{ height: 128, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#D1FAE5', overflow: 'visible' }}>
+              <View style={{ height: 128, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E6E6E1', overflow: 'visible' }}>
                 {p.image_url ? <Image source={{ uri: p.image_url }} style={{ width: '100%', height: '100%', borderRadius: 16 }} /> : <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 34 }}>🛍️</Text></View>}
-                <TouchableOpacity onPress={() => addItem(p, { id: storeId as string, name: storeName ?? '' })} style={{ position: 'absolute', right: 6, bottom: -13, minWidth: 66, height: 30, borderRadius: 9, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#059669', alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={`Add ${p.name}`}><Text style={{ color: '#059669', fontWeight: '900', fontSize: 12 }}>ADD</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => addItem(p, { id: storeId as string, name: storeName ?? '', ...(basket?.category ? { category: basket.category } : {}) })} style={{ position: 'absolute', right: 6, bottom: -13, minWidth: 66, height: 30, borderRadius: 9, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#0B0B0C', alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={`Add ${p.name}`}><Text style={{ color: '#0B0B0C', fontWeight: '900', fontSize: 12 }}>ADD</Text></TouchableOpacity>
               </View>
-              <Text style={{ fontSize: 14, fontWeight: '900', color: '#064E3B', marginTop: 16 }}>{formatRupees(p.price)}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '900', color: '#0B0B0C', marginTop: 16 }}>{formatRupees(p.price)}</Text>
               <Text style={{ fontSize: 12, fontWeight: '700', color: '#1C1917' }} numberOfLines={2}>{p.name}</Text>
               {p.unit ? <Text style={{ fontSize: 11, color: '#78716C' }}>{p.unit}</Text> : null}
             </View>
@@ -176,7 +201,7 @@ export function CheckoutScreen() {
       <Text style={styles.section}>Bill details</Text>
       <View style={styles.card}>
         <View style={styles.row}><Text style={styles.muted}>Items ({summary.totalItems})</Text><Text style={styles.value}>{formatRupees(summary.subtotalPaise)}</Text></View>
-        {summary.savingsPaise > 0 ? <View style={styles.row}><Text style={[styles.muted, { color: '#047857', fontWeight: '700' }]}>You save</Text><Text style={[styles.value, { color: '#047857', fontWeight: '800' }]}>− {formatRupees(summary.savingsPaise)}</Text></View> : null}
+        {summary.savingsPaise > 0 ? <View style={styles.row}><Text style={[styles.muted, { color: '#059669', fontWeight: '700' }]}>You save</Text><Text style={[styles.value, { color: '#059669', fontWeight: '800' }]}>− {formatRupees(summary.savingsPaise)}</Text></View> : null}
         <View style={styles.row}><Text style={styles.muted}>Delivery</Text><Text style={styles.value}>{summary.subtotalPaise >= FREE_DELIVERY_THRESHOLD_PAISE ? 'Free' : '₹20 + ₹7 per km'}</Text></View>
         <View style={styles.line} /><View style={styles.row}><Text style={styles.total}>To pay</Text><Text style={styles.totalValue}>{summary.subtotalPaise >= FREE_DELIVERY_THRESHOLD_PAISE ? formatRupees(summary.subtotalPaise) : 'Items + delivery'}</Text></View>
       </View>
@@ -186,7 +211,7 @@ export function CheckoutScreen() {
   </SafeAreaView>;
 }
 
-const styles=StyleSheet.create({subRow:{flexDirection:'row',gap:8,marginBottom:16},subChip:{flex:1,alignItems:'center',paddingVertical:11,borderRadius:14,backgroundColor:'#fff',borderWidth:1,borderColor:'#D1E7DD'},subChipOn:{backgroundColor:'#059669',borderColor:'#059669'},subChipText:{fontSize:13,fontWeight:'700',color:'#064E3B'},subChipTextOn:{color:'#fff'},safe:{flex:1,backgroundColor:'#F3FBF7'},center:{flex:1,alignItems:'center',justifyContent:'center'},header:{paddingVertical:12,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:14,backgroundColor:'#064E3B',borderBottomLeftRadius:22,borderBottomRightRadius:22},backBtn:{width:38,height:38,borderRadius:19,backgroundColor:'rgba(255,255,255,0.14)',alignItems:'center',justifyContent:'center'},headerSub:{fontSize:11.5,color:'#A7F3D0',marginTop:1},codChip:{backgroundColor:'#FFF7E6',borderWidth:1,borderColor:'#FDE68A',borderRadius:6,paddingHorizontal:6,paddingVertical:3},codChipText:{fontSize:8.5,fontWeight:'800',color:'#B45309',letterSpacing:0.4},back:{fontSize:30,color:'#ECFDF5',lineHeight:34,marginTop:-3},title:{fontSize:18,fontWeight:'800',color:'#fff'},content:{padding:20,paddingBottom:180},eyebrow:{fontSize:11,fontWeight:'800',letterSpacing:1.2,color:'#A8A29E',marginTop:4},store:{fontSize:20,fontWeight:'800',color:'#1C1917',marginTop:5,marginBottom:22},section:{fontSize:16,fontWeight:'800',color:'#064E3B',marginBottom:10,marginTop:6},optional:{fontSize:10,fontWeight:'700',color:'#A8A29E'},card:{backgroundColor:'#fff',borderWidth:1,borderColor:'#E3F1EA',borderRadius:20,padding:16,marginBottom:16,shadowColor:'#064E3B',shadowOffset:{width:0,height:3},shadowOpacity:0.06,shadowRadius:8,elevation:2},addressTop:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:10},addressLabel:{fontSize:12,fontWeight:'800',color:'#065F46',backgroundColor:'#D1FAE5',paddingHorizontal:8,paddingVertical:4,borderRadius:8},default:{fontSize:9,fontWeight:'800',letterSpacing:1,color:'#A8A29E'},addressMain:{fontSize:15,fontWeight:'700',color:'#1C1917',lineHeight:21},addressSub:{fontSize:13,color:'#78716C',marginTop:3,lineHeight:19},change:{fontSize:13,fontWeight:'800',color:'#047857',marginTop:12},paymentRow:{flexDirection:'row',alignItems:'center',paddingVertical:10,gap:12},radio:{width:20,height:20,borderRadius:10,borderWidth:2,borderColor:'#D6D3D1',alignItems:'center',justifyContent:'center'},radioSelected:{borderColor:'#059669'},radioDot:{width:10,height:10,borderRadius:5,backgroundColor:'#059669'},paymentTitle:{fontSize:14,fontWeight:'700',color:'#1C1917'},paymentSub:{fontSize:12,color:'#78716C',marginTop:2},notes:{minHeight:82,maxHeight:120,backgroundColor:'#fff',borderWidth:1,borderColor:'#E7E5E4',borderRadius:16,padding:14,fontSize:14,color:'#1C1917',textAlignVertical:'top',marginBottom:18},row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:11},muted:{fontSize:13,color:'#78716C'},value:{fontSize:13,fontWeight:'600',color:'#1C1917',maxWidth:'55%',textAlign:'right'},line:{height:1,backgroundColor:'#F5F5F4',marginVertical:4},total:{fontSize:16,fontWeight:'900',color:'#1C1917'},totalValue:{fontSize:19,fontWeight:'900',color:'#064E3B'},error:{backgroundColor:'#FEE2E2',borderWidth:1,borderColor:'#FCA5A5',borderRadius:14,padding:13,marginBottom:14},errorText:{fontSize:13,color:'#991B1B',lineHeight:19},footer:{position:'absolute',left:0,right:0,bottom:0,backgroundColor:'#fff',borderTopWidth:1,borderTopColor:'#E3F1EA',paddingHorizontal:20,paddingTop:12,paddingBottom:18},place:{backgroundColor:'#059669',borderRadius:16,minHeight:56,alignItems:'center',justifyContent:'center'},disabled:{backgroundColor:'#D6D3D1'},placeText:{color:'#fff',fontSize:16,fontWeight:'800'},itemRow:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingVertical:10,gap:12},itemInfo:{flex:1,gap:3},itemName:{fontSize:14,fontWeight:'700',color:'#1C1917'},itemUnit:{fontSize:12,color:'#78716C'},itemQuantity:{fontSize:12,color:'#78716C'},itemTotal:{fontSize:14,fontWeight:'800',color:'#1C1917'},footerNote:{fontSize:10,color:'#A8A29E',textAlign:'center',marginTop:7}});
+const styles=StyleSheet.create({subRow:{flexDirection:'row',gap:8,marginBottom:16},subChip:{flex:1,alignItems:'center',paddingVertical:11,borderRadius:14,backgroundColor:'#fff',borderWidth:1,borderColor:'#E6E6E1'},subChipOn:{backgroundColor:'#0B0B0C',borderColor:'#0B0B0C'},subChipText:{fontSize:13,fontWeight:'700',color:'#0B0B0C'},subChipTextOn:{color:'#fff'},safe:{flex:1,backgroundColor:'#F5F5F2'},center:{flex:1,alignItems:'center',justifyContent:'center'},header:{paddingVertical:12,flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingHorizontal:14,backgroundColor:'#0B0B0C',borderBottomLeftRadius:22,borderBottomRightRadius:22},backBtn:{width:38,height:38,borderRadius:19,backgroundColor:'rgba(255,255,255,0.14)',alignItems:'center',justifyContent:'center'},headerSub:{fontSize:11.5,color:'#E6E6E1',marginTop:1},codChip:{backgroundColor:'#FFF7E6',borderWidth:1,borderColor:'#FDE68A',borderRadius:6,paddingHorizontal:6,paddingVertical:3},codChipText:{fontSize:8.5,fontWeight:'800',color:'#B45309',letterSpacing:0.4},back:{fontSize:30,color:'#F5F5F2',lineHeight:34,marginTop:-3},title:{fontSize:18,fontWeight:'800',color:'#fff'},content:{padding:20,paddingBottom:180},eyebrow:{fontSize:11,fontWeight:'800',letterSpacing:1.2,color:'#A8A29E',marginTop:4},store:{fontSize:20,fontWeight:'800',color:'#1C1917',marginTop:5,marginBottom:22},section:{fontSize:16,fontWeight:'800',color:'#0B0B0C',marginBottom:10,marginTop:6},optional:{fontSize:10,fontWeight:'700',color:'#A8A29E'},card:{backgroundColor:'#fff',borderWidth:1,borderColor:'#E6E6E1',borderRadius:20,padding:16,marginBottom:16,shadowColor:'#0B0B0C',shadowOffset:{width:0,height:3},shadowOpacity:0.06,shadowRadius:8,elevation:2},addressTop:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:10},addressLabel:{fontSize:12,fontWeight:'800',color:'#26262A',backgroundColor:'#E6E6E1',paddingHorizontal:8,paddingVertical:4,borderRadius:8},default:{fontSize:9,fontWeight:'800',letterSpacing:1,color:'#A8A29E'},addressMain:{fontSize:15,fontWeight:'700',color:'#1C1917',lineHeight:21},addressSub:{fontSize:13,color:'#78716C',marginTop:3,lineHeight:19},change:{fontSize:13,fontWeight:'800',color:'#26262A',marginTop:12},paymentRow:{flexDirection:'row',alignItems:'center',paddingVertical:10,gap:12},radio:{width:20,height:20,borderRadius:10,borderWidth:2,borderColor:'#D6D3D1',alignItems:'center',justifyContent:'center'},radioSelected:{borderColor:'#0B0B0C'},radioDot:{width:10,height:10,borderRadius:5,backgroundColor:'#0B0B0C'},paymentTitle:{fontSize:14,fontWeight:'700',color:'#1C1917'},paymentSub:{fontSize:12,color:'#78716C',marginTop:2},notes:{minHeight:82,maxHeight:120,backgroundColor:'#fff',borderWidth:1,borderColor:'#E7E5E4',borderRadius:16,padding:14,fontSize:14,color:'#1C1917',textAlignVertical:'top',marginBottom:18},row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:11},muted:{fontSize:13,color:'#78716C'},value:{fontSize:13,fontWeight:'600',color:'#1C1917',maxWidth:'55%',textAlign:'right'},line:{height:1,backgroundColor:'#F5F5F4',marginVertical:4},total:{fontSize:16,fontWeight:'900',color:'#1C1917'},totalValue:{fontSize:19,fontWeight:'900',color:'#0B0B0C'},error:{backgroundColor:'#FEE2E2',borderWidth:1,borderColor:'#FCA5A5',borderRadius:14,padding:13,marginBottom:14},errorText:{fontSize:13,color:'#991B1B',lineHeight:19},footer:{position:'absolute',left:0,right:0,bottom:0,backgroundColor:'#fff',borderTopWidth:1,borderTopColor:'#E6E6E1',paddingHorizontal:20,paddingTop:12,paddingBottom:18},place:{backgroundColor:'#0B0B0C',borderRadius:16,minHeight:56,alignItems:'center',justifyContent:'center'},disabled:{backgroundColor:'#D6D3D1'},placeText:{color:'#fff',fontSize:16,fontWeight:'800'},itemRow:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingVertical:10,gap:12},itemInfo:{flex:1,gap:3},itemName:{fontSize:14,fontWeight:'700',color:'#1C1917'},itemUnit:{fontSize:12,color:'#78716C'},itemQuantity:{fontSize:12,color:'#78716C'},itemTotal:{fontSize:14,fontWeight:'800',color:'#1C1917'},footerNote:{fontSize:10,color:'#A8A29E',textAlign:'center',marginTop:7}});
 
 function NameCard() {
   const update = useAuthStore((st) => st.updateProfileName);
@@ -202,11 +227,11 @@ function NameCard() {
   };
   return (
     <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 20, padding: 16, marginBottom: 14 }}>
-      <Text style={{ fontSize: 15, fontWeight: '900', color: '#064E3B' }}>Who is receiving this order?</Text>
+      <Text style={{ fontSize: 15, fontWeight: '900', color: '#0B0B0C' }}>Who is receiving this order?</Text>
       <TextInput value={name} onChangeText={setName} placeholder="Your full name" placeholderTextColor="#A8A29E" autoCapitalize="words" accessibilityLabel="Your name"
-        style={{ borderWidth: 1, borderColor: '#A7F3D0', borderRadius: 12, padding: 12, marginTop: 10, fontSize: 15, color: '#064E3B' }} />
+        style={{ borderWidth: 1, borderColor: '#E6E6E1', borderRadius: 12, padding: 12, marginTop: 10, fontSize: 15, color: '#0B0B0C' }} />
       {err ? <Text style={{ color: '#B91C1C', marginTop: 6, fontSize: 12 }}>{err}</Text> : null}
-      <TouchableOpacity onPress={save} disabled={busy} style={{ backgroundColor: '#059669', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 10 }}>
+      <TouchableOpacity onPress={save} disabled={busy} style={{ backgroundColor: '#0B0B0C', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 10 }}>
         {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '800' }}>Save name</Text>}
       </TouchableOpacity>
     </View>
