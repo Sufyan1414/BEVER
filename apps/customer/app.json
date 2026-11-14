@@ -28,6 +28,12 @@
         {
           "locationWhenInUsePermission": "BEVER uses your location to pin your exact delivery spot so the rider can find you."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0B0B0C"
+        }
       ]
     ]
   }

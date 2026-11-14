@@ -1,3 +1,4 @@
+import { notifyNow, scheduleMorning } from './lib/notify';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Vibration, View } from 'react-native';
 import { Text } from './components/AppText';
@@ -99,9 +100,21 @@ function Console({ userId }: { userId: string }) {
   const onNewOrders = useCallback((fresh: Order[]) => {
     setAlertOrders(fresh);
     Vibration.vibrate([0, 350, 150, 350]);
+    void notifyNow(fresh.length === 1 ? 'New order 🔔' : `${fresh.length} new orders 🔔`, `₹${Math.round(fresh.reduce((n, o) => n + o.total_amount, 0) / 100)} waiting. Accept within 15 minutes.`);
   }, []);
 
   const { store, setStore, orders, products, setProducts, state, error, refreshing, reload } = useMerchantData({ userId, onNewOrders });
+
+  // Daily 8:30 message: yesterday's result, or a nudge to open the shop.
+  useEffect(() => {
+    if (state !== 'ready' || !store) return;
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    const done = orders.filter((o) => o.status === 'DELIVERED' && new Date(o.created_at).toDateString() === y.toDateString());
+    const revenue = done.reduce((n, o) => n + o.items_total, 0);
+    void scheduleMorning(8, 30,
+      done.length > 0 ? 'Good morning ☀️' : 'Good morning ☀️ Ready to open?',
+      done.length > 0 ? `Yesterday: ${done.length} order${done.length === 1 ? '' : 's'}, ₹${Math.round(revenue / 100)} in sales. Open your shop to start today.` : 'Open your shop and check your stock so customers can order.');
+  }, [state, store, orders]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 30000);

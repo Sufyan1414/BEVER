@@ -36,6 +36,12 @@
         {
           "locationWhenInUsePermission": "BEVER Merchant uses your location once to record where your shop is, so riders can find it."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0B0B0C"
+        }
       ]
     ]
   }

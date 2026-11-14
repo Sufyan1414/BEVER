@@ -35,6 +35,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, StyleSheet } from 'react-native';
 import { useFavouritesStore } from '../stores/useFavouritesStore';
+import { useEngagement } from '../hooks/useEngagement';
 import { BeverSplash } from '../components/BeverSplash';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useLocationStore } from '../stores/useLocationStore';
@@ -60,6 +61,7 @@ export function AppNavigator() {
   const { isLocationLoading, needsLocationSetup, loadPersistedLocation } = useLocationStore();
   const { loadPersistedCart } = useCartStore();
   const [splashDone, setSplashDone] = useState(false);
+  useEngagement();
   useEffect(() => { void useFavouritesStore.getState().load(); }, []);
 
   useEffect(() => {

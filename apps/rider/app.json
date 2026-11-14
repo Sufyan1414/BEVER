@@ -29,6 +29,12 @@
         {
           "locationWhenInUsePermission": "BEVER Rider shares your live position with the customer while you deliver their order."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0B0B0C"
+        }
       ]
     ]
   }

@@ -1,4 +1,5 @@
-import React,{useCallback,useEffect,useState} from 'react';
+import React,{useCallback,useEffect,useRef,useState} from 'react';
+import { notifyNow, scheduleMorning } from './lib/notify';
 import { activeInterval } from './lib/activeInterval';
 import { ActivityIndicator, Linking, Vibration, Platform, RefreshControl, ScrollView, StatusBar as RNStatusBar, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { Text, TextInput } from './AppText';
@@ -30,6 +31,9 @@ export default function App(){
  const[earnToday,setEarnToday]=useState(0);
  const loadAvailable=useCallback(async()=>{if(role!=='ok')return;try{const{data}=await supabase.rpc('list_available_deliveries');setAvailable(Array.isArray(data)?data:[])}catch{setAvailable([])}},[role]);
  useEffect(()=>{loadAvailable();return activeInterval(loadAvailable,15000)},[loadAvailable]);
+ const prevAvail=useRef(-1);
+ useEffect(()=>{if(role!=='ok')return;const n=available.length;if(prevAvail.current>=0&&n>prevAvail.current)void notifyNow('New delivery nearby 🛵',`${n} order${n===1?'':'s'} waiting for a rider. Open BEVER Rider to accept.`);prevAvail.current=n},[available,role]);
+ useEffect(()=>{if(role==='ok')void scheduleMorning(8,0,'Good morning 🛵','Going online today? Breakfast and lunch rushes bring the most orders.')},[role]);
  const claim=async(orderId:string)=>{setBusy(true);setNotice(null);try{const{error}=await supabase.rpc('claim_delivery',{p_order_id:orderId});if(error)throw error;await loadAvailable();await load(true);setTab('mine')}catch(e:any){const m=String(e?.message??'');setNotice(m.includes('ORDER_ALREADY_CLAIMED')||m.includes('ORDER_NOT_AVAILABLE')?'Another rider already took this order.':m.includes('ROLE_NOT_ALLOWED')?'Your rider account is not active yet.':'Could not take this delivery. Try again.');await loadAvailable()}finally{setBusy(false)}};
 
  useEffect(()=>{

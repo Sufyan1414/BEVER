@@ -25,6 +25,9 @@ import { useLocationStore } from '../../stores/useLocationStore';
 import { fetchNearbyStores, fetchDealProducts, fetchBuyAgain } from '../../services/store';
 import { ProductCard } from '../../components/ProductCard';
 import { ProductDetailSheet } from '../../components/ProductDetailSheet';
+import { BundleSheet } from '../../components/BundleSheet';
+import { fetchBundles, currentSlot, SLOT_LABEL, type Bundle } from '../../services/taste';
+import { useNudgeStore } from '../../stores/useNudgeStore';
 import { supabase } from '../../services/supabase';
 import { BrowsingLocationPickerScreen } from '../location/BrowsingLocationPickerScreen';
 import type { NearbyStore, Product, StoreCategory } from '../../types/store';
@@ -158,6 +161,9 @@ export function HomeScreen() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>(ALL_KEY);
   const [pendingQuery, setPendingQuery] = useState<string | null>(null);
   const [sheet, setSheet] = useState<{ product: Product; store: NearbyStore } | null>(null);
+  const [bundles, setBundles] = useState<Bundle[]>([]);
+  const [openBundleId, setOpenBundleId] = useState<string | null>(null);
+  const nudgeBundleId = useNudgeStore((st) => st.bundleId);
 
   useEffect(() => {
     const q = route.params?.query;
@@ -220,10 +226,15 @@ export function HomeScreen() {
     if (ids.length === 0) { setDeals([]); return; }
     let alive = true;
     fetchDealProducts(ids).then((rows) => { if (alive) setDeals(rows); }).catch(() => undefined);
+    fetchBundles(ids).then((rows) => { if (alive) setBundles(rows); }).catch(() => undefined);
     if (isAuthenticated) fetchBuyAgain(ids).then((rows) => { if (alive) setBuyAgain(rows); }).catch(() => undefined);
     else setBuyAgain([]);
     return () => { alive = false; };
   }, [homeState, isAuthenticated]);
+
+  useEffect(() => {
+    if (nudgeBundleId && bundles.some((b) => b.id === nudgeBundleId)) { setOpenBundleId(nudgeBundleId); useNudgeStore.getState().clear(); }
+  }, [nudgeBundleId, bundles]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -318,6 +329,35 @@ export function HomeScreen() {
             ))}
           </View>
 
+          {bundles.length > 0 && selectedCategory === ALL_KEY ? (() => {
+            const slot = currentSlot();
+            const mine = bundles.filter((b) => b.slot === slot);
+            const shown = mine.length > 0 ? mine : bundles;
+            const label = mine.length > 0 ? SLOT_LABEL[slot] : 'Baskets';
+            return (
+              <>
+                <SectionHead title={`${label} baskets`} sub="Ready-made combos. One tap adds everything" />
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter, gap: 12 }}>
+                  {shown.map((b) => {
+                    const st = storeFor(b.store_id);
+                    if (!st) return null;
+                    return (
+                      <TouchableOpacity key={b.id} activeOpacity={0.9} onPress={() => setOpenBundleId(b.id)} style={styles.bundle} accessibilityRole="button" accessibilityLabel={`Open ${b.name} from ${st.name}`}>
+                        <View style={styles.bundleThumbs}>
+                          {b.items.slice(0, 4).map((i) => (
+                            <View key={i.product.id} style={styles.bundleThumb}>{i.product.image_url ? <Image source={{ uri: i.product.image_url }} style={{ width: '100%', height: '100%' }} resizeMode="contain" /> : <Text>🛍️</Text>}</View>
+                          ))}
+                        </View>
+                        <Text style={styles.bundleName} numberOfLines={1}>{b.name}</Text>
+                        <Text style={styles.bundleShop} numberOfLines={1}>{st.name} · {b.items.length} items</Text>
+                        <View style={styles.bundleFoot}><Text style={styles.bundlePrice}>₹{Math.round(b.totalPaise / 100)}</Text><View style={styles.bundleGo}><Text style={styles.bundleGoText}>View</Text></View></View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </>
+            );
+          })() : null}
           {buyAgain.length > 0 && selectedCategory === ALL_KEY ? (<><SectionHead title="Buy it again" sub="Your usual picks, one tap away" />{productRow(buyAgain)}</>) : null}
           {deals.length > 0 && selectedCategory === ALL_KEY ? (<><SectionHead title="Deals for you" sub="Biggest savings from shops nearby" />{productRow(deals)}</>) : null}
         </View>
@@ -358,6 +398,12 @@ export function HomeScreen() {
         onClose={() => setSheet(null)}
         onViewShop={sheet ? () => { const cur = sheet; setSheet(null); openShop(cur.store, cur.product.id); } : undefined}
       />
+
+      {(() => {
+        const b = bundles.find((x) => x.id === openBundleId) ?? null;
+        const st = b ? storeFor(b.store_id) : null;
+        return <BundleSheet bundle={b} store={st ? { id: st.id, name: st.name, category: st.category, etaMinutes: etaOf(st) } : null} onClose={() => setOpenBundleId(null)} onAdded={() => setOpenBundleId(null)} />;
+      })()}
 
       {homeState.kind === 'LOADING' && !isRefreshing ? (
         <View>
@@ -454,6 +500,15 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, rowGap: 14 },
   tile: { borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   tileLabel: { fontSize: 11.5, fontWeight: '700', color: C.ink, textAlign: 'center', marginTop: 6, lineHeight: 14 },
+  bundle: { width: 232, backgroundColor: C.paper, borderRadius: 22, borderWidth: 1, borderColor: C.line, padding: 12 },
+  bundleThumbs: { flexDirection: 'row', gap: 6, marginBottom: 10 },
+  bundleThumb: { flex: 1, height: 52, borderRadius: 12, backgroundColor: C.canvas, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 3 },
+  bundleName: { fontSize: 15, fontWeight: '800', color: C.ink },
+  bundleShop: { fontSize: 12, color: C.muted, marginTop: 2 },
+  bundleFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
+  bundlePrice: { fontSize: 17, fontWeight: '800', color: C.ink },
+  bundleGo: { backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 7 },
+  bundleGoText: { color: '#fff', fontSize: 12.5, fontWeight: '800' },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginBottom: 14 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: C.line, backgroundColor: C.paper },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Linking, Modal, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { Text, TextInput } from './AppText';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/useAuthStore';
+import { ensureNotificationPermission, getMorningEnabled, setMorningEnabled } from '../services/notifications';
 
 const SUPPORT_EMAIL = 'support@bever.app';
 
@@ -15,6 +16,13 @@ export function AccountActions() {
   const [pin2, setPin2] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [morning, setMorning] = useState(true);
+  useEffect(() => { void getMorningEnabled().then(setMorning); }, []);
+  const toggleMorning = async (on: boolean) => {
+    setMorning(on);
+    await setMorningEnabled(on);
+    if (on && !(await ensureNotificationPermission())) Alert.alert('Notifications are off', 'Allow notifications for BEVER in your phone settings to get morning suggestions.');
+  };
 
   const close = () => { setSheet(null); setPin(''); setPin2(''); setErr(null); };
 
@@ -65,6 +73,14 @@ export function AccountActions() {
 
   return (
     <View style={styles.wrap}>
+      <View style={styles.row}>
+        <Text style={styles.icon}>🔔</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Morning suggestions</Text>
+          <Text style={styles.sub}>A daily nudge with a basket picked from what you love</Text>
+        </View>
+        <Switch value={morning} onValueChange={(v) => void toggleMorning(v)} trackColor={{ false: '#E6E6E1', true: '#0B0B0C' }} thumbColor="#fff" accessibilityLabel="Morning suggestions" />
+      </View>
       {rows.map((r) => (
         <TouchableOpacity key={r.title} style={styles.row} activeOpacity={0.85} onPress={r.onPress} accessibilityLabel={r.title}>
           <Text style={styles.icon}>{r.icon}</Text>
