@@ -1,0 +1,15 @@
+PASS  Sign in with phone+PIN pseudo-email  ok
+PASS  ensure_my_profile  ok
+PASS  Profile created with role customer  {"role":"customer","full_name":"BEVER Test Customer","phone":"+919000000001"}
+PASS  get_nearby_stores returns stores  13 stores: Sharma Kirana & General Store, Health First Pharmacy, Fresh Mart Fruits & Vegetables, Cool Corner Drinks & Ice Cream, Daily Dairy & Bakery, Tech Point Electronics, Paper & Pen Stationery, Mithai & Namkeen Corner, Spice Kitchen, Paws & Whiskers Pet Store, Style Street Fashion, Handy Hardware & Tools, Demo Restaurant
+PASS  Store has purchasable products  [{"id":"9392de85-6f36-4668-8523-d847afcbb53f","name":"Toor Dal","price":15500},{"id":"be55cb68-4f95-4df5-b03e-aff3288dd375","name":"Basmati Rice","price":64000},{"id":"c938abae-2ed6-484a-ab9e-5eddf57f9ad6","name":"Aashirvaad Atta","price":24500}]
+PASS  Delivery address exists
+PASS  create_customer_order (server pricing)  {"number":"BVR-20261114-0154","items":15500,"fee":2700,"total":18200,"productPrice":15500}
+PASS  Server item total equals product price  {"server":15500,"product":15500}
+PASS  Customer can read own order  {"status":"PENDING","delivery_otp":"2846","payment_method":"COD","total_amount":18200}
+PASS  Customer CANNOT directly edit order status/total  {"patchStatus":204,"order":{"status":"PENDING","total_amount":18200}}
+PASS  Customer can cancel own order (cleanup)  cancelled
+PASS  Customer CANNOT promote self to admin  {"patch":403,"role":"customer"}
+PASS  Customer CANNOT edit a store  {"patch":403,"store":{"name":"Sharma Kirana & General Store","is_verified":true}}
+
+ALL PASSED
