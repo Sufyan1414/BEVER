@@ -72,3 +72,6 @@ coverage/
 
 # Supabase local temporary files
 packages/supabase/.temp/
+
+# Security audit report (never commit or serve)
+AUDIT.md
