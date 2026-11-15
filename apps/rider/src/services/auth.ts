@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { loginLockMessage, recordLoginFailure, clearLoginFailures } from '../lib/loginGuard';
 
 function normalizePhone(input:string){
   const d=input.replace(/\D/g,'');
@@ -16,8 +17,11 @@ export async function signInRider(phone:string,pin:string){
   const normalized=normalizePhone(phone);
   if(!normalized)return{ok:false,error:'Enter a valid 10-digit Indian mobile number.'};
   if(!/^\d{6}$/.test(pin))return{ok:false,error:'PIN must be exactly 6 digits.'};
+  const locked=await loginLockMessage(normalized);
+  if(locked)return{ok:false,error:locked};
   const {error}=await supabase.auth.signInWithPassword({email:email(normalized),password:pin});
-  if(error)return{ok:false,error:friendly(error.message)};
+  if(error){if(/invalid login credentials/i.test(error.message))await recordLoginFailure(normalized);return{ok:false,error:friendly(error.message)};}
+  await clearLoginFailures(normalized);
   return{ok:true};
 }
 

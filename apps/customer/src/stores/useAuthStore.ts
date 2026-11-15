@@ -11,6 +11,7 @@
  *   - Subscribes to onAuthStateChange and synchronizes profile reactively.
  */
 
+import { loginLockMessage, recordLoginFailure, clearLoginFailures } from '../lib/loginGuard';
 import { create } from 'zustand';
 import type { Session, User, Subscription, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
@@ -218,14 +219,19 @@ export const useAuthStore = create<AuthState>((set, get) => {
         const normalizedPhone = phoneVal.formattedPhone;
         const internalEmail = phoneToInternalAuthEmail(normalizedPhone);
 
+        const locked = await loginLockMessage(normalizedPhone);
+        if (locked) return { success: false, error: locked };
+
         const { data, error } = await supabase.auth.signInWithPassword({
           email: internalEmail,
           password: pin,
         });
 
         if (error) {
+          if (/invalid login credentials/i.test(error.message)) await recordLoginFailure(normalizedPhone);
           return { success: false, error: parseSupabaseError(error) };
         }
+        await clearLoginFailures(normalizedPhone);
 
         if (data.session) {
           set({ session: data.session, user: data.session.user });

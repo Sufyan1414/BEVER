@@ -140,19 +140,21 @@ export async function fetchMyOrders(limit = 50): Promise<CustomerOrderSummary[]>
 export async function fetchOrderDetail(orderId: string): Promise<CustomerOrderDetail> {
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id,order_number,status,payment_method,total_amount,items_total,delivery_fee,discount_amount,special_instructions,delivered_at,delivery_otp,rejection_reason,cancellation_reason,created_at,estimated_delivery_at,delivery_address_snapshot,delivery_failure_reason,stores(name,phone)')
+    .select('id,order_number,status,payment_method,total_amount,items_total,delivery_fee,discount_amount,special_instructions,delivered_at,rejection_reason,cancellation_reason,created_at,estimated_delivery_at,delivery_address_snapshot,delivery_failure_reason,stores(name,phone)')
     .eq('id', orderId)
     .maybeSingle();
 
   if (orderError) throw new Error(orderError.message);
   if (!order) throw new Error('Order not found.');
 
-  const [{ data: items, error: itemsError }] = await Promise.all([
+  const [{ data: items, error: itemsError }, { data: otpRow }] = await Promise.all([
     supabase
       .from('order_items')
       .select('id,product_name_snapshot,unit_price,quantity,total_price,unit_snapshot')
       .eq('order_id', orderId)
       .order('created_at', { ascending: true }),
+    // The delivery code lives in its own table that only the customer can read.
+    supabase.from('order_delivery_otps').select('otp').eq('order_id', orderId).maybeSingle(),
   ]);
 
   if (itemsError) throw new Error(itemsError.message);
@@ -175,7 +177,7 @@ export async function fetchOrderDetail(orderId: string): Promise<CustomerOrderDe
     discountAmount: order.discount_amount,
     specialInstructions: order.special_instructions ?? null,
     deliveredAt: order.delivered_at ?? null,
-    deliveryOtp: order.delivery_otp ?? null,
+    deliveryOtp: (otpRow as { otp?: string } | null)?.otp ?? null,
     rejectionReason: order.rejection_reason ?? null,
     cancellationReason: order.cancellation_reason ?? null,
     deliveryFailureReason: order.delivery_failure_reason ?? null,

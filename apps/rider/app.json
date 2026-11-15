@@ -21,7 +21,8 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.bever.rider",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "blockedPermissions": []
     },
     "plugins": [
       [
@@ -35,7 +36,8 @@
         {
           "color": "#0B0B0C"
         }
-      ]
+      ],
+      "./plugins/withSecureAndroid"
     ]
   }
 }

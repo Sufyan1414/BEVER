@@ -5,6 +5,7 @@ import { Button, Card, Pill } from '../components/ui';
 import { SalesCard } from '../components/SalesCard';
 import { colors } from '../theme';
 import type { Store } from '../lib/types';
+import { confirmDeleteAccount } from '../lib/deleteAccount';
 
 export function StoreScreen({ store, busy, activeOrders, onToggleOpen, onSaveDetails, onSignOut }: {
   store: Store; busy: boolean; activeOrders: number; onToggleOpen: (open: boolean) => void; onSaveDetails: (name: string, phone: string) => Promise<void>; onSignOut: () => void;
@@ -67,6 +68,7 @@ export function StoreScreen({ store, busy, activeOrders, onToggleOpen, onSaveDet
       </Card>
 
       <Button label="Sign out" variant="secondary" icon="log-out-outline" onPress={onSignOut} style={{ marginTop: 8 }} />
+      <Button label="Delete my account" variant="ghost" icon="trash-outline" onPress={confirmDeleteAccount} style={{ marginTop: 4 }} />
       <Text style={styles.footnote}>Build: store settings + name fix</Text>
     </ScrollView>
   );

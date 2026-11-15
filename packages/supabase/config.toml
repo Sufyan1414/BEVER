@@ -23,7 +23,7 @@ port = 54324
 
 [storage]
 enabled = true
-file_size_limit = "52428800"
+file_size_limit = "2097152"
 
 [auth]
 enabled = true
@@ -31,6 +31,13 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = ["https://localhost:3000"]
 jwt_expiry = 3600
 enable_signup = true
+minimum_password_length = 6
+
+[auth.rate_limit]
+# Brake on scripted PIN guessing / mass signups (per IP, per 5 minutes)
+sign_in_sign_ups = 30
+token_refresh = 150
+email_sent = 4
 
 [auth.email]
 enable_signup = true

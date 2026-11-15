@@ -20,7 +20,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.bever.customer"
+      "package": "com.bever.customer",
+      "blockedPermissions": []
     },
     "plugins": [
       [
@@ -34,7 +35,8 @@
         {
           "color": "#0B0B0C"
         }
-      ]
+      ],
+      "./plugins/withSecureAndroid"
     ]
   }
 }

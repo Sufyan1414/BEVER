@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { loginLockMessage, recordLoginFailure, clearLoginFailures } from '../lib/loginGuard';
 
 export function normalizeIndianPhone(input: string): string | null {
   const digits = input.replace(/\D/g, '');
@@ -28,8 +29,14 @@ function friendlyAuthError(message: string) {
 export async function signInMerchant(phone: string, pin: string) {
   const v = validate(phone, pin);
   if ('error' in v) return { ok: false, error: v.error };
+  const locked = await loginLockMessage(v.normalized);
+  if (locked) return { ok: false, error: locked };
   const { error } = await supabase.auth.signInWithPassword({ email: phoneEmail(v.normalized), password: pin });
-  if (error) return { ok: false, error: friendlyAuthError(error.message) };
+  if (error) {
+    if (/invalid login credentials/i.test(error.message)) await recordLoginFailure(v.normalized);
+    return { ok: false, error: friendlyAuthError(error.message) };
+  }
+  await clearLoginFailures(v.normalized);
   return { ok: true };
 }
 
