@@ -1,0 +1,4 @@
+virtual customers: 500
+requests: 2000 in 64.0 s (31.2 req/s)
+latency ms  p50=261  p95=736  p99=767  max=836
+failed: 0 (0.00 %)
